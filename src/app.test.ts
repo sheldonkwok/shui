@@ -15,9 +15,9 @@ describe("Plants API", () => {
     if (server) server.close();
   });
 
-  it("should create a plant and then list it", async () => {
-    const testPlantName = "Test Plant " + Date.now();
+  const testPlantName = "Test Plant " + Date.now();
 
+  it("should create a plant and then list it", async () => {
     // Create a plant using hono/client
     const createRes = await client.plants.$post({
       json: { name: testPlantName },
@@ -38,15 +38,19 @@ describe("Plants API", () => {
   });
 
   it("should add a watering to an existing plant", async () => {
-    const testPlantName = "Test Plant " + Date.now();
-
     const createRes = await client.plants.$post({
       json: { name: testPlantName },
     });
 
-    expect(createRes.ok).toBe(true);
     const createdPlant = await createRes.json();
     expect(createdPlant).toHaveProperty("id");
-    expect(createdPlant).toHaveProperty("name", testPlantName);
+
+    const wateringRes = await client.waterings.$post({
+      json: { plantId: createdPlant.id },
+    });
+
+    const watering = await wateringRes.json();
+    expect(watering).toHaveProperty("plantId", createdPlant.id);
+    expect(watering).toHaveProperty("wateringTime");
   });
 });

@@ -1,13 +1,16 @@
 import { Hono } from "hono";
 import { arktypeValidator } from "@hono/arktype-validator";
+import { eq } from "drizzle-orm";
 
 import { db } from "./db.js";
 import { waterings, wateringInsertSchema } from "./schema.js";
 
 const app = new Hono()
-  .get("/", async (c) => {
-    const allWaterings = await db.select().from(waterings);
-    return c.json(allWaterings);
+  .get("/:id", async (c) => {
+    const id = Number(c.req.param("id"));
+    const ws = await db.select().from(waterings).where(eq(waterings.id, id));
+
+    return c.json(ws[0]!);
   })
   .post("/", arktypeValidator("json", wateringInsertSchema), async (c) => {
     const body = c.req.valid("json");
