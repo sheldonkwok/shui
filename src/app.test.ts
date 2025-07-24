@@ -5,7 +5,7 @@ import { hc } from "hono/client";
 
 describe("Plants API", () => {
   let server: ServerType;
-  const port = 3000;
+  const client = hc<typeof app>(`http://localhost:3000`);
 
   beforeAll(async () => {
     await new Promise<void>((res) => (server = serve(app, () => res())));
@@ -16,7 +16,6 @@ describe("Plants API", () => {
   });
 
   it("should create a plant and then list it", async () => {
-    const client = hc<typeof app>(`http://localhost:${port}`);
     const testPlantName = "Test Plant " + Date.now();
 
     // Create a plant using hono/client
@@ -36,5 +35,18 @@ describe("Plants API", () => {
 
     const foundPlant = allPlants.find((plant) => plant.name === testPlantName);
     expect(foundPlant?.id).toBe(createdPlant.id);
+  });
+
+  it("should add a watering to an existing plant", async () => {
+    const testPlantName = "Test Plant " + Date.now();
+
+    const createRes = await client.plants.$post({
+      json: { name: testPlantName },
+    });
+
+    expect(createRes.ok).toBe(true);
+    const createdPlant = await createRes.json();
+    expect(createdPlant).toHaveProperty("id");
+    expect(createdPlant).toHaveProperty("name", testPlantName);
   });
 });
