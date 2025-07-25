@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { serve, ServerType } from "@hono/node-server";
-import app from "./app.js";
+import app from "./app.ts";
 import { hc } from "hono/client";
 
 describe("Plants API", () => {

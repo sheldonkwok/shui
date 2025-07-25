@@ -1,6 +1,9 @@
 {
 	"extends": "@sindresorhus/tsconfig",
 	"compilerOptions": {
-		"noImplicitAny": true
+		"noImplicitAny": true,
+		"allowImportingTsExtensions": true,
+		"noEmit": true,
 	}
+
 }

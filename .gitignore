@@ -1,2 +1,4 @@
 node_modules
 sqlite.db
+.envrc
+.dev.vars

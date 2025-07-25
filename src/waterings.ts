@@ -2,8 +2,8 @@ import { Hono } from "hono";
 import { arktypeValidator } from "@hono/arktype-validator";
 import { eq } from "drizzle-orm";
 
-import { db } from "./db.js";
-import { waterings, wateringInsertSchema } from "./schema.js";
+import db from "./db.ts";
+import { waterings, wateringInsertSchema } from "./schema.ts";
 
 const app = new Hono()
   .get("/:id", async (c) => {

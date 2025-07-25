@@ -1,7 +1,7 @@
 import { Hono } from "hono";
 
-import { db } from "./db.js";
-import { plants, plantInsertSchema } from "./schema.js";
+import db from "./db.ts";
+import { plants, plantInsertSchema } from "./schema.ts";
 import { arktypeValidator } from "@hono/arktype-validator";
 
 const app = new Hono()
