@@ -21,7 +21,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   console.log(`Server is running on port ${port}`);
   serve({
     fetch: app.fetch,
-    port,
+    port: Number(port),
   });
 }
 

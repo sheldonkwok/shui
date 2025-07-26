@@ -24,9 +24,10 @@ const workos = new WorkOS(process.env["WORKOS_API_KEY"], { clientId });
 const routes = new Hono()
   .get("/login", async (c) => {
     const provider = "GoogleOAuth";
-    const redirectUri = process.env.NODE_ENV === "production" 
-      ? `https://${c.req.header("host")}/api/callback`
-      : "http://localhost:3000/callback";
+    const redirectUri =
+      process.env["NODE_ENV"] === "production"
+        ? `https://${c.req.header("host")}/api/callback`
+        : "http://localhost:3000/callback";
 
     const authorizationUrl = workos.sso.getAuthorizationUrl({
       provider,
