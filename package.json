@@ -21,15 +21,14 @@
   "devDependencies": {
     "@flydotio/dockerfile": "~0.7.10",
     "@types/node": "~24.0.14",
+    "execa": "~9.6.0",
     "typescript": "~5.8.3",
     "vitest": "~3.2.4"
   },
   "scripts": {
     "build": "tsc",
-    "claude": "claude-code",
     "dev": "node src/app.ts",
     "migrate": "drizzle-kit push",
-    "pretest": "rm -f sqlite.db && pnpm migrate",
     "test": "vitest run",
     "start": "node src/app.ts",
     "deploy": "fly deploy"

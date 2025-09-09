@@ -1,13 +1,19 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { serve, ServerType } from "@hono/node-server";
-import app from "./app.ts";
 import { hc } from "hono/client";
+
+import { execa } from "execa";
+
+import app from "./app.ts";
 
 describe("Plants API", () => {
   let server: ServerType;
   const client = hc<typeof app>(`http://localhost:3000`);
 
   beforeAll(async () => {
+    await execa`rm -rf $TURSO_DATABASE_URL`;
+    await execa`pnpm migrate`;
+
     await new Promise<void>((res) => (server = serve(app, () => res())));
   });
 

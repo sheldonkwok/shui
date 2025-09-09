@@ -1,5 +1,10 @@
 import { drizzle } from "drizzle-orm/libsql";
+import { createClient } from "@libsql/client";
 
-const db = drizzle("file:sqlite.db");
+import { dbCredentials } from './utils.ts';
+
+const client = createClient(dbCredentials);
+
+const db = drizzle(client);
 
 export default db;
