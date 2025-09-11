@@ -7,27 +7,35 @@
   },
   "type": "module",
   "dependencies": {
+    "@astrojs/node": "~9.4.3",
     "@hono/arktype-validator": "~2.0.1",
     "@hono/node-server": "~1.16.0",
     "@libsql/client": "~0.15.10",
     "@sindresorhus/tsconfig": "~7.0.0",
     "@workos-inc/node": "~7.62.0",
     "arktype": "~2.1.20",
+    "astro": "~5.13.7",
     "drizzle-arktype": "~0.1.3",
     "drizzle-kit": "~0.31.4",
     "drizzle-orm": "~0.44.3",
-    "hono": "~4.8.5"
+    "hono": "~4.8.5",
+    "serve-static": "~2.2.0"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "~0.7.10",
     "@types/node": "~24.0.14",
     "execa": "~9.6.0",
+    "nodemon": "~3.1.10",
     "typescript": "~5.8.3",
     "vitest": "~3.2.4"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "node src/app.ts",
+    "build": "pnpm run --parallel /^build:.*/",
+    "build:astro": "astro build",
+    "build:server": "tsc",
+    "dev": "pnpm run --parallel /^dev:.*/",
+    "dev:hono": "node --watch src/app.ts",
+    "dev:astro": "astro dev",
     "migrate": "drizzle-kit push",
     "test": "vitest run",
     "start": "node src/app.ts",
