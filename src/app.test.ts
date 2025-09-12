@@ -8,7 +8,7 @@ import app from "./app.ts";
 
 describe("Plants API", () => {
   let server: ServerType;
-  const { api: client } = hc<typeof app>(`http://localhost:3000`);
+  const client = hc<typeof app>(`http://localhost:3000`);
 
   beforeAll(async () => {
     await execa`rm -rf $TURSO_DATABASE_URL`;

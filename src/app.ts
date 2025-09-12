@@ -1,6 +1,5 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
-import { serveStatic } from "@hono/node-server/serve-static";
 
 import auth from "./auth.ts";
 
@@ -8,11 +7,9 @@ import plants from "./plants.ts";
 import waterings from "./waterings.ts";
 
 const app = new Hono()
-  .route("/api", auth.routes)
-  .use("/api/*", auth.middleware)
-  .use("/*", serveStatic({ root: "./dist" }))
-  .route("/api/plants", plants)
-  .route("/api/waterings", waterings);
+  .use("/*", auth.middleware)
+  .route("/plants", plants)
+  .route("/waterings", waterings);
 
 // Serve with Node.js when run directly
 if (import.meta.url === `file://${process.argv[1]}`) {

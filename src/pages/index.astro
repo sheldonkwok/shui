@@ -1,5 +1,23 @@
 ---
 // Single Page App
+
+import { hc } from "hono/client";
+
+import type app from "../app.ts";
+
+const cookie = Astro.cookies.get("session")?.value!;
+
+const client = hc<typeof app>(`http://localhost:4321`, {
+  init: {
+    credentials: "include",
+    headers: {
+      Cookie: `session=${cookie}`,
+    },
+  },
+});
+
+const req = await client.plants.$get();
+const plants = (await req.json()) || [];
 ---
 
 <html lang="en">
@@ -13,7 +31,7 @@
   <body>
     <div id="app">
       <h1>Welcome to Shui</h1>
-      <p>My plant watering app</p>
+      <p>My plant watering app: {plants.length}</p>
     </div>
   </body>
 </html>
