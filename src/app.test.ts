@@ -24,9 +24,12 @@ describe("Plants API", () => {
   const testPlantName = "Test Plant " + Date.now();
 
   it("should create a plant and then list it", async () => {
-    // Create a plant using hono/client
-    const createRes = await client.plants.$post({
-      json: { name: testPlantName },
+    // Create a plant using form data
+    const formData = new FormData();
+    formData.append("name", testPlantName);
+
+    const createRes = await client.api.plants.$post({
+      form: formData,
     });
 
     expect(createRes.ok).toBe(true);
@@ -35,7 +38,7 @@ describe("Plants API", () => {
     expect(createdPlant).toHaveProperty("name", testPlantName);
 
     // List all plants using hono/client
-    const listRes = await client.plants.$get();
+    const listRes = await client.api.plants.$get();
     expect(listRes.ok).toBe(true);
     const allPlants = await listRes.json();
 
@@ -44,19 +47,22 @@ describe("Plants API", () => {
   });
 
   it("should add a watering to an existing plant", async () => {
-    const createRes = await client.plants.$post({
-      json: { name: testPlantName },
+    // Create a plant using form data
+    const formData = new FormData();
+    formData.append("name", testPlantName + "_watering");
+
+    const createRes = await client.api.plants.$post({
+      form: formData,
     });
 
     const createdPlant = await createRes.json();
     expect(createdPlant).toHaveProperty("id");
 
-    const wateringRes = await client.waterings.$post({
-      json: { plantId: createdPlant.id },
+    const wateringRes = await client.api.plants[":id"].water.$post({
+      param: { id: createdPlant.id.toString() },
     });
 
-    const watering = await wateringRes.json();
-    expect(watering).toHaveProperty("plantId", createdPlant.id);
-    expect(watering).toHaveProperty("wateringTime");
+    expect(wateringRes.status).toBe(302); // Redirect response
+    expect(wateringRes.headers.get("location")).toBe("/");
   });
 });

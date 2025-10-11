@@ -24,8 +24,19 @@ const plants = (await req.json()) || [];
       <ul>
         {plants.map((plant) => (
           <li>
-            <span class="plant-name">{plant.name}</span>
-            <span class="plant-id">#{plant.id}</span>
+            <div class="plant-info">
+              <span class="plant-name">{plant.name}</span>
+              <span class="plant-id">#{plant.id}</span>
+            </div>
+            <form
+              method="post"
+              action={`/api/plants/${plant.id}/water`}
+              class="water-form"
+            >
+              <button type="submit" class="water-button">
+                💧 Water
+              </button>
+            </form>
           </li>
         ))}
       </ul>
@@ -57,6 +68,12 @@ const plants = (await req.json()) || [];
     border-radius: 6px;
   }
 
+  .plant-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
   .plant-name {
     font-weight: 500;
     color: #2d5f3f;
@@ -65,6 +82,32 @@ const plants = (await req.json()) || [];
   .plant-id {
     color: #6c757d;
     font-size: 0.9em;
+  }
+
+  .water-form {
+    margin: 0;
+  }
+
+  .water-button {
+    background-color: #4a90e2;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 0.9em;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .water-button:hover {
+    background-color: #357abd;
+  }
+
+  .water-button:active {
+    transform: translateY(1px);
   }
 
   .no-plants {

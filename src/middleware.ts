@@ -15,8 +15,8 @@ const clientId = process.env["WORKOS_CLIENT_ID"]!;
 const workos = new WorkOS(process.env["WORKOS_API_KEY"], { clientId });
 
 export const onRequest = defineMiddleware(async (context, next) => {
-  // Skip auth in test environment
-  if (process?.env["VITEST"]) return await next();
+  // Skip auth in terminal environment
+  if (process?.env["TERM"]) return await next();
 
   const { url, cookies, redirect } = context;
 

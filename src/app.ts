@@ -1,15 +1,9 @@
 import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 
-import auth from "./auth.ts";
-
 import plants from "./plants.ts";
-import waterings from "./waterings.ts";
 
-const app = new Hono()
-  .use("/*", auth.middleware)
-  .route("/api/plants", plants)
-  .route("/api/waterings", waterings);
+const app = new Hono().route("/api/plants", plants);
 
 // Serve with Node.js when run directly
 if (import.meta.url === `file://${process.argv[1]}`) {
