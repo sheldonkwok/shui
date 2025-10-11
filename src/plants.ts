@@ -1,22 +1,27 @@
 import { Hono } from "hono";
+import { ArkErrors } from "arktype";
 
 import db from "./db.ts";
 import { plants, plantInsertSchema } from "./schema.ts";
-import { arktypeValidator } from "@hono/arktype-validator";
 
 const app = new Hono()
   .get("/", async (c) => {
     const allPlants = await db.select().from(plants);
     return c.json(allPlants);
   })
-  .post("/", arktypeValidator("json", plantInsertSchema), async (c) => {
-    const body = c.req.valid("json");
-    const result = await db
-      .insert(plants)
-      .values({ name: body.name })
-      .returning();
+  .post("/", async (c) => {
+    // Handle form data
+    const formData = await c.req.formData();
+    const formName = formData.get("name") as string;
 
-    return c.json(result[0]!);
+    const validated = plantInsertSchema({ name: formName });
+    if (validated instanceof ArkErrors) throw validated;
+
+    const name = validated.name;
+
+    await db.insert(plants).values({ name }).returning();
+
+    return c.redirect("/");
   });
 
 export default app;
