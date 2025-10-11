@@ -8,8 +8,8 @@ import waterings from "./waterings.ts";
 
 const app = new Hono()
   .use("/*", auth.middleware)
-  .route("/plants", plants)
-  .route("/waterings", waterings);
+  .route("/api/plants", plants)
+  .route("/api/waterings", waterings);
 
 // Serve with Node.js when run directly
 if (import.meta.url === `file://${process.argv[1]}`) {

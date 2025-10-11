@@ -1,23 +1,7 @@
 ---
 // Single Page App
 
-import { hc } from "hono/client";
-
-import type app from "../app.ts";
-
-const cookie = Astro.cookies.get("session")?.value!;
-
-const client = hc<typeof app>(`http://localhost:4321`, {
-  init: {
-    credentials: "include",
-    headers: {
-      Cookie: `session=${cookie}`,
-    },
-  },
-});
-
-const req = await client.plants.$get();
-const plants = (await req.json()) || [];
+import PlantList from "../components/PlantList.astro";
 ---
 
 <html lang="en">
@@ -31,33 +15,20 @@ const plants = (await req.json()) || [];
   <body>
     <div id="app">
       <h1>My Plants</h1>
-      
+
       <!-- Plant List -->
-      <div class="plant-list">
-        {plants.length > 0 ? (
-          <ul>
-            {plants.map((plant) => (
-              <li key={plant.id}>
-                <span class="plant-name">{plant.name}</span>
-                <span class="plant-id">#{plant.id}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p class="no-plants">No plants yet. Add your first plant below!</p>
-        )}
-      </div>
+      <PlantList />
 
       <!-- Add Plant Form -->
       <form class="add-plant-form" method="post" action="/plants">
         <h2>Add New Plant</h2>
         <div class="form-group">
           <label for="plant-name">Plant Name:</label>
-          <input 
-            type="text" 
-            id="plant-name" 
-            name="name" 
-            required 
+          <input
+            type="text"
+            id="plant-name"
+            name="name"
+            required
             placeholder="Enter plant name"
           />
         </div>
@@ -67,7 +38,8 @@ const plants = (await req.json()) || [];
 
     <style>
       body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
         margin: 0;
         padding: 20px;
         background-color: #f5f5f5;
@@ -79,7 +51,7 @@ const plants = (await req.json()) || [];
         background: white;
         padding: 30px;
         border-radius: 8px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
       }
 
       h1 {
@@ -88,43 +60,6 @@ const plants = (await req.json()) || [];
         text-align: center;
       }
 
-      .plant-list {
-        margin-bottom: 40px;
-      }
-
-      .plant-list ul {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .plant-list li {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px;
-        margin-bottom: 10px;
-        background-color: #f8f9fa;
-        border: 1px solid #e9ecef;
-        border-radius: 6px;
-      }
-
-      .plant-name {
-        font-weight: 500;
-        color: #2d5f3f;
-      }
-
-      .plant-id {
-        color: #6c757d;
-        font-size: 0.9em;
-      }
-
-      .no-plants {
-        text-align: center;
-        color: #6c757d;
-        font-style: italic;
-        padding: 20px;
-      }
 
       .add-plant-form {
         border-top: 2px solid #e9ecef;

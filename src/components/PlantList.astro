@@ -1,0 +1,76 @@
+---
+import { hc } from "hono/client";
+import type app from "../app.ts";
+
+const cookie = Astro.cookies.get("session")?.value!;
+const url = new URL("/", Astro.request.url).toString();
+
+const client = hc<typeof app>(url, {
+  init: {
+    credentials: "include",
+    headers: {
+      Cookie: `session=${cookie}`,
+    },
+  },
+});
+
+const req = await client.api.plants.$get();
+const plants = (await req.json()) || [];
+---
+
+<div class="plant-list">
+  {
+    plants.length > 0 ? (
+      <ul>
+        {plants.map((plant) => (
+          <li>
+            <span class="plant-name">{plant.name}</span>
+            <span class="plant-id">#{plant.id}</span>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <p class="no-plants">No plants yet. Add your first plant below!</p>
+    )
+  }
+</div>
+
+<style>
+  .plant-list {
+    margin-bottom: 40px;
+  }
+
+  .plant-list ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .plant-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    margin-bottom: 10px;
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 6px;
+  }
+
+  .plant-name {
+    font-weight: 500;
+    color: #2d5f3f;
+  }
+
+  .plant-id {
+    color: #6c757d;
+    font-size: 0.9em;
+  }
+
+  .no-plants {
+    text-align: center;
+    color: #6c757d;
+    font-style: italic;
+    padding: 20px;
+  }
+</style>
