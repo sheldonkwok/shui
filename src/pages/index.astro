@@ -20,7 +20,7 @@ import PlantList from "../components/PlantList.astro";
       <PlantList />
 
       <!-- Add Plant Form -->
-      <form class="add-plant-form" method="post" action="/plants">
+      <form class="add-plant-form" method="post" action="/api/plants">
         <h2>Add New Plant</h2>
         <div class="form-group">
           <label for="plant-name">Plant Name:</label>
@@ -59,7 +59,6 @@ import PlantList from "../components/PlantList.astro";
         margin-bottom: 30px;
         text-align: center;
       }
-
 
       .add-plant-form {
         border-top: 2px solid #e9ecef;

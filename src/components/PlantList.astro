@@ -1,5 +1,6 @@
 ---
 import { hc } from "hono/client";
+import Plant from "./Plant.astro";
 import type app from "../app.ts";
 
 const cookie = Astro.cookies.get("session")?.value!;
@@ -15,7 +16,11 @@ const client = hc<typeof app>(url, {
 });
 
 const req = await client.api.plants.$get();
-const plants = (await req.json()) || [];
+const data = (await req.json()) || [];
+const plants = data.map((d) => ({
+  ...d,
+  lastWatered: d.lastWatered ? new Date(d.lastWatered) : null,
+}));
 ---
 
 <div class="plant-list">
@@ -23,21 +28,7 @@ const plants = (await req.json()) || [];
     plants.length > 0 ? (
       <ul>
         {plants.map((plant) => (
-          <li>
-            <div class="plant-info">
-              <span class="plant-name">{plant.name}</span>
-              <span class="plant-id">#{plant.id}</span>
-            </div>
-            <form
-              method="post"
-              action={`/api/plants/${plant.id}/water`}
-              class="water-form"
-            >
-              <button type="submit" class="water-button">
-                💧 Water
-              </button>
-            </form>
-          </li>
+          <Plant plant={plant} />
         ))}
       </ul>
     ) : (
@@ -55,59 +46,6 @@ const plants = (await req.json()) || [];
     list-style: none;
     padding: 0;
     margin: 0;
-  }
-
-  .plant-list li {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    margin-bottom: 10px;
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
-    border-radius: 6px;
-  }
-
-  .plant-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-
-  .plant-name {
-    font-weight: 500;
-    color: #2d5f3f;
-  }
-
-  .plant-id {
-    color: #6c757d;
-    font-size: 0.9em;
-  }
-
-  .water-form {
-    margin: 0;
-  }
-
-  .water-button {
-    background-color: #4a90e2;
-    color: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
-    font-size: 0.9em;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    display: flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  .water-button:hover {
-    background-color: #357abd;
-  }
-
-  .water-button:active {
-    transform: translateY(1px);
   }
 
   .no-plants {

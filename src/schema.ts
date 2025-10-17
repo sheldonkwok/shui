@@ -15,7 +15,7 @@ export const waterings = sqliteTable("waterings", {
     .notNull()
     .references(() => plants.id),
   wateringTime: integer("watering_time", { mode: "timestamp" })
-    .default(sql`CURRENT_TIMESTAMP`)
+    .default(sql`(unixepoch())`)
     .notNull(),
 });
 
