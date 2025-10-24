@@ -3,11 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "engines": {
-    "node": "23.x"
+    "node": ">=22.0.0 <24.0.0"
   },
   "type": "module",
   "dependencies": {
     "@astrojs/node": "~9.4.3",
+    "@astrojs/vercel": "~9.0.0",
     "@hono/arktype-validator": "~2.0.1",
     "@hono/node-server": "~1.16.0",
     "@libsql/client": "~0.15.10",
@@ -21,7 +22,6 @@
     "hono": "~4.8.5"
   },
   "devDependencies": {
-    "@flydotio/dockerfile": "~0.7.10",
     "@types/node": "~24.0.14",
     "execa": "~9.6.0",
     "nodemon": "~3.1.10",
@@ -29,14 +29,11 @@
     "vitest": "~3.2.4"
   },
   "scripts": {
-    "build": "pnpm run --parallel /^build:.*/",
-    "build:astro": "astro build",
-    "build:server": "tsc",
+    "build": "astro build",
     "dev": "astro dev",
     "migrate": "drizzle-kit push",
     "test": "vitest run",
-    "start": "node src/app.ts",
-    "deploy": "fly deploy"
+    "start": "node src/app.ts"
   },
   "keywords": [],
   "author": "",
