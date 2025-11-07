@@ -1,5 +1,3 @@
-/// <reference path="../.astro/types.d.ts" />
-
 interface SessionUser {
   firstName: string | null;
   lastName: string | null;

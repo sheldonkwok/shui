@@ -1,10 +1,16 @@
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
-import { dbCredentials } from "./utils.ts";
+const DB_URL = process.env["TURSO_DATABASE_URL"] ?? "file:sqlite.db";
 
-const client = createClient(dbCredentials);
+export const dbCredentials = {
+  url: DB_URL,
+  authToken: process.env["TURSO_AUTH_TOKEN"]!,
+};
 
-const db = drizzle(client, { logger: true });
+export function getDB() {
+  const client = createClient(dbCredentials);
 
-export default db;
+  const db = drizzle(client, { logger: true });
+  return db;
+}

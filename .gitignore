@@ -3,5 +3,7 @@ node_modules
 .dev.vars
 .vercel
 *.db
-.astro
 dist
+
+# Local Netlify folder
+.netlify
