@@ -1,5 +1,5 @@
 import { defineConfig } from "drizzle-kit";
-import { dbCredentials } from './src/utils.ts';
+import { dbCredentials } from "./src/db.ts";
 
 export default defineConfig({
   out: "./drizzle",
