@@ -1,5 +1,5 @@
 "use server";
-import { eq, count, max } from "drizzle-orm";
+import { eq, count, max, asc } from "drizzle-orm";
 
 import { getDB } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
@@ -14,7 +14,8 @@ export async function getPlants() {
     })
     .from(plants)
     .leftJoin(waterings, eq(plants.id, waterings.plantId))
-    .groupBy(plants.id);
+    .groupBy(plants.id)
+    .orderBy(asc(max(waterings.wateringTime)));
 
   // Convert timestamps to Date objects
   return data.map((plant) => ({
