@@ -1,14 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import type { Context } from "hono";
 
-// IP allowlist - Add your allowed IPs here
-const ALLOWED_IPS = new Set([
-  "127.0.0.1",
-  "::1",
-  "::ffff:127.0.0.1",
-  "24.5.56.45", // Your current public IP
-  // Add more IPs as needed
-]);
+const ALLOWED_IPS = new Set(["24.5.56.45"]);
 
 // IP ranges for private networks
 const PRIVATE_IP_RANGES = [
@@ -24,7 +17,6 @@ function isPrivateIP(ip: string): boolean {
 }
 
 function getClientIP(c: Context): string | null {
-  console.log(c.req.header());
   // Check common headers used by proxies and load balancers
   const forwarded = c.req.header("x-forwarded-for");
   if (forwarded) {
@@ -43,8 +35,6 @@ function getClientIP(c: Context): string | null {
     if (firstIP) return firstIP;
   }
 
-  // Fallback for local dev - Hono doesn't expose socket directly
-  // In development, localhost requests will be allowed by private IP ranges
   return null;
 }
 
@@ -70,7 +60,5 @@ export const ipRestrictionMiddleware = createMiddleware(async (c, next) => {
     return await next();
   }
 
-  // Block all other IPs
-  console.log(`Blocked access from IP: ${clientIP}`);
   return c.text("Access denied", 403);
 });

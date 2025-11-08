@@ -5,8 +5,6 @@ interface LayoutProps {
 }
 
 export default async function Layout({ children }: LayoutProps) {
-  // Handle authentication at layout level
-
   return (
     <html lang="en">
       <head>

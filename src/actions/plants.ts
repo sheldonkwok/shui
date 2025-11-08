@@ -1,4 +1,5 @@
 "use server";
+
 import { eq, count, max, asc } from "drizzle-orm";
 
 import { getDB } from "../db.ts";
@@ -27,7 +28,6 @@ export async function getPlants() {
 }
 
 export async function addPlant(name: string) {
-  // Insert plant into database
   await getDB().insert(plants).values({ name });
 }
 
