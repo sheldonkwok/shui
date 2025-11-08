@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useRouter } from 'waku';
-import type { PlantWithStats } from '../types.ts';
-import { waterPlant } from '../actions/plants.ts';
+import { useRouter } from "waku";
+import type { PlantWithStats } from "../types.ts";
+import { waterPlant } from "../actions/plants.ts";
 
 interface PlantProps {
   plant: PlantWithStats;
@@ -14,20 +14,20 @@ const formatLastWatered = (date: Date | null) => {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const twoWeeks = 14;
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
-  if (diffDays < 7) return `${diffDays} days ago`;
-  if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-  return `${Math.floor(diffDays / 30)} months ago`;
+  if (diffDays < twoWeeks) return `${diffDays} days ago`;
+  return `${Math.floor(diffDays / twoWeeks)} weeks ago`;
 };
 
 export function Plant({ plant }: PlantProps) {
   const router = useRouter();
 
   const handleWater = async () => {
-    await waterPlant(plant.id)
-    router.reload()
+    await waterPlant(plant.id);
+    router.reload();
   };
 
   return (
@@ -36,14 +36,12 @@ export function Plant({ plant }: PlantProps) {
         <span className="plant-name">{plant.name}</span>
         <div className="watering-stats">
           <span className="watering-count">💧 {plant.wateringCount} times</span>
-          <span className="last-watered">{formatLastWatered(plant.lastWatered)}</span>
+          <span className="last-watered">
+            {formatLastWatered(plant.lastWatered)}
+          </span>
         </div>
       </div>
-      <button
-        type="button"
-        className="water-button"
-        onClick={handleWater}
-      >
+      <button type="button" className="water-button" onClick={handleWater}>
         💧 Water
       </button>
     </li>
