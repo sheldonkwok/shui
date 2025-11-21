@@ -14,12 +14,12 @@ const formatLastWatered = (date: Date | null) => {
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const twoWeeks = 14;
+  const threeWeeks = 21;
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
-  if (diffDays < twoWeeks) return `${diffDays} days ago`;
-  return `${Math.floor(diffDays / twoWeeks)} weeks ago`;
+  if (diffDays <= threeWeeks) return `${diffDays} days ago`;
+  return `${Math.floor(diffDays / threeWeeks)} weeks ago`;
 };
 
 export function Plant({ plant }: PlantProps) {
