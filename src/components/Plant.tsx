@@ -34,12 +34,7 @@ export function Plant({ plant }: PlantProps) {
     <li className="plant-item">
       <div className="plant-info">
         <span className="plant-name">{plant.name}</span>
-        <div className="watering-stats">
-          <span className="watering-count">💧 {plant.wateringCount} times</span>
-          <span className="last-watered">
-            {formatLastWatered(plant.lastWatered)}
-          </span>
-        </div>
+        <span className="last-watered">{formatLastWatered(plant.lastWatered)}</span>
       </div>
       <button type="button" className="water-button" onClick={handleWater}>
         💧 Water
