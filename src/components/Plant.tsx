@@ -8,18 +8,19 @@ interface PlantProps {
   plant: PlantWithStats;
 }
 
+const WEEK = 7;
+
 const formatLastWatered = (date: Date | null) => {
   if (!date) return "Never watered";
 
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-  const threeWeeks = 21;
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
-  if (diffDays <= threeWeeks) return `${diffDays} days ago`;
-  return `${Math.floor(diffDays / threeWeeks)} weeks ago`;
+  if (diffDays <= WEEK * 3) return `${diffDays} days ago`;
+  return `${Math.floor(diffDays / WEEK)} weeks ago`;
 };
 
 export function Plant({ plant }: PlantProps) {
@@ -34,7 +35,9 @@ export function Plant({ plant }: PlantProps) {
     <li className="plant-item">
       <div className="plant-info">
         <span className="plant-name">{plant.name}</span>
-        <span className="last-watered">{formatLastWatered(plant.lastWatered)}</span>
+        <span className="last-watered">
+          {formatLastWatered(plant.lastWatered)}
+        </span>
       </div>
       <button type="button" className="water-button" onClick={handleWater}>
         💧 Water
