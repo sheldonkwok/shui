@@ -1,7 +1,7 @@
 import { createMiddleware } from "hono/factory";
 import type { Context } from "hono";
 
-const ALLOWED_IPS = new Set(["24.5.56.45"]);
+const ALLOWED_IPS = new Set(["24.23.250.55"]);
 
 // IP ranges for private networks
 const PRIVATE_IP_RANGES = [
