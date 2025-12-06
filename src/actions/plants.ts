@@ -5,11 +5,16 @@ import { eq, count, max, asc, desc } from "drizzle-orm";
 import { getDB } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
 
-function calculateIntervals(
-  wateringRecords: Array<{ plantId: number; wateringTime: Date }>
-): Record<number, number | null> {
+export interface WaterRecord {
+  plantId: number;
+  wateringTime: Date;
+}
+
+export async function calculateIntervals(
+  wateringRecords: Array<WaterRecord>
+): Promise<Record<number, number | null>> {
   // Group waterings by plantId
-  const byPlant: Record<number, Array<{ plantId: number; wateringTime: Date }>> = {};
+  const byPlant: Record<number, Array<WaterRecord>> = {};
 
   for (const record of wateringRecords) {
     if (!byPlant[record.plantId]) {
@@ -37,7 +42,9 @@ function calculateIntervals(
     // Calculate intervals between consecutive waterings
     const diffs: number[] = [];
     for (let i = 0; i < recent5.length - 1; i++) {
-      const diffMs = recent5[i]!.wateringTime.getTime() - recent5[i + 1]!.wateringTime.getTime();
+      const diffMs =
+        recent5[i]!.wateringTime.getTime() -
+        recent5[i + 1]!.wateringTime.getTime();
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
       diffs.push(diffDays);
     }
@@ -73,7 +80,7 @@ export async function getPlants() {
     .orderBy(desc(waterings.wateringTime));
 
   // Calculate average intervals
-  const wateringIntervals = calculateIntervals(recentWaterings);
+  const wateringIntervals = await calculateIntervals(recentWaterings);
 
   // Convert timestamps to Date objects and add interval data
   return data.map((plant) => ({

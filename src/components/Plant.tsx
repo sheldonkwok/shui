@@ -20,6 +20,7 @@ const formatLastWatered = (date: Date | null) => {
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
   if (diffDays <= WEEK * 3) return `${diffDays} days ago`;
+
   return `${Math.floor(diffDays / WEEK)} weeks ago`;
 };
 
