@@ -23,6 +23,13 @@ const formatLastWatered = (date: Date | null) => {
   return `${Math.floor(diffDays / WEEK)} weeks ago`;
 };
 
+const formatAvgInterval = (days: number | null) => {
+  if (days === null) return "—";
+  if (days < 1) return "< 1 day";
+  if (days === 1) return "1 day avg";
+  return `${days} days avg`;
+};
+
 export function Plant({ plant }: PlantProps) {
   const router = useRouter();
 
@@ -37,6 +44,9 @@ export function Plant({ plant }: PlantProps) {
         <span className="plant-name">{plant.name}</span>
         <span className="last-watered">
           {formatLastWatered(plant.lastWatered)}
+        </span>
+        <span className="avg-interval">
+          {formatAvgInterval(plant.avgWateringIntervalDays)}
         </span>
       </div>
       <button type="button" className="water-button" onClick={handleWater}>

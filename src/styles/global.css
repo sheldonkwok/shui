@@ -120,6 +120,13 @@ button:active {
   white-space: nowrap;
 }
 
+.avg-interval {
+  color: #999;
+  font-size: 0.8em;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
 .water-form {
   margin: 0;
 }
