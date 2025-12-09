@@ -21,7 +21,6 @@ h1 {
 }
 
 .add-plant-form {
-  border-top: 2px solid #e9ecef;
   padding-top: 30px;
 }
 
@@ -80,11 +79,9 @@ button:active {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 3.75px 15px;
+  padding: 3.75px 0;
   margin-bottom: 0.625em;
-  background-color: #f8f9fa;
-  border: 1px solid #e9ecef;
-  border-radius: 6px;
+  border-bottom: 1px solid #e9ecef;
 }
 
 .plant-info {
