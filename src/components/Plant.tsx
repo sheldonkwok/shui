@@ -24,11 +24,19 @@ const formatLastWatered = (date: Date | null) => {
   return `${Math.floor(diffDays / WEEK)} weeks ago`;
 };
 
-const formatAvgInterval = (days: number | null) => {
+const formatDaysUntilNext = (days: number | null) => {
   if (days === null) return "—";
-  if (days < 1) return "< 1 day";
-  if (days === 1) return "1 day avg";
-  return `${days} days avg`;
+
+  if (days < 0) {
+    return `${Math.abs(days)} days overdue`;
+  } else if (days === 0) {
+    return "Due today";
+  } else if (days < 1) {
+    return "< 1 day";
+  } else if (days === 1) {
+    return "1 day";
+  }
+  return `${days} days`;
 };
 
 export function Plant({ plant }: PlantProps) {
@@ -47,7 +55,7 @@ export function Plant({ plant }: PlantProps) {
           {formatLastWatered(plant.lastWatered)}
         </span>
         <span className="avg-interval">
-          {formatAvgInterval(plant.avgWateringIntervalDays)}
+          {formatDaysUntilNext(plant.daysUntilNextWatering)}
         </span>
       </div>
       <button type="button" className="water-button" onClick={handleWater}>

@@ -31,14 +31,26 @@ export async function getPlants() {
   // Calculate average intervals
   const wateringIntervals = calculateIntervals(recentWaterings);
 
-  // Convert timestamps to Date objects and add interval data
-  return data.map((plant) => ({
-    id: plant.id,
-    name: plant.name,
-    wateringCount: plant.wateringCount,
-    lastWatered: plant.lastWatered ? new Date(plant.lastWatered) : null,
-    avgWateringIntervalDays: wateringIntervals[plant.id] ?? null,
-  }));
+  // Convert timestamps to Date objects and calculate days until next watering
+  const now = new Date();
+  return data.map((plant) => {
+    const lastWatered = plant.lastWatered ? new Date(plant.lastWatered) : null;
+    const avgInterval = wateringIntervals[plant.id] ?? null;
+
+    let daysUntilNextWatering: number | null = null;
+    if (lastWatered && avgInterval !== null) {
+      const daysSinceWatered = (now.getTime() - lastWatered.getTime()) / (1000 * 60 * 60 * 24);
+      daysUntilNextWatering = Math.round((avgInterval - daysSinceWatered) * 10) / 10;
+    }
+
+    return {
+      id: plant.id,
+      name: plant.name,
+      wateringCount: plant.wateringCount,
+      lastWatered,
+      daysUntilNextWatering,
+    };
+  });
 }
 
 export async function addPlant(name: string) {

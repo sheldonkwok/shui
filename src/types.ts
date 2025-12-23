@@ -3,5 +3,5 @@ export interface PlantWithStats {
   name: string;
   wateringCount: number;
   lastWatered: Date | null;
-  avgWateringIntervalDays: number | null;
+  daysUntilNextWatering: number | null;
 }
