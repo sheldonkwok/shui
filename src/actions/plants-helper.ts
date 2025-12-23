@@ -1,6 +1,6 @@
 import { getDB } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
-import { eq, count, max, asc, desc } from "drizzle-orm";
+import { eq, count, max, asc, sql } from "drizzle-orm";
 
 export async function listPlants() {
   const data = await getDB()
@@ -19,15 +19,28 @@ export async function listPlants() {
 }
 
 export async function listRecentWaterings() {
-  const data = await getDB()
-    .select({
-      plantId: waterings.plantId,
-      wateringTime: waterings.wateringTime,
-    })
-    .from(waterings)
-    .orderBy(desc(waterings.wateringTime));
+  const data = await getDB().all<{
+    plantId: number;
+    wateringTime: number;
+  }>(sql`
+    WITH ranked_waterings AS (
+      SELECT
+        plant_id,
+        watering_time,
+        ROW_NUMBER() OVER (PARTITION BY plant_id ORDER BY watering_time DESC) as row_num
+      FROM waterings
+    )
+    SELECT plant_id as plantId, watering_time as wateringTime
+    FROM ranked_waterings
+    WHERE row_num <= 5
+    ORDER BY watering_time DESC
+  `);
 
-  return data;
+  // Convert timestamps to Date objects to match the expected return type
+  return data.map((record) => ({
+    plantId: record.plantId,
+    wateringTime: new Date(record.wateringTime * 1000),
+  }));
 }
 
 export interface WaterRecord {
@@ -53,23 +66,18 @@ export function calculateIntervals(
   for (const [plantIdStr, records] of Object.entries(byPlant)) {
     const plantId = Number(plantIdStr);
 
-    // Sort by time descending (most recent first) and take top 5
-    const recent5 = records
-      .sort((a, b) => b.wateringTime.getTime() - a.wateringTime.getTime())
-      .slice(0, 5);
-
     // Need at least 2 waterings to calculate an interval
-    if (recent5.length < 2) {
+    if (records.length < 2) {
       intervals[plantId] = null;
       continue;
     }
 
     // Calculate intervals between consecutive waterings
     const diffs: number[] = [];
-    for (let i = 0; i < recent5.length - 1; i++) {
+    for (let i = 0; i < records.length - 1; i++) {
       const diffMs =
-        recent5[i]!.wateringTime.getTime() -
-        recent5[i + 1]!.wateringTime.getTime();
+        records[i]!.wateringTime.getTime() -
+        records[i + 1]!.wateringTime.getTime();
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
       diffs.push(diffDays);
     }

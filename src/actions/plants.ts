@@ -36,6 +36,7 @@ export async function getPlants() {
       name: plant.name,
       wateringCount: plant.wateringCount,
       lastWatered,
+      avgWateringIntervalDays: avgInterval,
       daysUntilNextWatering,
     };
   });

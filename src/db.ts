@@ -11,6 +11,6 @@ export const dbCredentials = {
 export function getDB() {
   const client = createClient(dbCredentials);
 
-  const db = drizzle(client, { logger: true });
+  const db = drizzle(client, { logger: DB_URL.includes("file") });
   return db;
 }
