@@ -1,3 +1,35 @@
+import { getDB } from "../db.ts";
+import { plants, waterings } from "../schema.ts";
+import { eq, count, max, asc, desc } from "drizzle-orm";
+
+export async function listPlants() {
+  const data = await getDB()
+    .select({
+      id: plants.id,
+      name: plants.name,
+      wateringCount: count(waterings.id),
+      lastWatered: max(waterings.wateringTime),
+    })
+    .from(plants)
+    .leftJoin(waterings, eq(plants.id, waterings.plantId))
+    .groupBy(plants.id)
+    .orderBy(asc(max(waterings.wateringTime)));
+
+  return data;
+}
+
+export async function listRecentWaterings() {
+  const data = await getDB()
+    .select({
+      plantId: waterings.plantId,
+      wateringTime: waterings.wateringTime,
+    })
+    .from(waterings)
+    .orderBy(desc(waterings.wateringTime));
+
+  return data;
+}
+
 export interface WaterRecord {
   plantId: number;
   wateringTime: Date;
