@@ -29,7 +29,7 @@ const formatDaysUntilNext = (days: number | null) => {
   if (days === null) return "—";
 
   if (days < 0) {
-    return `${Math.abs(days)} days overdue`;
+    return `${Math.abs(days)} days`;
   } else if (days === 0) {
     return "Due today";
   } else if (days < 1) {
@@ -56,11 +56,11 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
     <li className={className}>
       <div className="plant-info">
         <span className="plant-name">{plant.name}</span>
+        <span className="next-water">
+          {formatDaysUntilNext(plant.daysUntilNextWatering)}
+        </span>
         <span className="last-watered">
           {formatLastWatered(plant.lastWatered)}
-        </span>
-        <span className="avg-interval">
-          {formatDaysUntilNext(plant.daysUntilNextWatering)}
         </span>
       </div>
       <button type="button" className="water-button" onClick={handleWater}>
