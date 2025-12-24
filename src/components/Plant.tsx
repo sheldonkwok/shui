@@ -6,6 +6,7 @@ import { waterPlant } from "../actions/plants.ts";
 
 interface PlantProps {
   plant: PlantWithStats;
+  isTransition?: boolean;
 }
 
 const WEEK = 7;
@@ -39,7 +40,7 @@ const formatDaysUntilNext = (days: number | null) => {
   return `${days} days`;
 };
 
-export function Plant({ plant }: PlantProps) {
+export function Plant({ plant, isTransition = false }: PlantProps) {
   const router = useRouter();
 
   const handleWater = async () => {
@@ -47,8 +48,12 @@ export function Plant({ plant }: PlantProps) {
     router.reload();
   };
 
+  const className = isTransition
+    ? "plant-item plant-item-transition"
+    : "plant-item";
+
   return (
-    <li className="plant-item">
+    <li className={className}>
       <div className="plant-info">
         <span className="plant-name">{plant.name}</span>
         <span className="last-watered">

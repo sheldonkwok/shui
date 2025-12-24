@@ -9,9 +9,24 @@ export async function PlantList() {
     <div className={styles["container"]}>
       {plants.length > 0 ? (
         <ul className={styles["list"]}>
-          {plants.map((plant) => (
-            <Plant key={plant.id} plant={plant} />
-          ))}
+          {plants.map((plant, index) => {
+            // Detect if this is the last overdue plant (transition point)
+            const nextPlant = plants[index + 1];
+            const isLastOverdue =
+              plant.daysUntilNextWatering !== null &&
+              plant.daysUntilNextWatering < 0 &&
+              nextPlant &&
+              nextPlant.daysUntilNextWatering !== null &&
+              nextPlant.daysUntilNextWatering >= 0;
+
+            return (
+              <Plant
+                key={plant.id}
+                plant={plant}
+                isTransition={isLastOverdue}
+              />
+            );
+          })}
         </ul>
       ) : (
         <p className={styles["noPlants"]}>

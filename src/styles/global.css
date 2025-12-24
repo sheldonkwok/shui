@@ -11,12 +11,6 @@ body {
   padding: 30px;
 }
 
-h1 {
-  color: #2d5f3f;
-  margin-bottom: 30px;
-  text-align: center;
-}
-
 .add-plant-form {
   padding-top: 30px;
 }
@@ -81,6 +75,10 @@ button:active {
   border-bottom: 1px solid #e9ecef;
 }
 
+.plant-item-transition {
+  border-bottom: 1px solid #6d94c5;
+}
+
 .plant-info {
   display: flex;
   align-items: center;
@@ -126,7 +124,7 @@ button:active {
 }
 
 .water-button {
-  background-color: #4a90e2;
+  background-color: #6d94c5;
   color: white;
   border: none;
   padding: 8px 12px;
