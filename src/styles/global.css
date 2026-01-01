@@ -67,8 +67,9 @@ button:active {
 }
 
 .plant-item {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr max-content;
+  gap: 12px;
   align-items: center;
   padding: 3.75px 0;
   margin-bottom: 0.625em;
@@ -79,24 +80,13 @@ button:active {
   border-bottom: 1px solid #6d94c5;
 }
 
-.plant-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-  flex: 1;
-}
-
 .plant-name {
   font-weight: 500;
   color: #2d5f3f;
   font-size: 1em;
-  min-width: 100px;
 }
 
 .watering-stats {
-  display: flex;
-  flex-direction: column;
   gap: 2px;
 }
 
@@ -110,14 +100,12 @@ button:active {
   color: #999;
   font-size: 0.8em;
   white-space: nowrap;
-  min-width: 100px;
 }
 
 .next-water {
   color: #999;
   font-size: 0.8em;
   white-space: nowrap;
-  min-width: 80px;
 }
 
 .water-form {
@@ -133,7 +121,6 @@ button:active {
   font-size: 0.9em;
   cursor: pointer;
   transition: background-color 0.2s;
-  display: flex;
   align-items: center;
   gap: 4px;
 }

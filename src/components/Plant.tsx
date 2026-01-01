@@ -54,15 +54,13 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
 
   return (
     <li className={className}>
-      <div className="plant-info">
-        <span className="plant-name">{plant.name}</span>
-        <span className="next-water">
-          {formatDaysUntilNext(plant.daysUntilNextWatering)}
-        </span>
-        <span className="last-watered">
-          {formatLastWatered(plant.lastWatered)}
-        </span>
-      </div>
+      <span className="plant-name">{plant.name}</span>
+      <span className="next-water">
+        {formatDaysUntilNext(plant.daysUntilNextWatering)}
+      </span>
+      <span className="last-watered">
+        {formatLastWatered(plant.lastWatered)}
+      </span>
       <button type="button" className="water-button" onClick={handleWater}>
         Water
       </button>
