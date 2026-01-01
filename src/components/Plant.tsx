@@ -64,7 +64,7 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
         </span>
       </div>
       <button type="button" className="water-button" onClick={handleWater}>
-        💧 Water
+        Water
       </button>
     </li>
   );
