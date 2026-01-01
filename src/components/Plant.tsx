@@ -15,9 +15,9 @@ const PlantItem = styled.li<{ isTransition: boolean }>`
   grid-template-columns: 1fr 1fr 1fr max-content;
   gap: 12px;
   align-items: center;
-  padding: 3.75px 0;
-  margin-bottom: 0.625em;
-  border-bottom: 1px solid ${(props) => (props.isTransition ? "#6d94c5" : "#e9ecef")};
+  padding: 0.45em 0;
+  border-bottom: 1px solid
+    ${(props) => (props.isTransition ? "#6d94c5" : "#e9ecef")};
 `;
 
 const PlantName = styled.span`
@@ -42,7 +42,7 @@ const WaterButton = styled.button`
   background-color: #6d94c5;
   color: white;
   border: none;
-  padding: 8px 12px;
+  padding: 6px 12px;
   border-radius: 4px;
   font-size: 0.9em;
   cursor: pointer;
