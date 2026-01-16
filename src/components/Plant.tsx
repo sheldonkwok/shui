@@ -1,6 +1,6 @@
 "use client";
 
-import styled from "@emotion/styled";
+import { css } from "../../styled-system/css";
 import { useRouter } from "waku";
 import type { PlantWithStats } from "../types.ts";
 import { waterPlant } from "../actions/plants.ts";
@@ -10,54 +10,60 @@ interface PlantProps {
   isTransition?: boolean;
 }
 
-const PlantItem = styled.li<{ isTransition: boolean }>`
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr max-content;
-  gap: 12px;
-  align-items: center;
-  padding: 0.45em 0;
-  border-bottom: 1px solid
-    ${(props) => (props.isTransition ? "#6d94c5" : "#e9ecef")};
-`;
+const plantItemStyles = css({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr max-content",
+  gap: "12px",
+  alignItems: "center",
+  padding: "2px 0",
+  borderBottom: "1px solid #e9ecef",
+});
 
-const PlantName = styled.span`
-  font-weight: 500;
-  color: #2d5f3f;
-  font-size: 1em;
-`;
+const plantItemTransitionStyles = css({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr max-content",
+  gap: "12px",
+  alignItems: "center",
+  padding: "2px 0",
+  borderBottom: "1px solid #6d94c5",
+});
 
-const NextWater = styled.span`
-  color: #999;
-  font-size: 0.8em;
-  white-space: nowrap;
-`;
+const plantNameStyles = css({
+  fontWeight: 500,
+  color: "#2d5f3f",
+  fontSize: "1em",
+});
 
-const LastWatered = styled.span`
-  color: #999;
-  font-size: 0.8em;
-  white-space: nowrap;
-`;
+const nextWaterStyles = css({
+  color: "#999",
+  fontSize: "0.8em",
+  whiteSpace: "nowrap",
+});
 
-const WaterButton = styled.button`
-  background-color: #6d94c5;
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 0.9em;
-  cursor: pointer;
-  transition: background-color 0.2s;
-  align-items: center;
-  gap: 4px;
+const lastWateredStyles = css({
+  color: "#999",
+  fontSize: "0.8em",
+  whiteSpace: "nowrap",
+});
 
-  &:hover {
-    background-color: #357abd;
-  }
-
-  &:active {
-    transform: translateY(1px);
-  }
-`;
+const waterButtonStyles = css({
+  backgroundColor: "#6d94c5",
+  color: "white",
+  border: "none",
+  padding: "4px 8px",
+  borderRadius: "4px",
+  fontSize: "0.85em",
+  cursor: "pointer",
+  transition: "background-color 0.2s",
+  alignItems: "center",
+  gap: "4px",
+  _hover: {
+    backgroundColor: "#357abd",
+  },
+  _active: {
+    transform: "translateY(1px)",
+  },
+});
 
 const WEEK = 7;
 
@@ -99,13 +105,25 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
   };
 
   return (
-    <PlantItem isTransition={isTransition}>
-      <PlantName>{plant.name}</PlantName>
-      <NextWater>{formatDaysUntilNext(plant.daysUntilNextWatering)}</NextWater>
-      <LastWatered>{formatLastWatered(plant.lastWatered)}</LastWatered>
-      <WaterButton type="button" onClick={handleWater}>
+    <li
+      className={
+        isTransition ? plantItemTransitionStyles : plantItemStyles
+      }
+    >
+      <span className={plantNameStyles}>{plant.name}</span>
+      <span className={nextWaterStyles}>
+        {formatDaysUntilNext(plant.daysUntilNextWatering)}
+      </span>
+      <span className={lastWateredStyles}>
+        {formatLastWatered(plant.lastWatered)}
+      </span>
+      <button
+        className={waterButtonStyles}
+        type="button"
+        onClick={handleWater}
+      >
         Water
-      </WaterButton>
-    </PlantItem>
+      </button>
+    </li>
   );
 }
