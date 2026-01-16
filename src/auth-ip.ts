@@ -42,6 +42,9 @@ export const ipRestrictionMiddleware = createMiddleware(async (c, next) => {
   // Skip in test environment
   if (process?.env["VITEST"]) return await next();
 
+  // Skip in Vercel preview deployments
+  if (process?.env["VERCEL_ENV"] === "preview") return await next();
+
   if (c.req.header("Host") === "localhost:3000") return await next();
 
   const clientIP = getClientIP(c);
