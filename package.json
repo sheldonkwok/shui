@@ -7,8 +7,6 @@
   },
   "type": "module",
   "dependencies": {
-    "@emotion/react": "^11.14.0",
-    "@emotion/styled": "^11.14.1",
     "@hono/arktype-validator": "~2.0.1",
     "@hono/node-server": "~1.16.0",
     "@libsql/client": "~0.15.10",
@@ -24,14 +22,17 @@
     "waku": "~0.26.1"
   },
   "devDependencies": {
+    "@pandacss/dev": "^1.8.1",
     "@types/node": "~24.0.14",
     "@types/react": "~19.2.2",
     "execa": "~9.6.0",
     "nodemon": "~3.1.10",
+    "postcss": "^8.5.6",
     "typescript": "~5.8.3",
     "vitest": "~3.2.4"
   },
   "scripts": {
+    "prepare": "panda codegen",
     "build": "waku build --with-vercel",
     "dev": "waku dev",
     "start": "waku start",

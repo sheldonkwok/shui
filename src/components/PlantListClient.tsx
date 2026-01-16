@@ -1,25 +1,25 @@
 "use client";
 
-import styled from "@emotion/styled";
+import { css } from "../../styled-system/css";
 import { Plant } from "./Plant.tsx";
 import type { PlantWithStats } from "../types.ts";
 
-const Container = styled.div`
-  margin-bottom: 40px;
-`;
+const containerStyles = css({
+  marginBottom: "40px",
+});
 
-const List = styled.ul`
-  list-style: none;
-  padding: 0;
-  margin: 0;
-`;
+const listStyles = css({
+  listStyle: "none",
+  padding: 0,
+  margin: 0,
+});
 
-const NoPlants = styled.p`
-  text-align: center;
-  color: #6c757d;
-  font-style: italic;
-  padding: 20px;
-`;
+const noPlantsStyles = css({
+  textAlign: "center",
+  color: "#6c757d",
+  fontStyle: "italic",
+  padding: "20px",
+});
 
 interface PlantListClientProps {
   plants: PlantWithStats[];
@@ -39,18 +39,20 @@ export function PlantListClient({ plants }: PlantListClientProps) {
   });
 
   return (
-    <Container>
+    <div className={containerStyles}>
       {plants.length > 0 ? (
-        <List>
+        <ul className={listStyles}>
           {parsedTransition.map(({ plant, isTransition }) => {
             return (
               <Plant key={plant.id} plant={plant} isTransition={isTransition} />
             );
           })}
-        </List>
+        </ul>
       ) : (
-        <NoPlants>No plants yet. Add your first plant below!</NoPlants>
+        <p className={noPlantsStyles}>
+          No plants yet. Add your first plant below!
+        </p>
       )}
-    </Container>
+    </div>
   );
 }
