@@ -5,6 +5,7 @@ import { useRouter } from "waku";
 import type { PlantWithStats } from "../types.ts";
 import { waterPlant } from "../actions/plants.ts";
 import { ChevronRight } from "lucide-react";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "./ui/Dialog.tsx";
 
 interface PlantProps {
   plant: PlantWithStats;
@@ -47,7 +48,7 @@ const lastWateredStyles = css({
   whiteSpace: "nowrap",
 });
 
-const waterButtonStyles = css({
+const triggerButtonStyles = css({
   backgroundColor: "#6d94c5",
   color: "white",
   border: "none",
@@ -63,6 +64,20 @@ const waterButtonStyles = css({
   },
   _active: {
     transform: "translateY(1px)",
+  },
+});
+
+const waterActionButtonStyles = css({
+  backgroundColor: "#4a7c59",
+  color: "white",
+  border: "none",
+  padding: "8px 16px",
+  borderRadius: "4px",
+  fontSize: "0.9em",
+  cursor: "pointer",
+  transition: "background-color 0.2s",
+  _hover: {
+    backgroundColor: "#3d6b4a",
   },
 });
 
@@ -118,13 +133,26 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
       <span className={lastWateredStyles}>
         {formatLastWatered(plant.lastWatered)}
       </span>
-      <button
-        className={waterButtonStyles}
-        type="button"
-        onClick={handleWater}
-      >
-        <ChevronRight size={16} />
-      </button>
+      <Dialog>
+        <DialogTrigger asChild>
+          <button className={triggerButtonStyles} type="button">
+            <ChevronRight size={16} />
+          </button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogTitle>Water {plant.name}</DialogTitle>
+          <DialogDescription>
+            Record a watering for this plant.
+          </DialogDescription>
+          <button
+            className={waterActionButtonStyles}
+            type="button"
+            onClick={handleWater}
+          >
+            Water
+          </button>
+        </DialogContent>
+      </Dialog>
     </li>
   );
 }
