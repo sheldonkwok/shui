@@ -13,21 +13,30 @@ interface PlantProps {
 }
 
 const plantItemStyles = css({
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr max-content",
-  gap: "12px",
-  alignItems: "center",
-  padding: "2px 0",
-  borderBottom: "1px solid #e9ecef",
+  display: "contents",
+  _after: {
+    content: '""',
+    gridColumn: "1 / -1",
+    borderBottom: "1px solid #e9ecef",
+  },
 });
 
 const plantItemTransitionStyles = css({
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr max-content",
-  gap: "12px",
+  display: "contents",
+  _after: {
+    content: '""',
+    gridColumn: "1 / -1",
+    borderBottom: "1px solid #6d94c5",
+  },
+});
+
+const cellStyles = css({
+  padding: "3px 0",
+});
+
+const buttonCellStyles = css({
+  display: "flex",
   alignItems: "center",
-  padding: "2px 0",
-  borderBottom: "1px solid #6d94c5",
 });
 
 const plantNameStyles = css({
@@ -126,33 +135,35 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
         isTransition ? plantItemTransitionStyles : plantItemStyles
       }
     >
-      <span className={plantNameStyles}>{plant.name}</span>
-      <span className={nextWaterStyles}>
+      <span className={`${plantNameStyles} ${cellStyles}`}>{plant.name}</span>
+      <span className={`${nextWaterStyles} ${cellStyles}`}>
         {formatDaysUntilNext(plant.daysUntilNextWatering)}
       </span>
-      <span className={lastWateredStyles}>
+      <span className={`${lastWateredStyles} ${cellStyles}`}>
         {formatLastWatered(plant.lastWatered)}
       </span>
-      <Dialog>
-        <DialogTrigger asChild>
-          <button className={triggerButtonStyles} type="button">
-            <ChevronRight size={16} />
-          </button>
-        </DialogTrigger>
-        <DialogContent>
-          <DialogTitle>Water {plant.name}</DialogTitle>
-          <DialogDescription>
-            Record a watering for this plant.
-          </DialogDescription>
-          <button
-            className={waterActionButtonStyles}
-            type="button"
-            onClick={handleWater}
-          >
-            Water
-          </button>
-        </DialogContent>
-      </Dialog>
+      <div className={buttonCellStyles}>
+        <Dialog>
+          <DialogTrigger asChild>
+            <button className={triggerButtonStyles} type="button">
+              <ChevronRight size={16} />
+            </button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogTitle>Water {plant.name}</DialogTitle>
+            <DialogDescription>
+              Record a watering for this plant.
+            </DialogDescription>
+            <button
+              className={waterActionButtonStyles}
+              type="button"
+              onClick={handleWater}
+            >
+              Water
+            </button>
+          </DialogContent>
+        </Dialog>
+      </div>
     </li>
   );
 }

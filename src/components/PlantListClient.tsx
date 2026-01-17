@@ -12,6 +12,10 @@ const listStyles = css({
   listStyle: "none",
   padding: 0,
   margin: 0,
+  display: "grid",
+  gridTemplateColumns: "auto auto auto max-content",
+  justifyContent: "space-between",
+  alignItems: "center",
 });
 
 const noPlantsStyles = css({
