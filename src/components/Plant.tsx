@@ -4,6 +4,7 @@ import { css } from "../../styled-system/css";
 import { useRouter } from "waku";
 import type { PlantWithStats } from "../types.ts";
 import { waterPlant } from "../actions/plants.ts";
+import { ChevronRight } from "lucide-react";
 
 interface PlantProps {
   plant: PlantWithStats;
@@ -122,7 +123,7 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
         type="button"
         onClick={handleWater}
       >
-        Water
+        <ChevronRight size={16} />
       </button>
     </li>
   );
