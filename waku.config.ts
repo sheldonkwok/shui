@@ -8,6 +8,9 @@ const libsqlClient = /sheldon/i.test(process.env["USER"] || "")
 export default defineConfig({
   unstable_honoEnhancer: "./src/hono-enhancer.ts",
   vite: {
+    server: {
+      host: true,
+    },
     resolve: {
       alias: {
         "@libsql/client": libsqlClient,
