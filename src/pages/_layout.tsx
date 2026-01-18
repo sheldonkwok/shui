@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import "../styles/global.css";
+import { Menubar } from "../components/Menubar";
 
 interface LayoutProps {
   children: ReactNode;
@@ -15,7 +16,10 @@ export default async function Layout({ children }: LayoutProps) {
         <title>Shui App</title>
       </head>
       <body>
-        <div id="app">{children}</div>
+        <div id="app">
+          <Menubar />
+          {children}
+        </div>
       </body>
     </html>
   );
