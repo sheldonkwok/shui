@@ -6,7 +6,6 @@ const libsqlClient = /sheldon/i.test(process.env["USER"] || "")
   : "@libsql/client/web";
 
 export default defineConfig({
-  unstable_honoEnhancer: "./src/hono-enhancer.ts",
   unstable_adapter: "waku/adapters/vercel",
   vite: {
     server: {
