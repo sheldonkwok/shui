@@ -25,9 +25,12 @@
   },
   "devDependencies": {
     "@pandacss/dev": "^1.8.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
     "@types/node": "~25.0.9",
     "@types/react": "~19.2.8",
     "execa": "~9.6.1",
+    "jsdom": "^27.4.0",
     "nodemon": "~3.1.11",
     "postcss": "^8.5.6",
     "typescript": "~5.9.3",

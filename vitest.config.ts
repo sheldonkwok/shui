@@ -7,5 +7,6 @@ export default defineConfig({
     env: {
       TURSO_DATABASE_URL: "file:sqlite.test.db",
     },
+    fileParallelism: false,
   },
 });
