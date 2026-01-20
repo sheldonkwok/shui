@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { css } from "../../styled-system/css";
 import { useRouter } from "waku";
 import type { PlantWithStats } from "../types.ts";
@@ -123,9 +124,11 @@ const formatDaysUntilNext = (days: number | null) => {
 
 export function Plant({ plant, isTransition = false }: PlantProps) {
   const router = useRouter();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleWater = async () => {
     await waterPlant(plant.id);
+    setIsDialogOpen(false);
     router.reload();
   };
 
@@ -143,7 +146,7 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
         {formatLastWatered(plant.lastWatered)}
       </span>
       <div className={buttonCellStyles}>
-        <Dialog>
+        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <button className={triggerButtonStyles} type="button">
               <ChevronRight size={16} />
