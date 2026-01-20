@@ -58,7 +58,7 @@ const lastWateredStyles = css({
 });
 
 const triggerButtonStyles = css({
-  backgroundColor: "#6d94c5",
+  backgroundColor: "#4a7c59",
   color: "white",
   border: "none",
   padding: "4px 8px",
@@ -69,7 +69,7 @@ const triggerButtonStyles = css({
   alignItems: "center",
   gap: "4px",
   _hover: {
-    backgroundColor: "#357abd",
+    backgroundColor: "#3d6b4a",
   },
   _active: {
     transform: "translateY(1px)",
@@ -77,7 +77,7 @@ const triggerButtonStyles = css({
 });
 
 const waterActionButtonStyles = css({
-  backgroundColor: "#4a7c59",
+  backgroundColor: "#6d94c5",
   color: "white",
   border: "none",
   padding: "8px 16px",
@@ -86,7 +86,7 @@ const waterActionButtonStyles = css({
   cursor: "pointer",
   transition: "background-color 0.2s",
   _hover: {
-    backgroundColor: "#3d6b4a",
+    backgroundColor: "#357abd",
   },
 });
 
