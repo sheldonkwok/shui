@@ -1,12 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { css } from "../../styled-system/css";
-import { useRouter } from "waku";
 import type { PlantWithStats } from "../types.ts";
-import { waterPlant } from "../actions/plants.ts";
-import { ChevronRight } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "./ui/Dialog.tsx";
+import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
 
 interface PlantProps {
   plant: PlantWithStats;
@@ -58,39 +54,6 @@ const lastWateredStyles = css({
   whiteSpace: "nowrap",
 });
 
-const triggerButtonStyles = css({
-  backgroundColor: "#4a7c59",
-  color: "white",
-  border: "none",
-  padding: "4px 8px",
-  borderRadius: "4px",
-  fontSize: "0.85em",
-  cursor: "pointer",
-  transition: "background-color 0.2s",
-  alignItems: "center",
-  gap: "4px",
-  _hover: {
-    backgroundColor: "#3d6b4a",
-  },
-  _active: {
-    transform: "translateY(1px)",
-  },
-});
-
-const waterActionButtonStyles = css({
-  backgroundColor: "#6d94c5",
-  color: "white",
-  border: "none",
-  padding: "8px 16px",
-  borderRadius: "4px",
-  fontSize: "0.9em",
-  cursor: "pointer",
-  transition: "background-color 0.2s",
-  _hover: {
-    backgroundColor: "#357abd",
-  },
-});
-
 const WEEK = 7;
 
 const formatLastWatered = (date: Date | null) => {
@@ -123,15 +86,6 @@ const formatDaysUntilNext = (days: number | null) => {
 };
 
 export function Plant({ plant, isTransition = false }: PlantProps) {
-  const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const handleWater = async () => {
-    await waterPlant(plant.id);
-    setIsDialogOpen(false);
-    router.reload();
-  };
-
   return (
     <li
       className={
@@ -146,26 +100,7 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
         {formatLastWatered(plant.lastWatered)}
       </span>
       <div className={buttonCellStyles}>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <button className={triggerButtonStyles} type="button">
-              <ChevronRight size={16} />
-            </button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogTitle>Water {plant.name}</DialogTitle>
-            <DialogDescription>
-              Record a watering for this plant.
-            </DialogDescription>
-            <button
-              className={waterActionButtonStyles}
-              type="button"
-              onClick={handleWater}
-            >
-              Water
-            </button>
-          </DialogContent>
-        </Dialog>
+        <PlantActionsDialog plantId={plant.id} plantName={plant.name} />
       </div>
     </li>
   );
