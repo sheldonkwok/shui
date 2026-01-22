@@ -17,6 +17,9 @@ export const waterings = sqliteTable("waterings", {
   wateringTime: integer("watering_time", { mode: "timestamp" })
     .default(sql`(unixepoch())`)
     .notNull(),
+  fertilized: integer("fertilized", { mode: "boolean" })
+    .notNull()
+    .default(false),
 });
 
 export const wateringInsertSchema = createInsertSchema(waterings);

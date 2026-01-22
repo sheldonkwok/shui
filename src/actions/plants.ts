@@ -55,6 +55,6 @@ export async function addPlant(name: string) {
   await getDB().insert(plants).values({ name });
 }
 
-export async function waterPlant(plantId: number) {
-  await getDB().insert(waterings).values({ plantId });
+export async function waterPlant(plantId: number, fertilized: boolean = false) {
+  await getDB().insert(waterings).values({ plantId, fertilized });
 }

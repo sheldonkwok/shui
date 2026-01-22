@@ -5,7 +5,7 @@ import { css } from "../../styled-system/css";
 import { useRouter } from "waku";
 import { waterPlant } from "../actions/plants.ts";
 import { ChevronRight } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription } from "./ui/Dialog.tsx";
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
 interface PlantActionsDialogProps {
   plantId: number;
@@ -31,7 +31,21 @@ const triggerButtonStyles = css({
   },
 });
 
-const waterActionButtonStyles = css({
+const fertilizeButtonStyles = css({
+  backgroundColor: "#d8b88b",
+  color: "white",
+  border: "none",
+  padding: "8px 16px",
+  borderRadius: "4px",
+  fontSize: "0.9em",
+  cursor: "pointer",
+  transition: "background-color 0.2s",
+  _hover: {
+    backgroundColor: "#965a3e",
+  },
+});
+
+const waterButtonStyles = css({
   backgroundColor: "#6d94c5",
   color: "white",
   border: "none",
@@ -45,12 +59,26 @@ const waterActionButtonStyles = css({
   },
 });
 
+const buttonContainerStyles = css({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-end",
+  gap: "8px",
+  marginTop: "12px",
+});
+
 export function PlantActionsDialog({ plantId, plantName }: PlantActionsDialogProps) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
+  const handleWaterWithFertilizer = async () => {
+    await waterPlant(plantId, true);
+    setIsDialogOpen(false);
+    router.reload();
+  };
+
   const handleWater = async () => {
-    await waterPlant(plantId);
+    await waterPlant(plantId, false);
     setIsDialogOpen(false);
     router.reload();
   };
@@ -63,17 +91,23 @@ export function PlantActionsDialog({ plantId, plantName }: PlantActionsDialogPro
         </button>
       </DialogTrigger>
       <DialogContent>
-        <DialogTitle>Water {plantName}</DialogTitle>
-        <DialogDescription>
-          Record a watering for this plant.
-        </DialogDescription>
-        <button
-          className={waterActionButtonStyles}
-          type="button"
-          onClick={handleWater}
-        >
-          Water
-        </button>
+        <DialogTitle>{plantName}</DialogTitle>
+        <div className={buttonContainerStyles}>
+          <button
+            className={fertilizeButtonStyles}
+            type="button"
+            onClick={handleWaterWithFertilizer}
+          >
+            Fertilize
+          </button>
+          <button
+            className={waterButtonStyles}
+            type="button"
+            onClick={handleWater}
+          >
+            Water
+          </button>
+        </div>
       </DialogContent>
     </Dialog>
   );
