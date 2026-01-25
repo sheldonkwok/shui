@@ -2,6 +2,10 @@
 
 This document provides guidelines for AI agents working on the shui project.
 
+## Technical Notes
+When inserting into sqlite with drizzle, we need to make sure we're using the correct primitive type. For example, booleans are actually integers and should be 1 for true and 0 for false.
+
+
 ## Pre-Commit Requirements
 
 ### 1. Always Run Tests Before Committing

@@ -56,5 +56,10 @@ export async function addPlant(name: string) {
 }
 
 export async function waterPlant(plantId: number, fertilized: boolean = false) {
-  await getDB().insert(waterings).values({ plantId, fertilized });
+  await getDB()
+    .insert(waterings)
+    .values({
+      plantId,
+      fertilized: fertilized ? 1 : 0,
+    });
 }
