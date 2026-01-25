@@ -18,8 +18,7 @@ export const waterings = sqliteTable("waterings", {
     .default(sql`(unixepoch())`)
     .notNull(),
   fertilized: integer("fertilized", { mode: "boolean" })
-    .notNull()
-    .default(false),
+    .default(0),
 });
 
 export const wateringInsertSchema = createInsertSchema(waterings);
