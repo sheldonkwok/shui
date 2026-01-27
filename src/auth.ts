@@ -29,18 +29,19 @@ const PRIVATE_IP_RANGES = [
 // Environment Helpers
 // =============================================================================
 
-const isProduction = () => process.env["VERCEL_ENV"] === "production";
-const isPreview = () => process.env["VERCEL_ENV"] === "preview";
-const isTest = () => Boolean(process?.env["VITEST"]);
-
 function getEnvOrThrow(key: string): string {
   const value = process.env[key];
   if (!value) throw new Error(`${key} must be set`);
   return value;
 }
 
+const isProduction = process.env["VERCEL_ENV"] === "production";
+const isPreview = process.env["VERCEL_ENV"] === "preview";
+const isTest = Boolean(process?.env["VITEST"]);
+const authSecret = getEnvOrThrow("AUTH_SECRET");
+
 function getGoogle(): Google {
-  const redirectUri = isProduction()
+  const redirectUri = isProduction
     ? "https://shui.fmj.io/auth/callback"
     : "http://localhost:3000/auth/callback";
 
@@ -85,11 +86,11 @@ function isIPAllowed(c: Context): boolean {
 // Cookie Signing
 // =============================================================================
 
-async function signValue(value: string, secret: string): Promise<string> {
+async function signValue(value: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
-    encoder.encode(secret),
+    encoder.encode(authSecret),
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
@@ -99,12 +100,12 @@ async function signValue(value: string, secret: string): Promise<string> {
   return `${value}.${signatureBase64}`;
 }
 
-async function verifySignedValue(signedValue: string, secret: string): Promise<string | null> {
+async function verifySignedValue(signedValue: string): Promise<string | null> {
   const lastDotIndex = signedValue.lastIndexOf(".");
   if (lastDotIndex === -1) return null;
 
   const value = signedValue.slice(0, lastDotIndex);
-  const expectedSigned = await signValue(value, secret);
+  const expectedSigned = await signValue(value);
 
   return signedValue === expectedSigned ? value : null;
 }
@@ -114,7 +115,7 @@ async function getSessionEmail(c: Context): Promise<string | null> {
   if (!cookie) return null;
 
   try {
-    return await verifySignedValue(cookie, getEnvOrThrow("AUTH_SECRET"));
+    return await verifySignedValue(cookie);
   } catch {
     return null;
   }
@@ -145,7 +146,7 @@ function handleGoogleAuth(c: Context): Response {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: isProduction(),
+    secure: isProduction,
     maxAge: CONFIG.oauthCookieMaxAge,
     sameSite: "Lax" as const,
   };
@@ -181,10 +182,10 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
       return c.text(`Access denied. Email ${email} is not authorized.`, 403);
     }
 
-    const signedEmail = await signValue(email, getEnvOrThrow("AUTH_SECRET"));
+    const signedEmail = await signValue(email);
     setCookie(c, CONFIG.cookieName, signedEmail, {
       httpOnly: true,
-      secure: isProduction(),
+      secure: isProduction,
       maxAge: CONFIG.sessionMaxAge,
       sameSite: "Lax",
     });
@@ -202,7 +203,7 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
 
 export const authMiddleware = createMiddleware(async (c, next) => {
   // Skip in test/preview environments
-  if (isTest() || isPreview()) return await next();
+  if (isTest || isPreview) return await next();
 
   const path = new URL(c.req.url).pathname;
 
