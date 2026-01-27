@@ -129,10 +129,18 @@ function handleLogout(c: Context): Response {
   return c.redirect("/");
 }
 
+function generateCodeVerifier(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...bytes))
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=/g, "");
+}
+
 function handleGoogleAuth(c: Context): Response {
   const google = getGoogle();
   const state = crypto.randomUUID();
-  const codeVerifier = crypto.randomUUID();
+  const codeVerifier = generateCodeVerifier();
   const url = google.createAuthorizationURL(state, codeVerifier, ["openid", "email"]);
 
   const cookieOptions = {
