@@ -10,6 +10,7 @@ import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "./ui/Dialog.t
 interface PlantActionsDialogProps {
   plantId: number;
   plantName: string;
+  lastFertilized: Date | null;
 }
 
 const triggerButtonStyles = css({
@@ -67,7 +68,29 @@ const buttonContainerStyles = css({
   marginTop: "12px",
 });
 
-export function PlantActionsDialog({ plantId, plantName }: PlantActionsDialogProps) {
+const lastFertilizedStyles = css({
+  color: "#999",
+  fontSize: "0.85em",
+  marginTop: "4px",
+});
+
+const WEEK = 7;
+
+const formatLastFertilized = (date: Date | null) => {
+  if (!date) return "Never fertilized";
+
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return "Last fertilized today";
+  if (diffDays === 1) return "Last fertilized yesterday";
+  if (diffDays <= WEEK * 3) return `Last fertilized ${diffDays} days ago`;
+
+  return `Last fertilized ${Math.floor(diffDays / WEEK)} weeks ago`;
+};
+
+export function PlantActionsDialog({ plantId, plantName, lastFertilized }: PlantActionsDialogProps) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -92,6 +115,7 @@ export function PlantActionsDialog({ plantId, plantName }: PlantActionsDialogPro
       </DialogTrigger>
       <DialogContent>
         <DialogTitle>{plantName}</DialogTitle>
+        <p className={lastFertilizedStyles}>{formatLastFertilized(lastFertilized)}</p>
         <div className={buttonContainerStyles}>
           <button
             className={fertilizeButtonStyles}

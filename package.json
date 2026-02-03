@@ -48,5 +48,10 @@
   "keywords": [],
   "author": "",
   "description": "",
-  "pnpm": {}
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "better-sqlite3",
+      "esbuild"
+    ]
+  }
 }

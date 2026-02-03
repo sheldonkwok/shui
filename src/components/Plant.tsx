@@ -100,7 +100,7 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
         {formatLastWatered(plant.lastWatered)}
       </span>
       <div className={buttonCellStyles}>
-        <PlantActionsDialog plantId={plant.id} plantName={plant.name} />
+        <PlantActionsDialog plantId={plant.id} plantName={plant.name} lastFertilized={plant.lastFertilized} />
       </div>
     </li>
   );

@@ -9,6 +9,8 @@ export async function listPlants() {
       name: plants.name,
       wateringCount: count(waterings.id),
       lastWatered: max(waterings.wateringTime),
+      lastFertilized:
+        sql<number | null>`MAX(CASE WHEN ${waterings.fertilized} = 1 THEN ${waterings.wateringTime} END)`,
     })
     .from(plants)
     .leftJoin(waterings, eq(plants.id, waterings.plantId))

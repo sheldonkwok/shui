@@ -21,6 +21,9 @@ export async function getPlants() {
   const now = new Date();
   const results = data.map((plant) => {
     const lastWatered = plant.lastWatered ? new Date(plant.lastWatered) : null;
+    const lastFertilized = plant.lastFertilized
+      ? new Date(plant.lastFertilized * 1000)
+      : null;
     const avgInterval = wateringIntervals[plant.id] ?? null;
 
     let daysUntilNextWatering: number | null = null;
@@ -36,6 +39,7 @@ export async function getPlants() {
       name: plant.name,
       wateringCount: plant.wateringCount,
       lastWatered,
+      lastFertilized,
       avgWateringIntervalDays: avgInterval,
       daysUntilNextWatering,
     };
