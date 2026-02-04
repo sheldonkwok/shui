@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { css } from "../../../styled-system/css";
+import { css, cx } from "../../../styled-system/css";
 
 const overlayStyles = css({
   position: "fixed",
@@ -75,10 +75,11 @@ export function DialogContent({
 
 export function DialogTitle({
   children,
+  className,
   ...props
 }: DialogPrimitive.DialogTitleProps) {
   return (
-    <DialogPrimitive.Title className={titleStyles} {...props}>
+    <DialogPrimitive.Title className={cx(titleStyles, className)} {...props}>
       {children}
     </DialogPrimitive.Title>
   );

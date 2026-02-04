@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { css } from "../../styled-system/css";
+import { useState, useRef } from "react";
+import { css, cx } from "../../styled-system/css";
 import { useRouter } from "waku";
-import { waterPlant } from "../actions/plants.ts";
+import { waterPlant, renamePlant } from "../actions/plants.ts";
 import { ChevronRight } from "lucide-react";
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
@@ -90,9 +90,78 @@ const formatLastFertilized = (date: Date | null) => {
   return `Last fertilized ${Math.floor(diffDays / WEEK)} weeks ago`;
 };
 
+const nameContainerStyles = css({
+  position: "relative",
+});
+
+const editableNameStyles = css({
+  cursor: "pointer",
+  _hover: {
+    opacity: 0.7,
+  },
+});
+
+const editableNameHiddenStyles = css({
+  visibility: "hidden",
+  pointerEvents: "none",
+});
+
+const nameInputStyles = css({
+  position: "absolute",
+  top: "0",
+  left: "0",
+  fontSize: "1.125rem",
+  lineHeight: "normal",
+  fontWeight: 600,
+  width: "33%",
+  height: "100%",
+  padding: "0",
+  border: "none",
+  borderBottom: "2px solid #2d5f3f",
+  borderRadius: "0",
+  backgroundColor: "transparent",
+  _focus: {
+    outline: "none",
+  },
+});
+
+const nameInputHiddenStyles = css({
+  visibility: "hidden",
+  pointerEvents: "none",
+});
+
 export function PlantActionsDialog({ plantId, plantName, lastFertilized }: PlantActionsDialogProps) {
   const router = useRouter();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(plantName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const handleNameClick = () => {
+    setIsEditing(true);
+    setTimeout(() => inputRef.current?.focus(), 0);
+  };
+
+  const handleNameBlur = async () => {
+    setIsEditing(false);
+    const trimmed = name.trim();
+    if (trimmed && trimmed !== plantName) {
+      await renamePlant(plantId, trimmed);
+      router.reload();
+    } else {
+      setName(plantName);
+    }
+  };
+
+  const handleNameKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      inputRef.current?.blur();
+    }
+    if (e.key === "Escape") {
+      setName(plantName);
+      setIsEditing(false);
+    }
+  };
 
   const handleWaterWithFertilizer = async () => {
     await waterPlant(plantId, true);
@@ -114,7 +183,22 @@ export function PlantActionsDialog({ plantId, plantName, lastFertilized }: Plant
         </button>
       </DialogTrigger>
       <DialogContent>
-        <DialogTitle>{plantName}</DialogTitle>
+        <div className={nameContainerStyles}>
+          <DialogTitle
+            className={cx(editableNameStyles, isEditing && editableNameHiddenStyles)}
+            onClick={handleNameClick}
+          >
+            {name}
+          </DialogTitle>
+          <input
+            ref={inputRef}
+            className={cx(nameInputStyles, !isEditing && nameInputHiddenStyles)}
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            onBlur={handleNameBlur}
+            onKeyDown={handleNameKeyDown}
+          />
+        </div>
         <p className={lastFertilizedStyles}>{formatLastFertilized(lastFertilized)}</p>
         <div className={buttonContainerStyles}>
           <button
