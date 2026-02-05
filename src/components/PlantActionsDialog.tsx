@@ -128,9 +128,13 @@ const nameInputHiddenStyles = css({
   pointerEvents: "none",
 });
 
-export function PlantActionsDialog({ plantId, plantName, lastFertilized }: PlantActionsDialogProps) {
-  const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+interface EditableNameProps {
+  plantId: number;
+  plantName: string;
+  onRenamed: () => void;
+}
+
+function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(plantName);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -145,7 +149,7 @@ export function PlantActionsDialog({ plantId, plantName, lastFertilized }: Plant
     const trimmed = name.trim();
     if (trimmed && trimmed !== plantName) {
       await renamePlant(plantId, trimmed);
-      router.reload();
+      onRenamed();
     } else {
       setName(plantName);
     }
@@ -160,6 +164,31 @@ export function PlantActionsDialog({ plantId, plantName, lastFertilized }: Plant
       setIsEditing(false);
     }
   };
+
+  return (
+    <div className={nameContainerStyles}>
+      <DialogTitle
+        className={cx(editableNameStyles, isEditing && editableNameHiddenStyles)}
+        onClick={handleNameClick}
+      >
+        {name}
+      </DialogTitle>
+      <input
+        ref={inputRef}
+        className={cx(nameInputStyles, !isEditing && nameInputHiddenStyles)}
+        size={Math.max(1, name.length)}
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        onBlur={handleNameBlur}
+        onKeyDown={handleNameKeyDown}
+      />
+    </div>
+  );
+}
+
+export function PlantActionsDialog({ plantId, plantName, lastFertilized }: PlantActionsDialogProps) {
+  const router = useRouter();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleWaterWithFertilizer = async () => {
     await waterPlant(plantId, true);
@@ -181,23 +210,7 @@ export function PlantActionsDialog({ plantId, plantName, lastFertilized }: Plant
         </button>
       </DialogTrigger>
       <DialogContent>
-        <div className={nameContainerStyles}>
-          <DialogTitle
-            className={cx(editableNameStyles, isEditing && editableNameHiddenStyles)}
-            onClick={handleNameClick}
-          >
-            {name}
-          </DialogTitle>
-          <input
-            ref={inputRef}
-            className={cx(nameInputStyles, !isEditing && nameInputHiddenStyles)}
-            size={Math.max(1, name.length)}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onBlur={handleNameBlur}
-            onKeyDown={handleNameKeyDown}
-          />
-        </div>
+        <EditableName plantId={plantId} plantName={plantName} onRenamed={() => router.reload()} />
         <p className={lastFertilizedStyles}>{formatLastFertilized(lastFertilized)}</p>
         <div className={buttonContainerStyles}>
           <button
