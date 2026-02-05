@@ -113,8 +113,6 @@ const nameInputStyles = css({
   fontSize: "1.125rem",
   lineHeight: "normal",
   fontWeight: 600,
-  width: "33%",
-  height: "100%",
   padding: "0",
   border: "none",
   borderBottom: "2px solid #2d5f3f",
@@ -193,6 +191,7 @@ export function PlantActionsDialog({ plantId, plantName, lastFertilized }: Plant
           <input
             ref={inputRef}
             className={cx(nameInputStyles, !isEditing && nameInputHiddenStyles)}
+            size={Math.max(1, name.length)}
             value={name}
             onChange={(e) => setName(e.target.value)}
             onBlur={handleNameBlur}
