@@ -13,6 +13,7 @@ When inserting into sqlite with drizzle, we need to make sure we're using the co
 Before creating any commit, you **must** run the test suite to ensure all tests pass:
 
 ```bash
+pnpm install  # Run this first to ensure dependencies are installed
 pnpm test
 ```
 
@@ -84,9 +85,10 @@ git commit -m "WIP"
 ## Workflow Summary
 
 1. Make your code changes
-2. Run `pnpm test` and ensure all tests pass
-3. Stage your changes with `git add`
-4. Commit with conventional commit style
-5. Push your changes
+2. Run `pnpm install` to ensure dependencies are installed
+3. Run `pnpm test` and ensure all tests pass
+4. Stage your changes with `git add`
+5. Commit with conventional commit style
+6. Push your changes
 
 Following these guidelines ensures code quality and maintains a clean, understandable commit history.
