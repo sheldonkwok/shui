@@ -7,7 +7,6 @@ import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
 
 interface PlantProps {
   plant: PlantWithStats;
-  isTransition?: boolean;
 }
 
 const plantItemStyles = css({
@@ -54,8 +53,6 @@ const lastWateredStyles = css({
 
 const WATER_COLOR_RGB = "109, 148, 197";
 const BORDER_COLOR = "#e9ecef";
-const TRANSITION_BORDER_COLOR = "#6d94c5";
-const MARGIN_SIZE = "0.2em";
 const MAX_DAYS_SCALE = 4;
 
 function getWaterRatio(daysUntilNextWatering: number | null): number {
@@ -96,22 +93,20 @@ const formatDaysUntilNext = (days: number | null) => {
   return `${days} days`;
 };
 
-export function Plant({ plant, isTransition = false }: PlantProps) {
+export function Plant({ plant }: PlantProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const ratio = getWaterRatio(plant.daysUntilNextWatering);
-  const borderColor = isTransition ? TRANSITION_BORDER_COLOR : BORDER_COLOR;
 
   return (
     <li
       className={plantItemStyles}
       style={{
-        '--border-color': borderColor,
+        '--border-color': BORDER_COLOR,
         '--water-gradient-color': `rgba(${WATER_COLOR_RGB}, ${ratio})`,
       } as React.CSSProperties}
     >
       <span
         className={`${plantNameStyles} ${clickableCellStyles}`}
-        style={{ marginLeft: MARGIN_SIZE }}
         onClick={() => setIsDialogOpen(true)}
       >
         {plant.name}
@@ -121,7 +116,6 @@ export function Plant({ plant, isTransition = false }: PlantProps) {
       </span>
       <span
         className={`${lastWateredStyles} ${clickableCellStyles}`}
-        style={{ marginRight: MARGIN_SIZE }}
         onClick={() => setIsDialogOpen(true)}
       >
         {formatLastWatered(plant.lastWatered)}
