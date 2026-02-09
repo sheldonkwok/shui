@@ -4,33 +4,15 @@ import { useState, useRef } from "react";
 import { css, cx } from "../../styled-system/css";
 import { useRouter } from "waku";
 import { waterPlant, renamePlant } from "../actions/plants.ts";
-import { ChevronRight } from "lucide-react";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
+import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
 interface PlantActionsDialogProps {
   plantId: number;
   plantName: string;
   lastFertilized: Date | null;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
-
-const triggerButtonStyles = css({
-  backgroundColor: "#4a7c59",
-  color: "white",
-  border: "none",
-  padding: "4px 8px",
-  borderRadius: "4px",
-  fontSize: "0.85em",
-  cursor: "pointer",
-  transition: "background-color 0.2s",
-  alignItems: "center",
-  gap: "4px",
-  _hover: {
-    backgroundColor: "#3d6b4a",
-  },
-  _active: {
-    transform: "translateY(1px)",
-  },
-});
 
 const fertilizeButtonStyles = css({
   backgroundColor: "#d8b88b",
@@ -186,29 +168,23 @@ function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
   );
 }
 
-export function PlantActionsDialog({ plantId, plantName, lastFertilized }: PlantActionsDialogProps) {
+export function PlantActionsDialog({ plantId, plantName, lastFertilized, open, onOpenChange }: PlantActionsDialogProps) {
   const router = useRouter();
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
 
   const handleWaterWithFertilizer = async () => {
     await waterPlant(plantId, true);
-    setIsDialogOpen(false);
+    onOpenChange(false);
     router.reload();
   };
 
   const handleWater = async () => {
     await waterPlant(plantId, false);
-    setIsDialogOpen(false);
+    onOpenChange(false);
     router.reload();
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <button className={triggerButtonStyles} type="button">
-          <ChevronRight size={16} />
-        </button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <EditableName plantId={plantId} plantName={plantName} onRenamed={() => router.reload()} />
         <p className={lastFertilizedStyles}>{formatLastFertilized(lastFertilized)}</p>
