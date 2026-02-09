@@ -13,9 +13,9 @@ const listStyles = css({
   padding: 0,
   margin: 0,
   display: "grid",
-  gridTemplateColumns: "auto auto auto max-content",
+  gridTemplateColumns: "auto auto auto",
   justifyContent: "space-between",
-  alignItems: "center",
+  alignItems: "stretch",
 });
 
 const noPlantsStyles = css({
