@@ -5,7 +5,6 @@ import { css, cx } from "../../styled-system/css";
 import { useRouter } from "waku";
 import { waterPlant, renamePlant } from "../actions/plants.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
-import * as palette from "../styles/palette.ts";
 
 interface PlantActionsDialogProps {
   plantId: number;
@@ -16,8 +15,8 @@ interface PlantActionsDialogProps {
 }
 
 const fertilizeButtonStyles = css({
-  backgroundColor: palette.brown,
-  color: palette.bgWhite,
+  backgroundColor: "palette.brown",
+  color: "white",
   border: "none",
   padding: "8px 16px",
   borderRadius: "4px",
@@ -25,13 +24,13 @@ const fertilizeButtonStyles = css({
   cursor: "pointer",
   transition: "background-color 0.2s",
   _hover: {
-    backgroundColor: palette.brownDark,
+    backgroundColor: "palette.brownDark",
   },
 });
 
 const waterButtonStyles = css({
-  backgroundColor: palette.blue,
-  color: palette.bgWhite,
+  backgroundColor: "palette.blue",
+  color: "white",
   border: "none",
   padding: "8px 16px",
   borderRadius: "4px",
@@ -39,7 +38,7 @@ const waterButtonStyles = css({
   cursor: "pointer",
   transition: "background-color 0.2s",
   _hover: {
-    backgroundColor: palette.blueDark,
+    backgroundColor: "palette.blueDark",
   },
 });
 
@@ -52,7 +51,7 @@ const buttonContainerStyles = css({
 });
 
 const lastFertilizedStyles = css({
-  color: palette.textLight,
+  color: "palette.textLight",
   fontSize: "0.85em",
   marginTop: "4px",
 });
@@ -98,7 +97,9 @@ const nameInputStyles = css({
   fontWeight: 600,
   padding: "0",
   border: "none",
-  borderBottom: `2px solid ${palette.green}`,
+  borderBottomWidth: "2px",
+  borderBottomStyle: "solid",
+  borderBottomColor: "palette.green",
   borderRadius: "0",
   backgroundColor: "transparent",
   _focus: {

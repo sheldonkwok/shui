@@ -28,7 +28,7 @@ const clickableCellStyles = css({
 
 const plantNameStyles = css({
   fontWeight: 500,
-  color: palette.green,
+  color: "palette.green",
   fontSize: "1em",
   display: "flex",
   alignItems: "center",
@@ -36,7 +36,7 @@ const plantNameStyles = css({
 });
 
 const nextWaterStyles = css({
-  color: palette.textLight,
+  color: "palette.textLight",
   fontSize: "0.8em",
   whiteSpace: "nowrap",
   display: "flex",
@@ -45,7 +45,7 @@ const nextWaterStyles = css({
 });
 
 const lastWateredStyles = css({
-  color: palette.textLight,
+  color: "palette.textLight",
   fontSize: "0.8em",
   whiteSpace: "nowrap",
   display: "flex",

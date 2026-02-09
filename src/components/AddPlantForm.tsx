@@ -3,14 +3,13 @@
 import { css } from "../../styled-system/css";
 import { useRouter } from "waku";
 import { addPlant } from "../actions/plants.ts";
-import * as palette from "../styles/palette.ts";
 
 const formStyles = css({
   paddingTop: "30px",
 });
 
 const titleStyles = css({
-  color: palette.green,
+  color: "palette.green",
   marginBottom: "20px",
   fontSize: "1.2em",
 });
@@ -23,26 +22,28 @@ const labelStyles = css({
   display: "block",
   marginBottom: "5px",
   fontWeight: 500,
-  color: palette.textBody,
+  color: "palette.textBody",
 });
 
 const inputStyles = css({
   width: "100%",
   padding: "10px",
-  border: `1px solid ${palette.border}`,
+  borderWidth: "1px",
+  borderStyle: "solid",
+  borderColor: "palette.border",
   borderRadius: "4px",
   fontSize: "16px",
   boxSizing: "border-box",
   _focus: {
     outline: "none",
-    borderColor: palette.green,
-    boxShadow: `0 0 0 2px ${palette.greenFocusShadow}`,
+    borderColor: "palette.green",
+    boxShadow: "focusGreen",
   },
 });
 
 const submitButtonStyles = css({
-  backgroundColor: palette.green,
-  color: palette.bgWhite,
+  backgroundColor: "palette.green",
+  color: "white",
   padding: "12px 24px",
   border: "none",
   borderRadius: "4px",
@@ -50,7 +51,7 @@ const submitButtonStyles = css({
   cursor: "pointer",
   transition: "background-color 0.2s",
   _hover: {
-    backgroundColor: palette.greenDark,
+    backgroundColor: "palette.greenDark",
   },
   _active: {
     transform: "translateY(1px)",

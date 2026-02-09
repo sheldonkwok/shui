@@ -3,7 +3,6 @@
 import { css } from "../../styled-system/css";
 import { Plant } from "./Plant.tsx";
 import type { PlantWithStats } from "../types.ts";
-import * as palette from "../styles/palette.ts";
 
 const containerStyles = css({
   marginBottom: "40px",
@@ -21,7 +20,7 @@ const listStyles = css({
 
 const noPlantsStyles = css({
   textAlign: "center",
-  color: palette.textPlaceholder,
+  color: "palette.textPlaceholder",
   fontStyle: "italic",
   padding: "20px",
 });
