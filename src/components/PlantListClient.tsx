@@ -30,26 +30,12 @@ interface PlantListClientProps {
 }
 
 export function PlantListClient({ plants }: PlantListClientProps) {
-  const parsedTransition = plants.map((plant, index) => {
-    const nextPlant = plants[index + 1];
-    const isTransition =
-      plant.daysUntilNextWatering !== null &&
-      plant.daysUntilNextWatering < 0 &&
-      nextPlant &&
-      nextPlant.daysUntilNextWatering !== null &&
-      nextPlant.daysUntilNextWatering >= 0;
-
-    return { plant, isTransition };
-  });
-
   return (
     <div className={containerStyles}>
       {plants.length > 0 ? (
         <ul className={listStyles}>
-          {parsedTransition.map(({ plant, isTransition }) => {
-            return (
-              <Plant key={plant.id} plant={plant} isTransition={isTransition} />
-            );
+          {plants.map((plant) => {
+            return <Plant key={plant.id} plant={plant} />;
           })}
         </ul>
       ) : (
