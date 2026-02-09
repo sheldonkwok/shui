@@ -4,11 +4,12 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { css, cx } from "../../../styled-system/css";
+import * as palette from "../../styles/palette.ts";
 
 const overlayStyles = css({
   position: "fixed",
   inset: 0,
-  backgroundColor: "rgba(0, 0, 0, 0.5)",
+  backgroundColor: palette.overlay,
   zIndex: 50,
 });
 
@@ -17,10 +18,10 @@ const contentStyles = css({
   left: "50%",
   top: "50%",
   transform: "translate(-50%, -50%)",
-  backgroundColor: "white",
+  backgroundColor: palette.bgWhite,
   borderRadius: "8px",
   padding: "24px",
-  boxShadow: "0 10px 38px -10px rgba(22, 23, 24, 0.35), 0 10px 20px -15px rgba(22, 23, 24, 0.2)",
+  boxShadow: `0 10px 38px -10px ${palette.shadowDark}, 0 10px 20px -15px ${palette.shadowLight}`,
   zIndex: 50,
   maxWidth: "450px",
   width: "90vw",
@@ -35,9 +36,9 @@ const closeButtonStyles = css({
   cursor: "pointer",
   padding: "4px",
   borderRadius: "4px",
-  color: "#666",
+  color: palette.textMuted,
   _hover: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: palette.bgHover,
   },
 });
 
@@ -49,7 +50,7 @@ const titleStyles = css({
 
 const descriptionStyles = css({
   fontSize: "0.875rem",
-  color: "#666",
+  color: palette.textMuted,
   marginBottom: "16px",
 });
 

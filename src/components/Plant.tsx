@@ -4,6 +4,7 @@ import { useState } from "react";
 import { css } from "../../styled-system/css";
 import type { PlantWithStats } from "../types.ts";
 import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
+import * as palette from "../styles/palette.ts";
 
 interface PlantProps {
   plant: PlantWithStats;
@@ -27,7 +28,7 @@ const clickableCellStyles = css({
 
 const plantNameStyles = css({
   fontWeight: 500,
-  color: "#2d5f3f",
+  color: palette.green,
   fontSize: "1em",
   display: "flex",
   alignItems: "center",
@@ -35,7 +36,7 @@ const plantNameStyles = css({
 });
 
 const nextWaterStyles = css({
-  color: "#999",
+  color: palette.textLight,
   fontSize: "0.8em",
   whiteSpace: "nowrap",
   display: "flex",
@@ -44,7 +45,7 @@ const nextWaterStyles = css({
 });
 
 const lastWateredStyles = css({
-  color: "#999",
+  color: palette.textLight,
   fontSize: "0.8em",
   whiteSpace: "nowrap",
   display: "flex",
@@ -52,9 +53,9 @@ const lastWateredStyles = css({
   padding: "0.1em 0",
 });
 
-const WATER_COLOR_RGB = "109, 148, 197";
-const BORDER_COLOR = "#e9ecef";
-const TRANSITION_BORDER_COLOR = "#6d94c5";
+const WATER_COLOR_RGB = palette.blueRgb;
+const BORDER_COLOR = palette.borderLight;
+const TRANSITION_BORDER_COLOR = palette.blue;
 const MARGIN_SIZE = "0.2em";
 const MAX_DAYS_SCALE = 4;
 
