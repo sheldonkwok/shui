@@ -31,3 +31,27 @@ export const bgHover = "#f0f0f0";
 export const overlay = "rgba(0, 0, 0, 0.5)";
 export const shadowDark = "rgba(22, 23, 24, 0.35)";
 export const shadowLight = "rgba(22, 23, 24, 0.2)";
+
+// Panda CSS token definitions – used by panda.config.ts
+export const colorTokens = {
+  green: { value: green },
+  greenDark: { value: greenDark },
+  blue: { value: blue },
+  blueDark: { value: blueDark },
+  brown: { value: brown },
+  brownDark: { value: brownDark },
+  textBody: { value: textBody },
+  textMuted: { value: textMuted },
+  textLight: { value: textLight },
+  textPlaceholder: { value: textPlaceholder },
+  border: { value: border },
+  borderLight: { value: borderLight },
+  bgPage: { value: bgPage },
+  bgHover: { value: bgHover },
+  overlay: { value: overlay },
+};
+
+export const shadowTokens = {
+  focusGreen: { value: `0 0 0 2px ${greenFocusShadow}` },
+  dialog: { value: `0 10px 38px -10px ${shadowDark}, 0 10px 20px -15px ${shadowLight}` },
+};
