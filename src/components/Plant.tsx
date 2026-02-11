@@ -33,15 +33,6 @@ const plantNameStyles = css({
   padding: "0.1em 0",
 });
 
-const nextWaterStyles = css({
-  color: "#999",
-  fontSize: "0.8em",
-  whiteSpace: "nowrap",
-  display: "flex",
-  alignItems: "center",
-  padding: "0.1em 0",
-});
-
 const lastWateredStyles = css({
   color: "#999",
   fontSize: "0.8em",
@@ -78,21 +69,6 @@ const formatLastWatered = (date: Date | null) => {
   return `${Math.floor(diffDays / WEEK)} weeks ago`;
 };
 
-const formatDaysUntilNext = (days: number | null) => {
-  if (days === null) return "—";
-
-  if (days < 0) {
-    return `${Math.abs(days)} days`;
-  } else if (days === 0) {
-    return "Due today";
-  } else if (days < 1) {
-    return "< 1 day";
-  } else if (days === 1) {
-    return "1 day";
-  }
-  return `${days} days`;
-};
-
 export function Plant({ plant }: PlantProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const ratio = getWaterRatio(plant.daysUntilNextWatering);
@@ -110,9 +86,6 @@ export function Plant({ plant }: PlantProps) {
         onClick={() => setIsDialogOpen(true)}
       >
         {plant.name}
-      </span>
-      <span className={`${nextWaterStyles}`}>
-        {formatDaysUntilNext(plant.daysUntilNextWatering)}
       </span>
       <span
         className={`${lastWateredStyles} ${clickableCellStyles}`}
