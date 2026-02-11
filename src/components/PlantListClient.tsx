@@ -13,7 +13,7 @@ const listStyles = css({
   padding: 0,
   margin: 0,
   display: "grid",
-  gridTemplateColumns: "auto auto auto",
+  gridTemplateColumns: "auto auto",
   justifyContent: "space-between",
   alignItems: "stretch",
 });
