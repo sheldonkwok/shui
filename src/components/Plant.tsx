@@ -31,6 +31,7 @@ const plantNameStyles = css({
   display: "flex",
   alignItems: "center",
   padding: "0.1em 0",
+  userSelect: "none",
 });
 
 const lastWateredStyles = css({
