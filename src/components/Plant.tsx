@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { css } from "../../styled-system/css";
 import type { PlantWithStats } from "../types.ts";
+import { formatCalendarDaysAgo } from "../until.ts";
 import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
 
 interface PlantProps {
@@ -54,20 +55,9 @@ function getWaterRatio(daysUntilNextWatering: number | null): number {
   return 1 - daysUntilNextWatering / MAX_DAYS_SCALE;
 }
 
-const WEEK = 7;
-
 const formatLastWatered = (date: Date | null) => {
   if (!date) return "Never watered";
-
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return "Today";
-  if (diffDays === 1) return "Yesterday";
-  if (diffDays <= WEEK * 3) return `${diffDays} days ago`;
-
-  return `${Math.floor(diffDays / WEEK)} weeks ago`;
+  return formatCalendarDaysAgo(date);
 };
 
 export function Plant({ plant }: PlantProps) {
