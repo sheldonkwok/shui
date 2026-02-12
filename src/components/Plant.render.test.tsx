@@ -65,6 +65,22 @@ describe("Plant component rendering", () => {
     expect(screen.getByText("Yesterday")).toBeInTheDocument();
   });
 
+  it("should display 'Yesterday' for a plant watered late yesterday even if less than 24 hours ago", async () => {
+    const plantId = await seedPlant("Late Yesterday Plant");
+    const lateYesterday = new Date();
+    lateYesterday.setDate(lateYesterday.getDate() - 1);
+    lateYesterday.setHours(23, 59, 0, 0);
+    await seedWatering(plantId, lateYesterday);
+
+    const plants = await getPlants();
+    const plant = plants[0]!;
+
+    render(<Plant plant={plant} />);
+
+    expect(screen.getByText("Late Yesterday Plant")).toBeInTheDocument();
+    expect(screen.getByText("Yesterday")).toBeInTheDocument();
+  });
+
   it("should display days ago for a plant watered multiple days ago", async () => {
     const plantId = await seedPlant("Old Watering Plant");
     const fiveDaysAgo = new Date();

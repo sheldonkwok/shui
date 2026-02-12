@@ -4,6 +4,7 @@ import { useState, useRef } from "react";
 import { css, cx } from "../../styled-system/css";
 import { useRouter } from "waku";
 import { waterPlant, renamePlant } from "../actions/plants.ts";
+import { formatCalendarDaysAgo } from "../until.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
 interface PlantActionsDialogProps {
@@ -56,20 +57,9 @@ const lastFertilizedStyles = css({
   marginTop: "4px",
 });
 
-const WEEK = 7;
-
 const formatLastFertilized = (date: Date | null) => {
   if (!date) return "Never fertilized";
-
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-
-  if (diffDays === 0) return "Last fertilized today";
-  if (diffDays === 1) return "Last fertilized yesterday";
-  if (diffDays <= WEEK * 3) return `Last fertilized ${diffDays} days ago`;
-
-  return `Last fertilized ${Math.floor(diffDays / WEEK)} weeks ago`;
+  return `Last fertilized ${formatCalendarDaysAgo(date).toLowerCase()}`;
 };
 
 const nameContainerStyles = css({
