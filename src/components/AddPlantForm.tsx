@@ -3,30 +3,17 @@
 import { css } from "../../styled-system/css";
 import { useRouter } from "waku";
 import { addPlant } from "../actions/plants.ts";
+import { ChevronRight } from "lucide-react";
 
 const formStyles = css({
   paddingTop: "30px",
-});
-
-const titleStyles = css({
-  color: "#2d5f3f",
-  marginBottom: "20px",
-  fontSize: "1.2em",
-});
-
-const formGroupStyles = css({
-  marginBottom: "15px",
-});
-
-const labelStyles = css({
-  display: "block",
-  marginBottom: "5px",
-  fontWeight: 500,
-  color: "#333",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
 });
 
 const inputStyles = css({
-  width: "100%",
+  flex: 1,
   padding: "10px",
   border: "1px solid #ddd",
   borderRadius: "4px",
@@ -42,11 +29,13 @@ const inputStyles = css({
 const submitButtonStyles = css({
   backgroundColor: "#2d5f3f",
   color: "white",
-  padding: "12px 24px",
   border: "none",
   borderRadius: "4px",
-  fontSize: "16px",
   cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "10px",
   transition: "background-color 0.2s",
   _hover: {
     backgroundColor: "#1e3f2b",
@@ -73,22 +62,15 @@ export function AddPlantForm() {
 
   return (
     <form className={formStyles} onSubmit={handleSubmit}>
-      <h2 className={titleStyles}>Add New Plant</h2>
-      <div className={formGroupStyles}>
-        <label className={labelStyles} htmlFor="plant-name">
-          Plant Name:
-        </label>
-        <input
-          className={inputStyles}
-          type="text"
-          id="plant-name"
-          name="name"
-          required
-          placeholder="Enter plant name"
-        />
-      </div>
+      <input
+        className={inputStyles}
+        type="text"
+        name="name"
+        required
+        placeholder="Add a new plant"
+      />
       <button className={submitButtonStyles} type="submit">
-        Add Plant
+        <ChevronRight size={20} />
       </button>
     </form>
   );
