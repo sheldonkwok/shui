@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { css, cx } from "../../styled-system/css";
+import { cva, cx } from "class-variance-authority";
 import { useRouter } from "waku";
 import { waterPlant, renamePlant } from "../actions/plants.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
@@ -15,90 +15,27 @@ interface PlantActionsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const fertilizeButtonStyles = css({
-  backgroundColor: "#d8b88b",
-  color: "white",
-  border: "none",
-  padding: "8px 16px",
-  borderRadius: "4px",
-  fontSize: "0.9em",
-  cursor: "pointer",
-  transition: "background-color 0.2s",
-  _hover: {
-    backgroundColor: "#965a3e",
-  },
-});
-
-const waterButtonStyles = css({
-  backgroundColor: "#6d94c5",
-  color: "white",
-  border: "none",
-  padding: "8px 16px",
-  borderRadius: "4px",
-  fontSize: "0.9em",
-  cursor: "pointer",
-  transition: "background-color 0.2s",
-  _hover: {
-    backgroundColor: "#357abd",
-  },
-});
-
-const buttonContainerStyles = css({
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "flex-end",
-  gap: "8px",
-  marginTop: "12px",
-});
-
-const lastFertilizedStyles = css({
-  color: "#999",
-  fontSize: "0.85em",
-  marginTop: "4px",
-});
+const fertilizeButton = cva(
+  "bg-[#d8b88b] text-white border-none px-4 py-2 rounded text-[0.9em] cursor-pointer transition-colors hover:bg-[#965a3e]",
+);
+const waterButton = cva(
+  "bg-[#6d94c5] text-white border-none px-4 py-2 rounded text-[0.9em] cursor-pointer transition-colors hover:bg-[#357abd]",
+);
+const buttonContainer = cva("flex flex-col items-end gap-2 mt-3");
+const lastFertilized = cva("text-[#999] text-[0.85em] mt-1");
 
 const formatLastFertilized = (date: Date | null) => {
   if (!date) return "Never fertilized";
   return `Last fertilized ${formatCalendarDaysAgo(date).toLowerCase()}`;
 };
 
-const nameContainerStyles = css({
-  position: "relative",
-});
-
-const editableNameStyles = css({
-  cursor: "pointer",
-  _hover: {
-    opacity: 0.7,
-  },
-});
-
-const editableNameHiddenStyles = css({
-  visibility: "hidden",
-  pointerEvents: "none",
-});
-
-const nameInputStyles = css({
-  position: "absolute",
-  top: "0",
-  left: "0",
-  fontSize: "1.125rem",
-  lineHeight: "normal",
-  fontWeight: 600,
-  padding: "0",
-  border: "none",
-  borderBottom: "2px solid #2d5f3f",
-  borderRadius: "0",
-  backgroundColor: "transparent",
-  _focus: {
-    outline: "none",
-  },
-});
-
-const nameInputHiddenStyles = css({
-  visibility: "hidden",
-  pointerEvents: "none",
-});
+const nameContainer = cva("relative");
+const editableName = cva("cursor-pointer hover:opacity-70");
+const editableNameHidden = cva("invisible pointer-events-none");
+const nameInput = cva(
+  "absolute top-0 left-0 text-lg leading-normal font-semibold p-0 border-none border-b-2 border-b-[#2d5f3f] rounded-none bg-transparent focus:outline-none",
+);
+const nameInputHidden = cva("invisible pointer-events-none");
 
 interface EditableNameProps {
   plantId: number;
@@ -138,16 +75,16 @@ function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
   };
 
   return (
-    <div className={nameContainerStyles}>
+    <div className={nameContainer()}>
       <DialogTitle
-        className={cx(editableNameStyles, isEditing && editableNameHiddenStyles)}
+        className={cx(editableName(), isEditing && editableNameHidden())}
         onClick={handleNameClick}
       >
         {name}
       </DialogTitle>
       <input
         ref={inputRef}
-        className={cx(nameInputStyles, !isEditing && nameInputHiddenStyles)}
+        className={cx(nameInput(), !isEditing && nameInputHidden())}
         size={Math.max(1, name.length)}
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -158,7 +95,7 @@ function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
   );
 }
 
-export function PlantActionsDialog({ plantId, plantName, lastFertilized, open, onOpenChange }: PlantActionsDialogProps) {
+export function PlantActionsDialog({ plantId, plantName, lastFertilized: lastFertilizedDate, open, onOpenChange }: PlantActionsDialogProps) {
   const router = useRouter();
 
   const handleWaterWithFertilizer = async () => {
@@ -177,17 +114,17 @@ export function PlantActionsDialog({ plantId, plantName, lastFertilized, open, o
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <EditableName plantId={plantId} plantName={plantName} onRenamed={() => router.reload()} />
-        <p className={lastFertilizedStyles}>{formatLastFertilized(lastFertilized)}</p>
-        <div className={buttonContainerStyles}>
+        <p className={lastFertilized()}>{formatLastFertilized(lastFertilizedDate)}</p>
+        <div className={buttonContainer()}>
           <button
-            className={fertilizeButtonStyles}
+            className={fertilizeButton()}
             type="button"
             onClick={handleWaterWithFertilizer}
           >
             Fertilize
           </button>
           <button
-            className={waterButtonStyles}
+            className={waterButton()}
             type="button"
             onClick={handleWater}
           >
