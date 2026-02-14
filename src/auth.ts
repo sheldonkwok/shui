@@ -1,9 +1,9 @@
-import { createMiddleware } from "hono/factory";
-import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { Google } from "arctic";
 import type { Context } from "hono";
+import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { createMiddleware } from "hono/factory";
 
-import { IS_TEST } from './utils.ts';
+import { IS_TEST } from "./utils.ts";
 
 // =============================================================================
 // Configuration
@@ -37,8 +37,8 @@ function getEnvOrThrow(key: string): string {
   return value;
 }
 
-const isProduction = process.env["VERCEL_ENV"] === "production";
-const isPreview = process.env["VERCEL_ENV"] === "preview";
+const isProduction = process.env.VERCEL_ENV === "production";
+const isPreview = process.env.VERCEL_ENV === "preview";
 const authSecret = getEnvOrThrow("AUTH_SECRET");
 
 function getGoogle(): Google {
@@ -46,11 +46,7 @@ function getGoogle(): Google {
     ? "https://shui.fmj.io/auth/callback"
     : "http://localhost:3000/auth/callback";
 
-  return new Google(
-    getEnvOrThrow("GOOGLE_CLIENT_ID"),
-    getEnvOrThrow("GOOGLE_CLIENT_SECRET"),
-    redirectUri
-  );
+  return new Google(getEnvOrThrow("GOOGLE_CLIENT_ID"), getEnvOrThrow("GOOGLE_CLIENT_SECRET"), redirectUri);
 }
 
 // =============================================================================
@@ -77,10 +73,7 @@ function isIPAllowed(c: Context): boolean {
   const clientIP = getClientIP(c);
   if (!clientIP) return false;
 
-  return (
-    CONFIG.allowedIPs.has(clientIP) ||
-    PRIVATE_IP_RANGES.some((range) => range.test(clientIP))
-  );
+  return CONFIG.allowedIPs.has(clientIP) || PRIVATE_IP_RANGES.some((range) => range.test(clientIP));
 }
 
 // =============================================================================
@@ -94,7 +87,7 @@ async function signValue(value: string): Promise<string> {
     encoder.encode(authSecret),
     { name: "HMAC", hash: "SHA-256" },
     false,
-    ["sign"]
+    ["sign"],
   );
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(value));
   const signatureBase64 = btoa(String.fromCharCode(...new Uint8Array(signature)));
@@ -176,7 +169,7 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
   try {
     const tokens = await getGoogle().validateAuthorizationCode(code, codeVerifier);
     const idToken = tokens.idToken();
-    const payload = JSON.parse(atob(idToken.split(".")[1]!));
+    const payload = JSON.parse(atob(idToken.split(".")[1]));
     const email = payload.email as string;
 
     if (email !== CONFIG.allowedEmail) {

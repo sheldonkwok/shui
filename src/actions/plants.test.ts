@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeAll, beforeEach } from "vitest";
-import { getPlants } from "./plants.ts";
-import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
 import { execaCommand } from "execa";
+import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
+import { getPlants } from "./plants.ts";
 
 const DAY = 24 * 60 * 60 * 1000;
 

@@ -1,10 +1,8 @@
-import { defineConfig } from "waku/config";
 import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "waku/config";
 
 // Vercel uses web version
-const libsqlClient = /sheldon/i.test(process.env["USER"] || "")
-  ? "@libsql/client"
-  : "@libsql/client/web";
+const libsqlClient = /sheldon/i.test(process.env.USER || "") ? "@libsql/client" : "@libsql/client/web";
 
 export default defineConfig({
   unstable_adapter: "waku/adapters/vercel",

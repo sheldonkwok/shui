@@ -1,6 +1,6 @@
+import { asc, count, eq, max, sql } from "drizzle-orm";
 import { getDB } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
-import { eq, count, max, asc, sql } from "drizzle-orm";
 
 export async function listPlants() {
   const data = await getDB()
@@ -9,8 +9,9 @@ export async function listPlants() {
       name: plants.name,
       wateringCount: count(waterings.id),
       lastWatered: max(waterings.wateringTime),
-      lastFertilized:
-        sql<number | null>`MAX(CASE WHEN ${waterings.fertilized} = 1 THEN ${waterings.wateringTime} END)`,
+      lastFertilized: sql<
+        number | null
+      >`MAX(CASE WHEN ${waterings.fertilized} = 1 THEN ${waterings.wateringTime} END)`,
     })
     .from(plants)
     .leftJoin(waterings, eq(plants.id, waterings.plantId))
@@ -50,9 +51,7 @@ export interface WaterRecord {
   wateringTime: Date;
 }
 
-export function calculateIntervals(
-  wateringRecords: Array<WaterRecord>
-): Record<number, number | null> {
+export function calculateIntervals(wateringRecords: Array<WaterRecord>): Record<number, number | null> {
   // Group waterings by plantId
   const byPlant: Record<number, Array<WaterRecord>> = {};
 
@@ -60,7 +59,7 @@ export function calculateIntervals(
     if (!byPlant[record.plantId]) {
       byPlant[record.plantId] = [];
     }
-    byPlant[record.plantId]!.push(record);
+    byPlant[record.plantId]?.push(record);
   }
 
   const intervals: Record<number, number | null> = {};
@@ -77,9 +76,10 @@ export function calculateIntervals(
     // Calculate intervals between consecutive waterings
     const diffs: number[] = [];
     for (let i = 0; i < records.length - 1; i++) {
-      const diffMs =
-        records[i]!.wateringTime.getTime() -
-        records[i + 1]!.wateringTime.getTime();
+      const current = records[i];
+      const next = records[i + 1];
+      if (!current || !next) continue;
+      const diffMs = current.wateringTime.getTime() - next.wateringTime.getTime();
       const diffDays = diffMs / (1000 * 60 * 60 * 24);
       diffs.push(diffDays);
     }

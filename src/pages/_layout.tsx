@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import "../styles/global.css";
 import "../styles/tailwind.css";
 import { Menubar } from "../components/Menubar";

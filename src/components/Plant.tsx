@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
 import { cva } from "class-variance-authority";
+import { useState } from "react";
 import type { PlantWithStats } from "../types.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
 import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
@@ -14,10 +14,10 @@ const plantItem = cva(
   "contents after:content-[''] after:col-span-full after:h-px after:[background:linear-gradient(to_right,var(--border-color),var(--water-gradient-color))]",
 );
 const plantName = cva(
-  "font-medium text-[#2d5f3f] text-base flex items-center py-[0.1em] select-none cursor-pointer",
+  "bg-transparent border-none text-left font-medium text-[#2d5f3f] text-base flex items-center py-[0.1em] select-none cursor-pointer",
 );
 const lastWatered = cva(
-  "text-[#999] text-[0.8em] whitespace-nowrap flex items-center py-[0.1em] cursor-pointer",
+  "bg-transparent border-none text-left text-[#999] text-[0.8em] whitespace-nowrap flex items-center py-[0.1em] cursor-pointer",
 );
 
 const WATER_COLOR_RGB = "109, 148, 197";
@@ -43,23 +43,19 @@ export function Plant({ plant }: PlantProps) {
   return (
     <li
       className={plantItem()}
-      style={{
-        '--border-color': BORDER_COLOR,
-        '--water-gradient-color': `rgba(${WATER_COLOR_RGB}, ${ratio})`,
-      } as React.CSSProperties}
+      style={
+        {
+          "--border-color": BORDER_COLOR,
+          "--water-gradient-color": `rgba(${WATER_COLOR_RGB}, ${ratio})`,
+        } as React.CSSProperties
+      }
     >
-      <span
-        className={plantName()}
-        onClick={() => setIsDialogOpen(true)}
-      >
+      <button type="button" className={plantName()} onClick={() => setIsDialogOpen(true)}>
         {plant.name}
-      </span>
-      <span
-        className={lastWatered()}
-        onClick={() => setIsDialogOpen(true)}
-      >
+      </button>
+      <button type="button" className={lastWatered()} onClick={() => setIsDialogOpen(true)}>
         {formatLastWatered(plant.lastWatered)}
-      </span>
+      </button>
       <PlantActionsDialog
         plantId={plant.id}
         plantName={plant.name}
