@@ -3,95 +3,59 @@
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { css, cx } from "../../../styled-system/css";
+import { type ClassValue, clsx } from "clsx";
+import { twMerge } from "tailwind-merge";
 
-const overlayStyles = css({
-  position: "fixed",
-  inset: 0,
-  backgroundColor: "rgba(0, 0, 0, 0.5)",
-  zIndex: 50,
-});
-
-const contentStyles = css({
-  position: "fixed",
-  left: "50%",
-  top: "50%",
-  transform: "translate(-50%, -50%)",
-  backgroundColor: "white",
-  borderRadius: "8px",
-  padding: "24px",
-  boxShadow: "0 10px 38px -10px rgba(22, 23, 24, 0.35), 0 10px 20px -15px rgba(22, 23, 24, 0.2)",
-  zIndex: 50,
-  maxWidth: "450px",
-  width: "90vw",
-});
-
-const closeButtonStyles = css({
-  position: "absolute",
-  top: "12px",
-  right: "12px",
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-  padding: "4px",
-  borderRadius: "4px",
-  color: "#666",
-  _hover: {
-    backgroundColor: "#f0f0f0",
-  },
-});
-
-const titleStyles = css({
-  fontSize: "1.125rem",
-  fontWeight: 600,
-  marginBottom: "8px",
-});
-
-const descriptionStyles = css({
-  fontSize: "0.875rem",
-  color: "#666",
-  marginBottom: "16px",
-});
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
 
 export const Dialog = DialogPrimitive.Root;
 export const DialogTrigger = DialogPrimitive.Trigger;
 
-export function DialogContent({
-  children,
-  ...props
-}: DialogPrimitive.DialogContentProps) {
-  return (
-    <DialogPrimitive.Portal>
-      <DialogPrimitive.Overlay className={overlayStyles} />
-      <DialogPrimitive.Content className={contentStyles} {...props}>
-        {children}
-        <DialogPrimitive.Close className={closeButtonStyles}>
-          <X size={16} />
-        </DialogPrimitive.Close>
-      </DialogPrimitive.Content>
-    </DialogPrimitive.Portal>
-  );
-}
-
-export function DialogTitle({
-  children,
-  className,
-  ...props
-}: DialogPrimitive.DialogTitleProps) {
-  return (
-    <DialogPrimitive.Title className={cx(titleStyles, className)} {...props}>
+export const DialogContent = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Content>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
+>(({ className, children, ...props }, ref) => (
+  <DialogPrimitive.Portal>
+    <DialogPrimitive.Overlay className="fixed inset-0 bg-black/50 z-50" />
+    <DialogPrimitive.Content
+      ref={ref}
+      className={cn(
+        "fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 shadow-lg z-50 max-w-[450px] w-[90vw]",
+        className,
+      )}
+      {...props}
+    >
       {children}
-    </DialogPrimitive.Title>
-  );
-}
+      <DialogPrimitive.Close className="absolute top-3 right-3 bg-transparent border-none cursor-pointer p-1 rounded text-[#666] hover:bg-[#f0f0f0]">
+        <X size={16} />
+      </DialogPrimitive.Close>
+    </DialogPrimitive.Content>
+  </DialogPrimitive.Portal>
+));
+DialogContent.displayName = DialogPrimitive.Content.displayName;
 
-export function DialogDescription({
-  children,
-  ...props
-}: DialogPrimitive.DialogDescriptionProps) {
-  return (
-    <DialogPrimitive.Description className={descriptionStyles} {...props}>
-      {children}
-    </DialogPrimitive.Description>
-  );
-}
+export const DialogTitle = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Title>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Title
+    ref={ref}
+    className={cn("text-lg font-semibold mb-2", className)}
+    {...props}
+  />
+));
+DialogTitle.displayName = DialogPrimitive.Title.displayName;
+
+export const DialogDescription = React.forwardRef<
+  React.ComponentRef<typeof DialogPrimitive.Description>,
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
+>(({ className, ...props }, ref) => (
+  <DialogPrimitive.Description
+    ref={ref}
+    className={cn("text-sm text-[#666] mb-4", className)}
+    {...props}
+  />
+));
+DialogDescription.displayName = DialogPrimitive.Description.displayName;
