@@ -1,6 +1,8 @@
 import { drizzle } from "drizzle-orm/libsql";
 import { createClient } from "@libsql/client";
 
+import { IS_TEST } from './utils.ts';
+
 const DB_URL = process.env["TURSO_DATABASE_URL"] ?? "file:sqlite.db";
 
 export const dbCredentials = {
@@ -11,6 +13,6 @@ export const dbCredentials = {
 export function getDB() {
   const client = createClient(dbCredentials);
 
-  const db = drizzle(client, { logger: DB_URL.includes("file") });
+  const db = drizzle(client, { logger: DB_URL.includes("file") && !IS_TEST });
   return db;
 }

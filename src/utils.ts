@@ -1,3 +1,5 @@
+export const IS_TEST = Boolean(process?.env["VITEST"]);
+
 const WEEK = 7;
 
 export function formatCalendarDaysAgo(date: Date): string {

@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import { css, cx } from "../../styled-system/css";
 import { useRouter } from "waku";
 import { waterPlant, renamePlant } from "../actions/plants.ts";
-import { formatCalendarDaysAgo } from "../until.ts";
+import { formatCalendarDaysAgo } from "../utils.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
 interface PlantActionsDialogProps {
