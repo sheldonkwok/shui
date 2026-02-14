@@ -1,48 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { css } from "../../styled-system/css";
+import { cva } from "class-variance-authority";
 import type { PlantWithStats } from "../types.ts";
-import { formatCalendarDaysAgo } from "../until.ts";
+import { formatCalendarDaysAgo } from "../utils.ts";
 import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
 
 interface PlantProps {
   plant: PlantWithStats;
 }
 
-const plantItemStyles = css({
-  display: "contents",
-  _after: {
-    content: '""',
-    gridColumn: "1 / -1",
-    height: "1px",
-    background:
-      "linear-gradient(to right, var(--border-color), var(--water-gradient-color))",
-  },
-});
-
-const clickableCellStyles = css({
-  cursor: "pointer",
-});
-
-const plantNameStyles = css({
-  fontWeight: 500,
-  color: "#2d5f3f",
-  fontSize: "1em",
-  display: "flex",
-  alignItems: "center",
-  padding: "0.1em 0",
-  userSelect: "none",
-});
-
-const lastWateredStyles = css({
-  color: "#999",
-  fontSize: "0.8em",
-  whiteSpace: "nowrap",
-  display: "flex",
-  alignItems: "center",
-  padding: "0.1em 0",
-});
+const plantItem = cva(
+  "contents after:content-[''] after:col-span-full after:h-px after:[background:linear-gradient(to_right,var(--border-color),var(--water-gradient-color))]",
+);
+const plantName = cva(
+  "font-medium text-[#2d5f3f] text-base flex items-center py-[0.1em] select-none cursor-pointer",
+);
+const lastWatered = cva(
+  "text-[#999] text-[0.8em] whitespace-nowrap flex items-center py-[0.1em] cursor-pointer",
+);
 
 const WATER_COLOR_RGB = "109, 148, 197";
 const BORDER_COLOR = "#e9ecef";
@@ -66,20 +42,20 @@ export function Plant({ plant }: PlantProps) {
 
   return (
     <li
-      className={plantItemStyles}
+      className={plantItem()}
       style={{
         '--border-color': BORDER_COLOR,
         '--water-gradient-color': `rgba(${WATER_COLOR_RGB}, ${ratio})`,
       } as React.CSSProperties}
     >
       <span
-        className={`${plantNameStyles} ${clickableCellStyles}`}
+        className={plantName()}
         onClick={() => setIsDialogOpen(true)}
       >
         {plant.name}
       </span>
       <span
-        className={`${lastWateredStyles} ${clickableCellStyles}`}
+        className={lastWatered()}
         onClick={() => setIsDialogOpen(true)}
       >
         {formatLastWatered(plant.lastWatered)}

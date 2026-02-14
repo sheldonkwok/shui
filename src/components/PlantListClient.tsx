@@ -1,29 +1,14 @@
 "use client";
 
-import { css } from "../../styled-system/css";
+import { cva } from "class-variance-authority";
 import { Plant } from "./Plant.tsx";
 import type { PlantWithStats } from "../types.ts";
 
-const containerStyles = css({
-  marginBottom: "40px",
-});
-
-const listStyles = css({
-  listStyle: "none",
-  padding: 0,
-  margin: 0,
-  display: "grid",
-  gridTemplateColumns: "auto auto",
-  justifyContent: "space-between",
-  alignItems: "stretch",
-});
-
-const noPlantsStyles = css({
-  textAlign: "center",
-  color: "#6c757d",
-  fontStyle: "italic",
-  padding: "20px",
-});
+const container = cva("mb-10");
+const list = cva(
+  "list-none p-0 m-0 grid grid-cols-[auto_auto] justify-between items-stretch",
+);
+const noPlants = cva("text-center text-[#6c757d] italic p-5");
 
 interface PlantListClientProps {
   plants: PlantWithStats[];
@@ -31,15 +16,15 @@ interface PlantListClientProps {
 
 export function PlantListClient({ plants }: PlantListClientProps) {
   return (
-    <div className={containerStyles}>
+    <div className={container()}>
       {plants.length > 0 ? (
-        <ul className={listStyles}>
+        <ul className={list()}>
           {plants.map((plant) => {
             return <Plant key={plant.id} plant={plant} />;
           })}
         </ul>
       ) : (
-        <p className={noPlantsStyles}>
+        <p className={noPlants()}>
           No plants yet. Add your first plant below!
         </p>
       )}

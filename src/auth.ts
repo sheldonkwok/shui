@@ -3,6 +3,8 @@ import { getCookie, setCookie, deleteCookie } from "hono/cookie";
 import { Google } from "arctic";
 import type { Context } from "hono";
 
+import { IS_TEST } from './utils.ts';
+
 // =============================================================================
 // Configuration
 // =============================================================================
@@ -37,7 +39,6 @@ function getEnvOrThrow(key: string): string {
 
 const isProduction = process.env["VERCEL_ENV"] === "production";
 const isPreview = process.env["VERCEL_ENV"] === "preview";
-const isTest = Boolean(process?.env["VITEST"]);
 const authSecret = getEnvOrThrow("AUTH_SECRET");
 
 function getGoogle(): Google {
@@ -203,7 +204,7 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
 
 export const authMiddleware = createMiddleware(async (c, next) => {
   // Skip in test/preview environments
-  if (isTest || isPreview) return await next();
+  if (IS_TEST || isPreview) return await next();
 
   const path = new URL(c.req.url).pathname;
 
