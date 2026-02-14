@@ -5,6 +5,9 @@ This document provides guidelines for AI agents working on the shui project.
 ## Technical Notes
 When inserting into sqlite with drizzle, we need to make sure we're using the correct primitive type. For example, booleans are actually integers and should be 1 for true and 0 for false.
 
+## Styling
+Always use Tailwind CSS with `cva` (class-variance-authority) for component styling. Define styles as `cva(...)` constants at the top of the file and apply them as `styleName()` in JSX.
+
 
 ## Pre-Commit Requirements
 

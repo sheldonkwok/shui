@@ -1,49 +1,17 @@
 "use client";
 
-import { css } from "../../styled-system/css";
+import { cva } from "class-variance-authority";
 import { useRouter } from "waku";
 import { addPlant } from "../actions/plants.ts";
 import { ChevronRight } from "lucide-react";
 
-const formStyles = css({
-  paddingTop: "30px",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-});
-
-const inputStyles = css({
-  flex: 1,
-  padding: "10px",
-  border: "1px solid #ddd",
-  borderRadius: "4px",
-  fontSize: "16px",
-  boxSizing: "border-box",
-  _focus: {
-    outline: "none",
-    borderColor: "#2d5f3f",
-    boxShadow: "0 0 0 2px rgba(45, 95, 63, 0.2)",
-  },
-});
-
-const submitButtonStyles = css({
-  backgroundColor: "#2d5f3f",
-  color: "white",
-  border: "none",
-  borderRadius: "4px",
-  cursor: "pointer",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "10px",
-  transition: "background-color 0.2s",
-  _hover: {
-    backgroundColor: "#1e3f2b",
-  },
-  _active: {
-    transform: "translateY(1px)",
-  },
-});
+const form = cva("pt-[30px] flex items-center gap-2");
+const input = cva(
+  "flex-1 p-2.5 border border-[#ddd] rounded text-base box-border focus:outline-none focus:border-[#2d5f3f] focus:shadow-[0_0_0_2px_rgba(45,95,63,0.2)]",
+);
+const submitButton = cva(
+  "bg-[#2d5f3f] text-white border-none rounded cursor-pointer flex items-center justify-center p-2.5 transition-colors duration-200 hover:bg-[#1e3f2b] active:translate-y-px",
+);
 
 export function AddPlantForm() {
   const router = useRouter();
@@ -61,15 +29,15 @@ export function AddPlantForm() {
   };
 
   return (
-    <form className={formStyles} onSubmit={handleSubmit}>
+    <form className={form()} onSubmit={handleSubmit}>
       <input
-        className={inputStyles}
+        className={input()}
         type="text"
         name="name"
         required
         placeholder="Add a new plant"
       />
-      <button className={submitButtonStyles} type="submit">
+      <button className={submitButton()} type="submit">
         <ChevronRight size={20} />
       </button>
     </form>
