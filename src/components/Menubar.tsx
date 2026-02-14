@@ -1,27 +1,14 @@
-import { css } from "../../styled-system/css";
+import { cva } from "class-variance-authority";
 
-const menubarStyles = css({
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-  paddingBottom: "8px",
-});
-
-const logoStyles = css({
-  width: "40px",
-  height: "40px",
-});
-
-const titleStyles = css({
-  fontSize: "24px",
-  fontWeight: "bold",
-});
+const menubar = cva("flex items-center gap-2 pb-2");
+const logo = cva("w-[30px] h-[30px]");
+const title = cva("text-2xl font-bold");
 
 export function Menubar() {
   return (
-    <div className={menubarStyles}>
-      <img src="/shui.png" alt="Shui" className={logoStyles} />
-      <span className={titleStyles}>Shui</span>
+    <div className={menubar()}>
+      <img src="/shui.png" alt="Shui" className={logo()} />
+      <span className={title()}>Shui</span>
     </div>
   );
 }
