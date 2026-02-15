@@ -3,17 +3,10 @@
 import { eq } from "drizzle-orm";
 import { getDB } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
-import {
-  calculateIntervals,
-  listPlants,
-  listRecentWaterings,
-} from "./plants-helper.ts";
+import { calculateIntervals, listPlants, listRecentWaterings } from "./plants-helper.ts";
 
 export async function getPlants() {
-  const [data, recentWaterings] = await Promise.all([
-    listPlants(),
-    listRecentWaterings(),
-  ]);
+  const [data, recentWaterings] = await Promise.all([listPlants(), listRecentWaterings()]);
 
   // Calculate average intervals
   const wateringIntervals = calculateIntervals(recentWaterings);
@@ -22,17 +15,13 @@ export async function getPlants() {
   const now = new Date();
   const results = data.map((plant) => {
     const lastWatered = plant.lastWatered ? new Date(plant.lastWatered) : null;
-    const lastFertilized = plant.lastFertilized
-      ? new Date(plant.lastFertilized * 1000)
-      : null;
+    const lastFertilized = plant.lastFertilized ? new Date(plant.lastFertilized * 1000) : null;
     const avgInterval = wateringIntervals[plant.id] ?? null;
 
     let daysUntilNextWatering: number | null = null;
     if (lastWatered && avgInterval !== null) {
-      const daysSinceWatered =
-        (now.getTime() - lastWatered.getTime()) / (1000 * 60 * 60 * 24);
-      daysUntilNextWatering =
-        Math.round((avgInterval - daysSinceWatered) * 10) / 10;
+      const daysSinceWatered = (now.getTime() - lastWatered.getTime()) / (1000 * 60 * 60 * 24);
+      daysUntilNextWatering = Math.round((avgInterval - daysSinceWatered) * 10) / 10;
     }
 
     return {
@@ -48,8 +37,7 @@ export async function getPlants() {
 
   // Sort by daysUntilNextWatering ascending (null values last)
   return results.sort((a, b) => {
-    if (a.daysUntilNextWatering === null && b.daysUntilNextWatering === null)
-      return 0;
+    if (a.daysUntilNextWatering === null && b.daysUntilNextWatering === null) return 0;
     if (a.daysUntilNextWatering === null) return 1;
     if (b.daysUntilNextWatering === null) return -1;
     return a.daysUntilNextWatering - b.daysUntilNextWatering;
@@ -61,10 +49,7 @@ export async function addPlant(name: string) {
 }
 
 export async function renamePlant(plantId: number, newName: string) {
-  await getDB()
-    .update(plants)
-    .set({ name: newName })
-    .where(eq(plants.id, plantId));
+  await getDB().update(plants).set({ name: newName }).where(eq(plants.id, plantId));
 }
 
 export async function waterPlant(plantId: number, fertilized: boolean = false) {

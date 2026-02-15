@@ -1,9 +1,9 @@
 "use client";
 
-import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { X } from "lucide-react";
 import { type ClassValue, clsx } from "clsx";
+import { X } from "lucide-react";
+import * as React from "react";
 import { twMerge } from "tailwind-merge";
 
 function cn(...inputs: ClassValue[]) {
@@ -40,11 +40,7 @@ export const DialogTitle = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Title>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Title
-    ref={ref}
-    className={cn("text-lg font-semibold mb-2", className)}
-    {...props}
-  />
+  <DialogPrimitive.Title ref={ref} className={cn("text-lg font-semibold mb-2", className)} {...props} />
 ));
 DialogTitle.displayName = DialogPrimitive.Title.displayName;
 
@@ -52,10 +48,6 @@ export const DialogDescription = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description
-    ref={ref}
-    className={cn("text-sm text-[#666] mb-4", className)}
-    {...props}
-  />
+  <DialogPrimitive.Description ref={ref} className={cn("text-sm text-[#666] mb-4", className)} {...props} />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;

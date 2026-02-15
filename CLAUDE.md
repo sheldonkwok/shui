@@ -17,6 +17,7 @@ Before creating any commit, you **must** run the test suite to ensure all tests 
 
 ```bash
 pnpm install  # Run this first to ensure dependencies are installed
+pnpm biome
 pnpm test
 ```
 

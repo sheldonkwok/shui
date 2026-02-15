@@ -1,9 +1,9 @@
 "use client";
 
 import { cva } from "class-variance-authority";
+import { ChevronRight } from "lucide-react";
 import { useRouter } from "waku";
 import { addPlant } from "../actions/plants.ts";
-import { ChevronRight } from "lucide-react";
 
 const form = cva("pt-[30px] flex items-center gap-2");
 const input = cva(
@@ -30,13 +30,7 @@ export function AddPlantForm() {
 
   return (
     <form className={form()} onSubmit={handleSubmit}>
-      <input
-        className={input()}
-        type="text"
-        name="name"
-        required
-        placeholder="Add a new plant"
-      />
+      <input className={input()} type="text" name="name" required placeholder="Add a new plant" />
       <button className={submitButton()} type="submit">
         <ChevronRight size={20} />
       </button>

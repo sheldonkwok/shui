@@ -12,12 +12,9 @@ export async function cleanupTestDB() {
 export async function seedPlant(name: string): Promise<number> {
   const db = getDB();
 
-  const result = await db
-    .insert(plants)
-    .values({ name })
-    .returning({ id: plants.id });
+  const result = await db.insert(plants).values({ name }).returning({ id: plants.id });
 
-  return result[0]!.id;
+  return result[0].id;
 }
 
 export async function seedWatering(plantId: number, wateringTime: Date) {

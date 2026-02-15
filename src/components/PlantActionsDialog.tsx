@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef } from "react";
 import { cva, cx } from "class-variance-authority";
+import { useRef, useState } from "react";
 import { useRouter } from "waku";
-import { waterPlant, renamePlant } from "../actions/plants.ts";
+import { renamePlant, waterPlant } from "../actions/plants.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
@@ -95,7 +95,13 @@ function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
   );
 }
 
-export function PlantActionsDialog({ plantId, plantName, lastFertilized: lastFertilizedDate, open, onOpenChange }: PlantActionsDialogProps) {
+export function PlantActionsDialog({
+  plantId,
+  plantName,
+  lastFertilized: lastFertilizedDate,
+  open,
+  onOpenChange,
+}: PlantActionsDialogProps) {
   const router = useRouter();
 
   const handleWaterWithFertilizer = async () => {
@@ -116,18 +122,10 @@ export function PlantActionsDialog({ plantId, plantName, lastFertilized: lastFer
         <EditableName plantId={plantId} plantName={plantName} onRenamed={() => router.reload()} />
         <p className={lastFertilized()}>{formatLastFertilized(lastFertilizedDate)}</p>
         <div className={buttonContainer()}>
-          <button
-            className={fertilizeButton()}
-            type="button"
-            onClick={handleWaterWithFertilizer}
-          >
+          <button className={fertilizeButton()} type="button" onClick={handleWaterWithFertilizer}>
             Fertilize
           </button>
-          <button
-            className={waterButton()}
-            type="button"
-            onClick={handleWater}
-          >
+          <button className={waterButton()} type="button" onClick={handleWater}>
             Water
           </button>
         </div>
