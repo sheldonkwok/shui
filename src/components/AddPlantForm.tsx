@@ -5,7 +5,7 @@ import { ChevronRight } from "lucide-react";
 import { useRouter } from "waku";
 import { addPlant } from "../actions/plants.ts";
 
-const form = cva("pt-[30px] flex items-center gap-2");
+const form = cva("flex items-center gap-2");
 const input = cva(
   "flex-1 p-2.5 border border-[#ddd] rounded text-base box-border focus:outline-none focus:border-[#2d5f3f] focus:shadow-[0_0_0_2px_rgba(45,95,63,0.2)]",
 );

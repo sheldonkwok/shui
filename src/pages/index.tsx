@@ -1,4 +1,3 @@
-import { AddPlantForm } from "../components/AddPlantForm.tsx";
 import { PlantList } from "../components/PlantList.tsx";
 import { TabRefresh } from "../components/TabRefresh.tsx";
 
@@ -8,8 +7,6 @@ export default async function HomePage() {
       <TabRefresh />
 
       <PlantList />
-
-      <AddPlantForm />
     </>
   );
 }
