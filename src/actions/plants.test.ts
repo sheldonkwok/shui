@@ -1,5 +1,4 @@
-import { execaCommand } from "execa";
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
 import { getPlants } from "./plants.ts";
 
@@ -8,11 +7,6 @@ const DAY = 24 * 60 * 60 * 1000;
 describe("getPlants - watering intervals", () => {
   const now = new Date();
   const time = now.getTime();
-
-  beforeAll(async () => {
-    // Push schema to test database
-    await execaCommand("pnpm drizzle-kit push", { stdio: "inherit" });
-  });
 
   beforeEach(async () => {
     await cleanupTestDB();
