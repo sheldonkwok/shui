@@ -11,6 +11,7 @@
     "@hono/node-server": "~1.19.9",
     "@libsql/client": "~0.17.0",
     "@radix-ui/react-dialog": "^1.1.15",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-popover": "^1.1.15",
     "@sindresorhus/tsconfig": "~8.1.0",
     "@tailwindcss/vite": "^4.1.18",
@@ -43,7 +44,7 @@
   },
   "scripts": {
     "build": "waku build",
-    "biome": "biome check --write .",
+    "biomec": "biome check --write .",
     "dev": "waku dev",
     "start": "waku start",
     "migrate": "drizzle-kit push",
