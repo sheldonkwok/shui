@@ -10,9 +10,5 @@ export const dbCredentials = {
   authToken: process.env.TURSO_AUTH_TOKEN,
 };
 
-export function getDB() {
-  const client = createClient(dbCredentials);
-
-  const db = drizzle(client, { logger: DB_URL.includes("file") && !IS_TEST });
-  return db;
-}
+const client = createClient(dbCredentials);
+export const db = drizzle(client, { logger: DB_URL.includes("file") && !IS_TEST });

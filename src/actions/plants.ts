@@ -1,7 +1,7 @@
 "use server";
 
 import { eq } from "drizzle-orm";
-import { getDB } from "../db.ts";
+import { db } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
 import { calculateIntervals, listPlants, listRecentWaterings } from "./plants-helper.ts";
 
@@ -45,15 +45,15 @@ export async function getPlants() {
 }
 
 export async function addPlant(name: string) {
-  await getDB().insert(plants).values({ name });
+  await db.insert(plants).values({ name });
 }
 
 export async function renamePlant(plantId: number, newName: string) {
-  await getDB().update(plants).set({ name: newName }).where(eq(plants.id, plantId));
+  await db.update(plants).set({ name: newName }).where(eq(plants.id, plantId));
 }
 
 export async function waterPlant(plantId: number, fertilized: boolean = false) {
-  await getDB()
+  await db
     .insert(waterings)
     .values({
       plantId,

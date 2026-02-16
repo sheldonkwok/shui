@@ -1,9 +1,9 @@
 import { asc, count, eq, max, sql } from "drizzle-orm";
-import { getDB } from "../db.ts";
+import { db } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
 
 export async function listPlants() {
-  const data = await getDB()
+  const data = await db
     .select({
       id: plants.id,
       name: plants.name,
@@ -22,7 +22,7 @@ export async function listPlants() {
 }
 
 export async function listRecentWaterings() {
-  const data = await getDB().all<{
+  const data = await db.all<{
     plantId: number;
     wateringTime: number;
   }>(sql`
