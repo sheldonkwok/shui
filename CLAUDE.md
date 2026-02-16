@@ -8,27 +8,42 @@ When inserting into sqlite with drizzle, we need to make sure we're using the co
 ## Styling
 Always use Tailwind CSS with `cva` (class-variance-authority) for component styling. Define styles as `cva(...)` constants at the top of the file and apply them as `styleName()` in JSX.
 
+## Code Quality Checks
 
-## Pre-Commit Requirements
-
-### 1. Always Run Tests Before Committing
-
-Before creating any commit, you **must** run the test suite to ensure all tests pass:
-If you don't have turso installed in your environment, it can be installed with this script `curl -sSfL https://get.tur.so/install.sh | bash`
+**CRITICAL: After generating or modifying any code, you MUST run the following checks:**
 
 ```bash
 pnpm install  # Run this first to ensure dependencies are installed
-pnpm biomec
-pnpm test
+pnpm biomec  # Check and fix code formatting/linting
+pnpm test    # Run all tests to ensure nothing broke
 ```
 
-- Verify that all existing tests pass
-- If you added new functionality, ensure appropriate tests are included
-- Fix any failing tests before proceeding with the commit
-- Do not commit code with failing tests
+### When to Run
+
+- Immediately after creating or editing any source code files
+- After adding or modifying functionality
+- Before considering a task complete
+
+### What to Do If Checks Fail
+
+If you don't have turso installed in your environment, it can be installed with this script `curl -sSfL https://get.tur.so/install.sh | bash`
+
+**If `pnpm biomec` fails:**
+- Review the linting errors reported
+- Fix the issues (biomec will auto-fix most formatting issues)
+- Re-run `pnpm biomec` to verify fixes
+
+**If `pnpm test` fails:**
+- Read the test failure output carefully
+- Fix the broken functionality or update tests if behavior intentionally changed
+- Do NOT proceed until all tests pass
+
+**Important:** Code is not considered complete until both `pnpm biomec` and `pnpm test` pass successfully.
+
+## Pre-Commit Requirements
 
 
-### 2. Always Use pnpm Instead of npm
+### 1. Always Use pnpm Instead of npm
 
 This project uses **pnpm** as the package manager. Always use pnpm commands instead of npm:
 
@@ -48,7 +63,7 @@ pnpm remove <package-name>
 
 **Never use npm commands** - always use pnpm to maintain consistency and proper dependency management.
 
-### 3. Use Conventional Commit Style
+### 2. Use Conventional Commit Style
 
 All commits must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification.
 
