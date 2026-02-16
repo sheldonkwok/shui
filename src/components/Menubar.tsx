@@ -3,7 +3,12 @@
 import { cva } from "class-variance-authority";
 import { Menu } from "lucide-react";
 import { AddPlantForm } from "./AddPlantForm.tsx";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "./ui/DropdownMenu.tsx";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/DropdownMenu.tsx";
 
 const menubar = cva("flex items-center gap-2 pb-2");
 const logo = cva("w-[30px] h-[30px]");

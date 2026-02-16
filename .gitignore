@@ -2,7 +2,7 @@ node_modules
 .envrc
 .dev.vars
 .vercel
-*.db
+sqlite*.db*
 dist
 
 # Local Netlify folder
