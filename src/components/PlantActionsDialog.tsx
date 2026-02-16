@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 interface PlantActionsDialogProps {
   plantId: number;
   plantName: string;
+  lastWatered: Date | null;
   lastFertilized: Date | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -22,7 +23,13 @@ const waterButton = cva(
   "bg-[#6d94c5] text-white border-none px-4 py-2 rounded text-[0.9em] cursor-pointer transition-colors hover:bg-[#357abd]",
 );
 const buttonContainer = cva("flex flex-col items-end gap-2 mt-3");
-const lastFertilized = cva("text-[#999] text-[0.85em] mt-1");
+const lastWateredStyle = cva("text-[#999] text-[0.85em] mt-1");
+const lastFertilizedStyle = cva("text-[#999] text-[0.85em] mt-1");
+
+const formatMostRecentWatering = (date: Date | null) => {
+  if (!date) return "Most recent watering: never";
+  return `Most recent watering ${formatCalendarDaysAgo(date).toLowerCase()}`;
+};
 
 const formatLastFertilized = (date: Date | null) => {
   if (!date) return "Not fertilized recently";
@@ -98,6 +105,7 @@ function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
 export function PlantActionsDialog({
   plantId,
   plantName,
+  lastWatered: lastWateredDate,
   lastFertilized: lastFertilizedDate,
   open,
   onOpenChange,
@@ -120,7 +128,8 @@ export function PlantActionsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <EditableName plantId={plantId} plantName={plantName} onRenamed={() => router.reload()} />
-        <p className={lastFertilized()}>{formatLastFertilized(lastFertilizedDate)}</p>
+        <p className={lastWateredStyle()}>{formatMostRecentWatering(lastWateredDate)}</p>
+        <p className={lastFertilizedStyle()}>{formatLastFertilized(lastFertilizedDate)}</p>
         <div className={buttonContainer()}>
           <button className={fertilizeButton()} type="button" onClick={handleWaterWithFertilizer}>
             Fertilize

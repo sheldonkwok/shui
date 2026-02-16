@@ -49,6 +49,7 @@
     "dev": "pnpm run /^dev:/",
     "start": "waku start",
     "migrate": "drizzle-kit push",
+    "sync-views": "node --experimental-strip-types scripts/sync-views.ts",
     "test": "vitest run",
     "dev:waku": "waku dev"
   },

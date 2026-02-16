@@ -1,10 +1,7 @@
+import { sql } from "drizzle-orm";
 import { $ } from "execa";
-import postgres from "postgres";
-
-const DATABASE_URL = process.env.DATABASE_URL;
-if (!DATABASE_URL) {
-  throw new Error("DATABASE_URL is required");
-}
+import { getDB } from "../src/db.ts";
+import { plants, waterings } from "../src/schema.ts";
 
 function parseTursoTable(output: string): Record<string, string>[] {
   const lines = output.trim().split("\n");
@@ -51,34 +48,34 @@ function parseTursoTable(output: string): Record<string, string>[] {
   });
 }
 
-const sql = postgres(DATABASE_URL);
+const db = getDB();
 
 const { stdout: plantsOutput } = await $`turso db shell shui ${"SELECT * FROM plants"}`;
 const { stdout: wateringsOutput } = await $`turso db shell shui ${"SELECT * FROM waterings"}`;
 
-const plants = parseTursoTable(plantsOutput).map((r) => ({
+const plantsData = parseTursoTable(plantsOutput).map((r) => ({
   id: Number(r.id),
-  name: r.name,
+  name: r.name!,
 }));
 
-const waterings = parseTursoTable(wateringsOutput).map((r) => ({
+const wateringsData = parseTursoTable(wateringsOutput).map((r) => ({
   id: Number(r.id),
-  plant_id: Number(r.plant_id),
-  watering_time: new Date(Number(r.watering_time) * 1000),
+  plantId: Number(r.plant_id),
+  wateringTime: new Date(Number(r.watering_time) * 1000),
   fertilized: Boolean(Number(r.fertilized)),
 }));
 
-console.log(`Found ${plants.length} plants, ${waterings.length} waterings`);
+console.log(`Found ${plantsData.length} plants, ${wateringsData.length} waterings`);
 
-await sql`INSERT INTO plants ${sql(plants, "id", "name")}`;
-console.log(`Inserted ${plants.length} plants`);
+await db.insert(plants).values(plantsData);
+console.log(`Inserted ${plantsData.length} plants`);
 
-await sql`INSERT INTO waterings ${sql(waterings, "id", "plant_id", "watering_time", "fertilized")}`;
-console.log(`Inserted ${waterings.length} waterings`);
+await db.insert(waterings).values(wateringsData);
+console.log(`Inserted ${wateringsData.length} waterings`);
 
-await sql`SELECT setval('plants_id_seq', (SELECT MAX(id) FROM plants))`;
-await sql`SELECT setval('waterings_id_seq', (SELECT MAX(id) FROM waterings))`;
+await db.execute(sql`SELECT setval('plants_id_seq', (SELECT MAX(id) FROM plants))`);
+await db.execute(sql`SELECT setval('waterings_id_seq', (SELECT MAX(id) FROM waterings))`);
 console.log("Reset sequences");
 
-await sql.end();
 console.log("Done");
+process.exit(0);

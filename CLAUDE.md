@@ -17,7 +17,7 @@ Always use Tailwind CSS with `cva` (class-variance-authority) for component styl
 **CRITICAL: After generating or modifying any code, you MUST run the following checks:**
 
 ```bash
-pnpm install  # Run this first to ensure dependencies are installed
+pnpm install  # Run this first if you are Claude. Do NOT run if you are Codex.
 pnpm check  # Check and fix code formatting/linting
 pnpm test    # Run all tests to ensure nothing broke
 ```

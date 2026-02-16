@@ -4,7 +4,7 @@
 import type { PathsForPages, GetConfigResponse } from 'waku/router';
 
 // prettier-ignore
-import type { getConfig as File_Index_getConfig } from './pages/index.ts';
+import type { getConfig as File_Index_getConfig } from './pages/index';
 
 // prettier-ignore
 type Page =

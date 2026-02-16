@@ -59,6 +59,7 @@ export function Plant({ plant }: PlantProps) {
       <PlantActionsDialog
         plantId={plant.id}
         plantName={plant.name}
+        lastWatered={plant.lastWatered}
         lastFertilized={plant.lastFertilized}
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}

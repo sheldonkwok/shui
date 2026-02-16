@@ -1,6 +1,6 @@
 import { sql } from "drizzle-orm";
 import { getDB } from "./db.ts";
-import { plants, waterings } from "./schema.ts";
+import { avgWateringIntervals, plants, waterings } from "./schema.ts";
 
 export async function cleanupTestDB() {
   const db = getDB();
@@ -9,6 +9,7 @@ export async function cleanupTestDB() {
   // Reset sequences so IDs are predictable
   await db.execute(sql`ALTER SEQUENCE plants_id_seq RESTART WITH 1`);
   await db.execute(sql`ALTER SEQUENCE waterings_id_seq RESTART WITH 1`);
+  await db.refreshMaterializedView(avgWateringIntervals);
 }
 
 export async function seedPlant(name: string): Promise<number> {
@@ -19,10 +20,12 @@ export async function seedPlant(name: string): Promise<number> {
   return result[0]!.id;
 }
 
-export async function seedWatering(plantId: number, wateringTime: Date) {
+export async function seedWatering(plantId: number, wateringTime: Date, fertilized = false) {
   const db = getDB();
   await db.insert(waterings).values({
     plantId,
     wateringTime,
+    fertilized,
   });
+  await db.refreshMaterializedView(avgWateringIntervals);
 }
