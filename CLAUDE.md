@@ -14,6 +14,7 @@ Always use Tailwind CSS with `cva` (class-variance-authority) for component styl
 ### 1. Always Run Tests Before Committing
 
 Before creating any commit, you **must** run the test suite to ensure all tests pass:
+If you don't have turso installed in your environment, it can be installed with this script `curl -sSfL https://get.tur.so/install.sh | bash`
 
 ```bash
 pnpm install  # Run this first to ensure dependencies are installed
@@ -25,6 +26,7 @@ pnpm test
 - If you added new functionality, ensure appropriate tests are included
 - Fix any failing tests before proceeding with the commit
 - Do not commit code with failing tests
+
 
 ### 2. Always Use pnpm Instead of npm
 

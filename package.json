@@ -45,10 +45,12 @@
   "scripts": {
     "build": "waku build",
     "biomec": "biome check --write .",
-    "dev": "waku dev",
+    "dev": "pnpm run /^dev:/",
     "start": "waku start",
     "migrate": "drizzle-kit push",
-    "test": "vitest run"
+    "test": "vitest run",
+    "dev:turso": "turso dev --db-file sqlite.db",
+    "dev:waku": "waku dev"
   },
   "keywords": [],
   "author": "",

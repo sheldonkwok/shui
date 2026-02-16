@@ -5,8 +5,9 @@ export default defineConfig({
     environment: "node",
     globals: true,
     env: {
-      TURSO_DATABASE_URL: "file:sqlite.test.db",
+      TURSO_DATABASE_URL: "http://127.0.0.1:8081",
     },
+    globalSetup: "./vitest.global-setup.ts",
     fileParallelism: false,
   },
 });
