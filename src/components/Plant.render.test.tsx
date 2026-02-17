@@ -5,9 +5,8 @@
 import { render, screen } from "@testing-library/react";
 import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
-import { execaCommand } from "execa";
 import { getPlants } from "../actions/plants.ts";
-import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
+import { cleanupTestDB, pushTestSchema, seedPlant, seedWatering } from "../test-utils.ts";
 import { Plant } from "./Plant.tsx";
 
 // Mock waku router
@@ -19,7 +18,7 @@ vi.mock("waku", () => ({
 
 describe("Plant component rendering", () => {
   beforeAll(async () => {
-    await execaCommand("pnpm drizzle-kit push", { stdio: "inherit" });
+    await pushTestSchema();
   });
 
   beforeEach(async () => {

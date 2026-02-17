@@ -19,11 +19,7 @@ export async function listPlants() {
 }
 
 export async function listRecentWaterings() {
-  const data = await getDB().all<{
-    plantId: number;
-    wateringTime: number;
-    fertilized: number;
-  }>(sql`
+  const result = await getDB().execute(sql`
     WITH ranked_waterings AS (
       SELECT
         plant_id,
@@ -32,17 +28,16 @@ export async function listRecentWaterings() {
         ROW_NUMBER() OVER (PARTITION BY plant_id ORDER BY watering_time DESC) as row_num
       FROM waterings
     )
-    SELECT plant_id as plantId, watering_time as wateringTime, fertilized
+    SELECT plant_id as "plantId", watering_time as "wateringTime", fertilized
     FROM ranked_waterings
     WHERE row_num <= 5
     ORDER BY watering_time DESC
   `);
 
-  // Convert timestamps to Date objects to match the expected return type
-  return data.map((record) => ({
-    plantId: record.plantId,
-    wateringTime: new Date(record.wateringTime * 1000),
-    fertilized: record.fertilized === 1,
+  return result.rows.map((record) => ({
+    plantId: record.plantId as number,
+    wateringTime: new Date(record.wateringTime as string),
+    fertilized: record.fertilized as boolean,
   }));
 }
 

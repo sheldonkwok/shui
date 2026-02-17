@@ -1,9 +1,11 @@
 import { defineConfig } from "drizzle-kit";
-import { dbCredentials } from "./src/db.ts";
+
+const PGLITE_DIR = process.env.PGLITE_DIR ?? "./pglite";
 
 export default defineConfig({
   out: "./drizzle",
   schema: "./src/schema.ts",
-  dialect: "turso",
-  dbCredentials,
+  dialect: "postgresql",
+  driver: "pglite",
+  dbCredentials: { url: PGLITE_DIR },
 });

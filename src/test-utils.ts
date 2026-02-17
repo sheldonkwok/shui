@@ -1,12 +1,32 @@
+import { sql } from "drizzle-orm";
 import { getDB } from "./db.ts";
 import { plants, waterings } from "./schema.ts";
 
+export async function pushTestSchema() {
+  const db = getDB();
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS plants (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL
+    )
+  `);
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS waterings (
+      id SERIAL PRIMARY KEY,
+      plant_id INTEGER NOT NULL REFERENCES plants(id),
+      watering_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+      fertilized BOOLEAN DEFAULT FALSE
+    )
+  `);
+}
+
 export async function cleanupTestDB() {
   const db = getDB();
-
-  // Delete all data (schema remains intact)
   await db.delete(waterings);
   await db.delete(plants);
+  // Reset sequences so IDs are predictable
+  await db.execute(sql`ALTER SEQUENCE plants_id_seq RESTART WITH 1`);
+  await db.execute(sql`ALTER SEQUENCE waterings_id_seq RESTART WITH 1`);
 }
 
 export async function seedPlant(name: string): Promise<number> {

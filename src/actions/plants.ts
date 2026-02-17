@@ -24,7 +24,7 @@ export async function getPlants() {
     }
   }
 
-  // Convert timestamps to Date objects and calculate days until next watering
+  // Calculate days until next watering
   const now = new Date();
   const results = plantsList.map((plant) => {
     const lastWatered = plant.lastWatered ? new Date(plant.lastWatered) : null;
@@ -65,11 +65,9 @@ export async function renamePlant(plantId: number, newName: string) {
   await getDB().update(plants).set({ name: newName }).where(eq(plants.id, plantId));
 }
 
-export async function waterPlant(plantId: number, fertilized: boolean = false) {
-  await getDB()
-    .insert(waterings)
-    .values({
-      plantId,
-      fertilized: fertilized ? 1 : 0,
-    });
+export async function waterPlant(plantId: number, fertilized = false) {
+  await getDB().insert(waterings).values({
+    plantId,
+    fertilized,
+  });
 }

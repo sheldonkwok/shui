@@ -29,14 +29,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: test
-        run: echo $TURSO_DATABASE_URL
-        env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
-
+      # TODO: Set up Supabase production secrets
+      # - DATABASE_URL: ${{ secrets.DATABASE_URL }}
       - name: Run migrations
         run: pnpm migrate
         env:
-          TURSO_DATABASE_URL: ${{ secrets.TURSO_DATABASE_URL }}
-          TURSO_AUTH_TOKEN: ${{ secrets.TURSO_AUTH_TOKEN }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}

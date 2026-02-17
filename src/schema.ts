@@ -1,21 +1,20 @@
 import { createInsertSchema } from "drizzle-arktype";
-import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { boolean, integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 
-export const plants = sqliteTable("plants", {
-  id: integer("id").primaryKey(),
-  name: text("name", { length: 255 }).notNull(),
+export const plants = pgTable("plants", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
 });
 
 export const plantInsertSchema = createInsertSchema(plants);
 
-export const waterings = sqliteTable("waterings", {
-  id: integer("id").primaryKey(),
+export const waterings = pgTable("waterings", {
+  id: serial("id").primaryKey(),
   plantId: integer("plant_id")
     .notNull()
     .references(() => plants.id),
-  wateringTime: integer("watering_time", { mode: "timestamp" }).default(sql`(unixepoch())`).notNull(),
-  fertilized: integer("fertilized", { mode: "boolean" }).default(0),
+  wateringTime: timestamp("watering_time", { withTimezone: true }).defaultNow().notNull(),
+  fertilized: boolean("fertilized").default(false),
 });
 
 export const wateringInsertSchema = createInsertSchema(waterings);

@@ -1,18 +1,12 @@
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-
+import { PGlite } from "@electric-sql/pglite";
+import { drizzle } from "drizzle-orm/pglite";
 import { IS_TEST } from "./utils.ts";
 
-const DB_URL = process.env.TURSO_DATABASE_URL ?? "http://127.0.0.1:8080";
+const PGLITE_DIR = process.env.PGLITE_DIR ?? "./pglite";
 
-export const dbCredentials = {
-  url: DB_URL,
-  authToken: process.env.TURSO_AUTH_TOKEN,
-};
+const client = new PGlite(PGLITE_DIR);
+const db = drizzle(client, { logger: !IS_TEST });
 
 export function getDB() {
-  const client = createClient(dbCredentials);
-
-  const db = drizzle(client, { logger: !DB_URL.includes("turso.io") && !IS_TEST });
   return db;
 }

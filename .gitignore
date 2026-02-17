@@ -2,7 +2,8 @@ node_modules
 .envrc
 .dev.vars
 .vercel
-sqlite*.db*
+pglite
+pglite-test
 dist
 
 # Local Netlify folder

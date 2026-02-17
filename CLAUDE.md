@@ -3,7 +3,7 @@
 This document provides guidelines for AI agents working on the shui project.
 
 ## Technical Notes
-When inserting into sqlite with drizzle, we need to make sure we're using the correct primitive type. For example, booleans are actually integers and should be 1 for true and 0 for false.
+The project uses PGlite (in-process PostgreSQL) for its database. No external database process is needed — PGlite runs embedded in Node.js. Data is stored in the `./pglite` directory. Run `pnpm migrate` to push the schema.
 
 ## Styling
 Always use Tailwind CSS with `cva` (class-variance-authority) for component styling. Define styles as `cva(...)` constants at the top of the file and apply them as `styleName()` in JSX.
@@ -25,8 +25,6 @@ pnpm test    # Run all tests to ensure nothing broke
 - Before considering a task complete
 
 ### What to Do If Checks Fail
-
-If you don't have turso installed in your environment, it can be installed with this script `curl -sSfL https://get.tur.so/install.sh | bash`
 
 **If `pnpm biomec` fails:**
 - Review the linting errors reported
