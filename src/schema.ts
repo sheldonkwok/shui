@@ -29,7 +29,7 @@ export const waterings = pgTable("waterings", {
 
 export const wateringInsertSchema = createInsertSchema(waterings);
 
-export const avgWateringIntervals = pgMaterializedView("avg_watering_intervals", {
+export const wateringSummary = pgMaterializedView("watering_summary", {
   plantId: integer("plant_id"),
   wateringCount: integer("watering_count"),
   lastWatered: timestamp("last_watered", { withTimezone: true }),

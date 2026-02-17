@@ -3,19 +3,18 @@
 import { eq } from "drizzle-orm";
 import { getDB } from "../db.ts";
 import { plants, waterings } from "../schema.ts";
-import { getAvgIntervals, listPlants, refreshAvgIntervals } from "./plants-helper.ts";
+import { listPlants, refreshWateringSummary } from "./plants-helper.ts";
 
 export async function getPlants() {
-  const [plantsList, wateringIntervals] = await Promise.all([listPlants(), getAvgIntervals()]);
+  const plantsList = await listPlants();
 
   // Calculate days until next watering
   const now = new Date();
   const results = plantsList
     .map((plant) => {
       const lastWatered = plant.lastWatered ? new Date(plant.lastWatered) : null;
-      const intervalData = wateringIntervals[plant.id];
-      const avgInterval = intervalData?.avgIntervalDays ?? null;
-      const lastFertilized = intervalData?.lastFertilized ?? null;
+      const avgInterval = plant.avgIntervalDays ?? null;
+      const lastFertilized = plant.lastFertilized ?? null;
 
       let daysUntilNextWatering: number | null = null;
       if (lastWatered && avgInterval !== null) {
@@ -57,5 +56,5 @@ export async function waterPlant(plantId: number, fertilized = false) {
     fertilized,
   });
 
-  await refreshAvgIntervals();
+  await refreshWateringSummary();
 }
