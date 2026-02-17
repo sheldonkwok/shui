@@ -99,6 +99,30 @@ describe("getPlants - watering intervals", () => {
     expect(result[0]?.avgWateringIntervalDays).toBe(3.5);
   });
 
+  it("should return null lastFertilized when no waterings are fertilized", async () => {
+    const plantId = await seedPlant("Unfertilized Plant");
+
+    await seedWatering(plantId, now);
+    await seedWatering(plantId, new Date(time - 7 * DAY));
+
+    const result = await getPlants();
+
+    expect(result[0]?.lastFertilized).toBeNull();
+  });
+
+  it("should return the most recent fertilized date as lastFertilized", async () => {
+    const plantId = await seedPlant("Fertilized Plant");
+    const sevenDaysAgo = new Date(time - 7 * DAY);
+
+    await seedWatering(plantId, now);
+    await seedWatering(plantId, sevenDaysAgo, true);
+    await seedWatering(plantId, new Date(time - 14 * DAY), true);
+
+    const result = await getPlants();
+
+    expect(result[0]?.lastFertilized).toEqual(sevenDaysAgo);
+  });
+
   it("should handle waterings less than 1 day apart", async () => {
     const plantId = await seedPlant("Frequently Watered Plant");
     const halfDayAgo = new Date(time - 0.5 * DAY);
@@ -112,5 +136,26 @@ describe("getPlants - watering intervals", () => {
 
     // Average of 0.5 and 0.5 = 0.5
     expect(result[0]?.avgWateringIntervalDays).toBe(0.5);
+  });
+
+  it("should sort plants by daysUntilNextWatering ascending", async () => {
+    const closestId = await seedPlant("Closest");
+    const nearId = await seedPlant("Near");
+    const fartherId = await seedPlant("Farther");
+
+    await seedWatering(closestId, new Date(time - 3 * DAY));
+    await seedWatering(closestId, new Date(time - 6 * DAY));
+
+    await seedWatering(nearId, new Date(time - 6 * DAY));
+    await seedWatering(nearId, new Date(time - 13 * DAY));
+
+    await seedWatering(fartherId, new Date(time - 10 * DAY));
+    await seedWatering(fartherId, new Date(time - 17 * DAY));
+
+    const result = await getPlants();
+    const ids = result.map((p) => p.id);
+
+    expect(ids.indexOf(fartherId)).toBeLessThan(ids.indexOf(closestId));
+    expect(ids.indexOf(closestId)).toBeLessThan(ids.indexOf(nearId));
   });
 });

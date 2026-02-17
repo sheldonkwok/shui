@@ -1,91 +1,39 @@
-import { asc, count, eq, max, sql } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import { getDB } from "../db.ts";
-import { plants, waterings } from "../schema.ts";
+import { avgWateringIntervals, plants } from "../schema.ts";
 
 export async function listPlants() {
   const data = await getDB()
     .select({
       id: plants.id,
       name: plants.name,
-      wateringCount: count(waterings.id),
-      lastWatered: max(waterings.wateringTime),
+      wateringCount: sql<number>`COALESCE(${avgWateringIntervals.wateringCount}, 0)`,
+      lastWatered: avgWateringIntervals.lastWatered,
     })
     .from(plants)
-    .leftJoin(waterings, eq(plants.id, waterings.plantId))
-    .groupBy(plants.id)
-    .orderBy(asc(max(waterings.wateringTime)));
+    .leftJoin(avgWateringIntervals, eq(plants.id, avgWateringIntervals.plantId))
+    .orderBy(asc(avgWateringIntervals.lastWatered));
 
   return data;
 }
 
-export async function listRecentWaterings() {
-  const result = await getDB().execute(sql`
-    WITH ranked_waterings AS (
-      SELECT
-        plant_id,
-        watering_time,
-        fertilized,
-        ROW_NUMBER() OVER (PARTITION BY plant_id ORDER BY watering_time DESC) as row_num
-      FROM waterings
-    )
-    SELECT plant_id as "plantId", watering_time as "wateringTime", fertilized
-    FROM ranked_waterings
-    WHERE row_num <= 5
-    ORDER BY watering_time DESC
-  `);
-
-  const rows = Array.isArray(result) ? result : result.rows;
-
-  return rows.map((record: Record<string, unknown>) => ({
-    plantId: record.plantId as number,
-    wateringTime: new Date(record.wateringTime as string),
-    fertilized: record.fertilized as boolean,
-  }));
+export async function refreshAvgIntervals() {
+  await getDB().refreshMaterializedView(avgWateringIntervals);
 }
 
-export interface WaterRecord {
-  plantId: number;
-  wateringTime: Date;
-  fertilized: boolean;
-}
+export async function getAvgIntervals(): Promise<
+  Record<number, { avgIntervalDays: number | null; lastFertilized: Date | null }>
+> {
+  const rows = await getDB().select().from(avgWateringIntervals);
 
-export function calculateIntervals(wateringRecords: Array<WaterRecord>): Record<number, number | null> {
-  // Group waterings by plantId
-  const byPlant: Record<number, Array<WaterRecord>> = {};
-
-  for (const record of wateringRecords) {
-    if (!byPlant[record.plantId]) {
-      byPlant[record.plantId] = [];
+  const result: Record<number, { avgIntervalDays: number | null; lastFertilized: Date | null }> = {};
+  for (const row of rows) {
+    if (row.plantId !== null) {
+      result[row.plantId] = {
+        avgIntervalDays: row.avgIntervalDays,
+        lastFertilized: row.lastFertilized,
+      };
     }
-    byPlant[record.plantId]?.push(record);
   }
-
-  const intervals: Record<number, number | null> = {};
-
-  for (const [plantIdStr, records] of Object.entries(byPlant)) {
-    const plantId = Number(plantIdStr);
-
-    // Need at least 2 waterings to calculate an interval
-    if (records.length < 2) {
-      intervals[plantId] = null;
-      continue;
-    }
-
-    // Calculate intervals between consecutive waterings
-    const diffs: number[] = [];
-    for (let i = 0; i < records.length - 1; i++) {
-      const current = records[i];
-      const next = records[i + 1];
-      if (!current || !next) continue;
-      const diffMs = current.wateringTime.getTime() - next.wateringTime.getTime();
-      const diffDays = diffMs / (1000 * 60 * 60 * 24);
-      diffs.push(diffDays);
-    }
-
-    // Calculate average and round to 1 decimal place
-    const avg = diffs.reduce((sum, d) => sum + d, 0) / diffs.length;
-    intervals[plantId] = Math.round(avg * 10) / 10;
-  }
-
-  return intervals;
+  return result;
 }
