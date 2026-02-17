@@ -169,7 +169,7 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
   try {
     const tokens = await getGoogle().validateAuthorizationCode(code, codeVerifier);
     const idToken = tokens.idToken();
-    const payload = JSON.parse(atob(idToken.split(".")[1]));
+    const payload = JSON.parse(atob(idToken.split(".")[1]!));
     const email = payload.email as string;
 
     if (email !== CONFIG.allowedEmail) {

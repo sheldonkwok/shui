@@ -5,7 +5,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     env: {
-      TURSO_DATABASE_URL: "http://127.0.0.1:8081",
+      PGLITE_DIR: "./pglite-test",
     },
     globalSetup: "./vitest.global-setup.ts",
     fileParallelism: false,

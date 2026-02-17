@@ -3,9 +3,13 @@
 This document provides guidelines for AI agents working on the shui project.
 
 ## Technical Notes
-When inserting into sqlite with drizzle, we need to make sure we're using the correct primitive type. For example, booleans are actually integers and should be 1 for true and 0 for false.
+
+The project uses PGlite (in-process PostgreSQL) for its database. No external database process is needed — PGlite runs embedded in Node.js. Data is stored in the `./pglite` directory. Run `pnpm migrate` to push the schema.
+
+Use execa instead of execSync for shelling out. 
 
 ## Styling
+
 Always use Tailwind CSS with `cva` (class-variance-authority) for component styling. Define styles as `cva(...)` constants at the top of the file and apply them as `styleName()` in JSX.
 
 ## Code Quality Checks
@@ -14,7 +18,7 @@ Always use Tailwind CSS with `cva` (class-variance-authority) for component styl
 
 ```bash
 pnpm install  # Run this first to ensure dependencies are installed
-pnpm biomec  # Check and fix code formatting/linting
+pnpm check  # Check and fix code formatting/linting
 pnpm test    # Run all tests to ensure nothing broke
 ```
 
@@ -26,22 +30,21 @@ pnpm test    # Run all tests to ensure nothing broke
 
 ### What to Do If Checks Fail
 
-If you don't have turso installed in your environment, it can be installed with this script `curl -sSfL https://get.tur.so/install.sh | bash`
+**If `pnpm check` fails:**
 
-**If `pnpm biomec` fails:**
 - Review the linting errors reported
-- Fix the issues (biomec will auto-fix most formatting issues)
-- Re-run `pnpm biomec` to verify fixes
+- Fix the issues (check will auto-fix most formatting issues)
+- Re-run `pnpm check` to verify fixes
 
 **If `pnpm test` fails:**
+
 - Read the test failure output carefully
 - Fix the broken functionality or update tests if behavior intentionally changed
 - Do NOT proceed until all tests pass
 
-**Important:** Code is not considered complete until both `pnpm biomec` and `pnpm test` pass successfully.
+**Important:** Code is not considered complete until both `pnpm check` and `pnpm test` pass successfully.
 
 ## Pre-Commit Requirements
-
 
 ### 1. Always Use pnpm Instead of npm
 
@@ -105,11 +108,12 @@ git commit -m "WIP"
 
 ## Workflow Summary
 
+1. Never touch the .envrc file
 1. Make your code changes
-2. Run `pnpm install` to ensure dependencies are installed
-3. Run `pnpm test` and ensure all tests pass
-4. Stage your changes with `git add`
-5. Commit with conventional commit style
-6. Push your changes
+1. Run `pnpm install` to ensure dependencies are installed
+1. Run `pnpm test` and ensure all tests pass
+1. Stage your changes with `git add`
+1. Commit with conventional commit style
+1. Push your changes
 
 Following these guidelines ensures code quality and maintains a clean, understandable commit history.
