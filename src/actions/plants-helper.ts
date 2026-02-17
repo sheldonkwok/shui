@@ -9,9 +9,6 @@ export async function listPlants() {
       name: plants.name,
       wateringCount: count(waterings.id),
       lastWatered: max(waterings.wateringTime),
-      lastFertilized: sql<
-        number | null
-      >`MAX(CASE WHEN ${waterings.fertilized} = 1 THEN ${waterings.wateringTime} END)`,
     })
     .from(plants)
     .leftJoin(waterings, eq(plants.id, waterings.plantId))
@@ -25,15 +22,17 @@ export async function listRecentWaterings() {
   const data = await getDB().all<{
     plantId: number;
     wateringTime: number;
+    fertilized: number;
   }>(sql`
     WITH ranked_waterings AS (
       SELECT
         plant_id,
         watering_time,
+        fertilized,
         ROW_NUMBER() OVER (PARTITION BY plant_id ORDER BY watering_time DESC) as row_num
       FROM waterings
     )
-    SELECT plant_id as plantId, watering_time as wateringTime
+    SELECT plant_id as plantId, watering_time as wateringTime, fertilized
     FROM ranked_waterings
     WHERE row_num <= 5
     ORDER BY watering_time DESC
@@ -43,12 +42,14 @@ export async function listRecentWaterings() {
   return data.map((record) => ({
     plantId: record.plantId,
     wateringTime: new Date(record.wateringTime * 1000),
+    fertilized: record.fertilized === 1,
   }));
 }
 
 export interface WaterRecord {
   plantId: number;
   wateringTime: Date;
+  fertilized: boolean;
 }
 
 export function calculateIntervals(wateringRecords: Array<WaterRecord>): Record<number, number | null> {

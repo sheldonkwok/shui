@@ -6,16 +6,29 @@ import { plants, waterings } from "../schema.ts";
 import { calculateIntervals, listPlants, listRecentWaterings } from "./plants-helper.ts";
 
 export async function getPlants() {
-  const [data, recentWaterings] = await Promise.all([listPlants(), listRecentWaterings()]);
+  // Seems to run into a cold start issue for both going at once
+  const plantsList = await listPlants();
+  const recentWaterings = await listRecentWaterings();
 
   // Calculate average intervals
   const wateringIntervals = calculateIntervals(recentWaterings);
 
+  // Derive lastFertilized per plant from recentWaterings
+  const lastFertilizedByPlant: Record<number, Date | null> = {};
+  for (const record of recentWaterings) {
+    if (record.fertilized) {
+      const existing = lastFertilizedByPlant[record.plantId];
+      if (!existing || record.wateringTime > existing) {
+        lastFertilizedByPlant[record.plantId] = record.wateringTime;
+      }
+    }
+  }
+
   // Convert timestamps to Date objects and calculate days until next watering
   const now = new Date();
-  const results = data.map((plant) => {
+  const results = plantsList.map((plant) => {
     const lastWatered = plant.lastWatered ? new Date(plant.lastWatered) : null;
-    const lastFertilized = plant.lastFertilized ? new Date(plant.lastFertilized * 1000) : null;
+    const lastFertilized = lastFertilizedByPlant[plant.id] ?? null;
     const avgInterval = wateringIntervals[plant.id] ?? null;
 
     let daysUntilNextWatering: number | null = null;
