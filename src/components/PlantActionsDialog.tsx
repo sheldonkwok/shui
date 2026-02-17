@@ -25,7 +25,7 @@ const buttonContainer = cva("flex flex-col items-end gap-2 mt-3");
 const lastFertilized = cva("text-[#999] text-[0.85em] mt-1");
 
 const formatLastFertilized = (date: Date | null) => {
-  if (!date) return "Never fertilized";
+  if (!date) return "Not fertilized recently";
   return `Last fertilized ${formatCalendarDaysAgo(date).toLowerCase()}`;
 };
 
