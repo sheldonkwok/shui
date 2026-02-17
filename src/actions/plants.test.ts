@@ -1,5 +1,5 @@
-import { beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { cleanupTestDB, pushTestSchema, seedPlant, seedWatering } from "../test-utils.ts";
+import { beforeEach, describe, expect, it } from "vitest";
+import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
 import { getPlants } from "./plants.ts";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -7,10 +7,6 @@ const DAY = 24 * 60 * 60 * 1000;
 describe("getPlants - watering intervals", () => {
   const now = new Date();
   const time = now.getTime();
-
-  beforeAll(async () => {
-    await pushTestSchema();
-  });
 
   beforeEach(async () => {
     await cleanupTestDB();

@@ -3,7 +3,10 @@
   "compilerOptions": {
     "noImplicitAny": true,
     "allowImportingTsExtensions": true,
+    "noPropertyAccessFromIndexSignature": false,
     "noEmit": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "module": "preserve",
+    "moduleResolution": "bundler"
   }
 }

@@ -1,8 +1,9 @@
 import { rm } from "node:fs/promises";
+import { $ } from "execa";
 
 export async function setup() {
-  // Clean up any previous test database so each run starts fresh
   await rm("./pglite-test", { recursive: true, force: true });
+  await $({ env: { PGLITE_DIR: "./pglite-test" }, stdio: "inherit" })`pnpm migrate`;
 }
 
 export async function teardown() {

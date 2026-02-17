@@ -34,7 +34,9 @@ export async function listRecentWaterings() {
     ORDER BY watering_time DESC
   `);
 
-  return result.rows.map((record) => ({
+  const rows = Array.isArray(result) ? result : result.rows;
+
+  return rows.map((record: Record<string, unknown>) => ({
     plantId: record.plantId as number,
     wateringTime: new Date(record.wateringTime as string),
     fertilized: record.fertilized as boolean,

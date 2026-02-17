@@ -3,10 +3,10 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { getPlants } from "../actions/plants.ts";
-import { cleanupTestDB, pushTestSchema, seedPlant, seedWatering } from "../test-utils.ts";
+import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
 import { Plant } from "./Plant.tsx";
 
 // Mock waku router
@@ -17,10 +17,6 @@ vi.mock("waku", () => ({
 }));
 
 describe("Plant component rendering", () => {
-  beforeAll(async () => {
-    await pushTestSchema();
-  });
-
   beforeEach(async () => {
     await cleanupTestDB();
   });
@@ -29,7 +25,7 @@ describe("Plant component rendering", () => {
     await seedPlant("Test Fern");
 
     const plants = await getPlants();
-    const plant = plants[0];
+    const plant = plants[0]!;
 
     render(<Plant plant={plant} />);
 
@@ -42,7 +38,7 @@ describe("Plant component rendering", () => {
     await seedWatering(plantId, new Date());
 
     const plants = await getPlants();
-    const plant = plants[0];
+    const plant = plants[0]!;
 
     render(<Plant plant={plant} />);
 
@@ -57,7 +53,7 @@ describe("Plant component rendering", () => {
     await seedWatering(plantId, yesterday);
 
     const plants = await getPlants();
-    const plant = plants[0];
+    const plant = plants[0]!;
 
     render(<Plant plant={plant} />);
 
@@ -73,7 +69,7 @@ describe("Plant component rendering", () => {
     await seedWatering(plantId, lateYesterday);
 
     const plants = await getPlants();
-    const plant = plants[0];
+    const plant = plants[0]!;
 
     render(<Plant plant={plant} />);
 
@@ -88,7 +84,7 @@ describe("Plant component rendering", () => {
     await seedWatering(plantId, fiveDaysAgo);
 
     const plants = await getPlants();
-    const plant = plants[0];
+    const plant = plants[0]!;
 
     render(<Plant plant={plant} />);
 

@@ -2,24 +2,6 @@ import { sql } from "drizzle-orm";
 import { getDB } from "./db.ts";
 import { plants, waterings } from "./schema.ts";
 
-export async function pushTestSchema() {
-  const db = getDB();
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS plants (
-      id SERIAL PRIMARY KEY,
-      name TEXT NOT NULL
-    )
-  `);
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS waterings (
-      id SERIAL PRIMARY KEY,
-      plant_id INTEGER NOT NULL REFERENCES plants(id),
-      watering_time TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-      fertilized BOOLEAN DEFAULT FALSE
-    )
-  `);
-}
-
 export async function cleanupTestDB() {
   const db = getDB();
   await db.delete(waterings);
@@ -32,9 +14,9 @@ export async function cleanupTestDB() {
 export async function seedPlant(name: string): Promise<number> {
   const db = getDB();
 
-  const result = await db.insert(plants).values({ name }).returning({ id: plants.id });
+  const result = await db.insert(plants).values({ name }).returning();
 
-  return result[0].id;
+  return result[0]!.id;
 }
 
 export async function seedWatering(plantId: number, wateringTime: Date) {
