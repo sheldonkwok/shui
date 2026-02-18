@@ -17,7 +17,7 @@ const plantName = cva(
   "bg-transparent border-none text-left font-medium text-[#2d5f3f] text-base flex items-center py-[0.1em] select-none cursor-pointer",
 );
 const lastWatered = cva(
-  "bg-transparent border-none text-left text-[#999] text-[0.8em] whitespace-nowrap flex items-center py-[0.1em] cursor-pointer",
+  "bg-transparent border-none text-left text-[#999] text-[0.8em] whitespace-nowrap flex items-center py-[0.1em] cursor-pointer select-none",
 );
 
 const WATER_COLOR_RGB = "109, 148, 197";
