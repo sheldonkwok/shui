@@ -11,21 +11,12 @@ import { IS_TEST } from "./utils.ts";
 
 const CONFIG = {
   allowedEmail: "me@sheldonk.com",
-  allowedIPs: new Set(["24.23.250.55"]),
   cookieName: "auth_session",
   stateCookieName: "oauth_state",
   verifierCookieName: "oauth_verifier",
   sessionMaxAge: 60 * 60 * 24 * 30, // 30 days
   oauthCookieMaxAge: 60 * 10, // 10 minutes
 } as const;
-
-const PRIVATE_IP_RANGES = [
-  /^10\./, // 10.0.0.0/8
-  /^172\.(1[6-9]|2[0-9]|3[0-1])\./, // 172.16.0.0/12
-  /^192\.168\./, // 192.168.0.0/16
-  /^fc00:/, // IPv6 private
-  /^fd[0-9a-f]{2}:/i, // IPv6 unique local
-];
 
 // =============================================================================
 // Environment Helpers
@@ -39,6 +30,7 @@ function getEnvOrThrow(key: string): string {
 
 const isProduction = process.env.VERCEL_ENV === "production";
 const isPreview = process.env.VERCEL_ENV === "preview";
+const isDev = process.env.NODE_ENV === "development";
 const authSecret = getEnvOrThrow("AUTH_SECRET");
 
 function getGoogle(): Google {
@@ -47,33 +39,6 @@ function getGoogle(): Google {
     : "http://localhost:3000/auth/callback";
 
   return new Google(getEnvOrThrow("GOOGLE_CLIENT_ID"), getEnvOrThrow("GOOGLE_CLIENT_SECRET"), redirectUri);
-}
-
-// =============================================================================
-// IP Checking
-// =============================================================================
-
-function getClientIP(c: Context): string | null {
-  for (const header of ["x-forwarded-for", "x-real-ip", "x-vercel-forwarded-for"]) {
-    const value = c.req.header(header);
-    if (value) {
-      const ip = value.split(",")[0]?.trim();
-      if (ip) return ip;
-    }
-  }
-  return null;
-}
-
-function isIPAllowed(c: Context): boolean {
-  const host = c.req.header("Host") ?? "";
-  if (host === "localhost:3000" || /^192\.168\.\d+\.\d+(:\d+)?$/.test(host)) {
-    return true;
-  }
-
-  const clientIP = getClientIP(c);
-  if (!clientIP) return false;
-
-  return CONFIG.allowedIPs.has(clientIP) || PRIVATE_IP_RANGES.some((range) => range.test(clientIP));
 }
 
 // =============================================================================
@@ -196,8 +161,8 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
 // =============================================================================
 
 export const authMiddleware = createMiddleware(async (c, next) => {
-  // Skip in test/preview environments
-  if (IS_TEST || isPreview) return await next();
+  // Skip auth in test, dev, and preview environments
+  if (IS_TEST || isDev || isPreview) return await next();
 
   const path = new URL(c.req.url).pathname;
 
@@ -205,9 +170,6 @@ export const authMiddleware = createMiddleware(async (c, next) => {
   if (path === "/auth/logout") return handleLogout(c);
   if (path === "/auth/google") return handleGoogleAuth(c);
   if (path === "/auth/callback") return await handleOAuthCallback(c);
-
-  // Check access: IP first, then session cookie
-  if (isIPAllowed(c)) return await next();
 
   const email = await getSessionEmail(c);
   if (email === CONFIG.allowedEmail) return await next();
