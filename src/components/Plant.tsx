@@ -11,13 +11,13 @@ interface PlantProps {
 }
 
 const plantItem = cva(
-  "contents after:content-[''] after:col-span-full after:h-px after:[background:linear-gradient(to_right,var(--border-color),var(--water-gradient-color))]",
+  "relative flex justify-between items-center h-[28px] after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:[background:linear-gradient(to_right,var(--border-color),var(--water-gradient-color))]",
 );
 const plantName = cva(
-  "bg-transparent border-none text-left font-medium text-[#2d5f3f] text-base flex items-center py-[0.1em] select-none cursor-pointer",
+  "bg-transparent border-none text-left font-medium text-[#2d5f3f] text-base flex items-center select-none cursor-pointer",
 );
 const lastWatered = cva(
-  "bg-transparent border-none text-left text-[#999] text-[0.8em] whitespace-nowrap flex items-center py-[0.1em] cursor-pointer select-none",
+  "bg-transparent border-none text-left text-[#999] text-[0.8em] whitespace-nowrap flex items-center cursor-pointer select-none",
 );
 
 const WATER_COLOR_RGB = "109, 148, 197";

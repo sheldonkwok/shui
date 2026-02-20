@@ -5,7 +5,7 @@ import type { PlantWithStats } from "../types.ts";
 import { Plant } from "./Plant.tsx";
 
 const container = cva("mb-10");
-const list = cva("list-none p-0 m-0 grid grid-cols-[auto_auto] justify-between items-stretch");
+const list = cva("list-none p-0 m-0");
 const noPlants = cva("text-center text-[#6c757d] italic p-5");
 
 interface PlantListClientProps {
