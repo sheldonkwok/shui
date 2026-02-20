@@ -19,7 +19,7 @@ export async function getPlants() {
       let daysUntilNextWatering: number | null = null;
       if (lastWatered && avgInterval !== null) {
         const daysSinceWatered = (now.getTime() - lastWatered.getTime()) / (1000 * 60 * 60 * 24);
-        daysUntilNextWatering = Math.round((avgInterval - daysSinceWatered) * 10) / 10;
+        daysUntilNextWatering = Math.floor((avgInterval - daysSinceWatered) * 10) / 10;
       }
 
       return {
