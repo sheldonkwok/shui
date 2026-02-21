@@ -3,7 +3,6 @@
 import { cva, cx } from "class-variance-authority";
 import { useRef, useState } from "react";
 import { useRouter } from "waku";
-import { waterPlant } from "../actions/plants.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
@@ -117,13 +116,21 @@ export function PlantActionsDialog({
   const router = useRouter();
 
   const handleWaterWithFertilizer = async () => {
-    await waterPlant(plantId, true);
+    await fetch(`/api/plants/${plantId}/water`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: true }),
+    });
     onOpenChange(false);
     router.reload();
   };
 
   const handleWater = async () => {
-    await waterPlant(plantId, false);
+    await fetch(`/api/plants/${plantId}/water`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: false }),
+    });
     onOpenChange(false);
     router.reload();
   };

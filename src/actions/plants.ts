@@ -1,8 +1,6 @@
 "use server";
 
-import { getDB } from "../db.ts";
-import { plants, waterings } from "../schema.ts";
-import { listPlants, refreshWateringSummary } from "./plants-helper.ts";
+import { listPlants } from "./plants-helper.ts";
 
 export async function getPlants() {
   const plantsList = await listPlants();
@@ -39,17 +37,4 @@ export async function getPlants() {
     });
 
   return results;
-}
-
-export async function addPlant(name: string) {
-  await getDB().insert(plants).values({ name });
-}
-
-export async function waterPlant(plantId: number, fertilized = false) {
-  await getDB().insert(waterings).values({
-    plantId,
-    fertilized,
-  });
-
-  await refreshWateringSummary();
 }
