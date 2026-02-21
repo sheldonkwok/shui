@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
-import { IS_TEST } from "./utils.ts";
+import { IS_PREVIEW, IS_PRODUCTION, IS_TEST } from "./utils.ts";
 
 // =============================================================================
 // Configuration
@@ -30,12 +30,10 @@ function getEnvOrThrow(key: string): string {
   return value;
 }
 
-const isProduction = process.env.VERCEL_ENV === "production";
-const isPreview = process.env.VERCEL_ENV === "preview";
 const authSecret = getEnvOrThrow("AUTH_SECRET");
 
 function getGoogle(): Google {
-  const redirectUri = isProduction
+  const redirectUri = IS_PRODUCTION
     ? "https://shui.fmj.io/auth/callback"
     : "http://localhost:3000/auth/callback";
 
@@ -107,7 +105,7 @@ function handleGoogleAuth(c: Context): Response {
 
   const cookieOptions = {
     httpOnly: true,
-    secure: isProduction,
+    secure: IS_PRODUCTION,
     maxAge: CONFIG.oauthCookieMaxAge,
     sameSite: "Lax" as const,
   };
@@ -146,12 +144,12 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
     const signedEmail = await signValue(email);
     setCookie(c, CONFIG.cookieName, signedEmail, {
       httpOnly: true,
-      secure: isProduction,
+      secure: IS_PRODUCTION,
       maxAge: CONFIG.sessionMaxAge,
       sameSite: "Lax",
     });
     setCookie(c, CONFIG.indicatorCookieName, "1", {
-      secure: isProduction,
+      secure: IS_PRODUCTION,
       maxAge: CONFIG.sessionMaxAge - 60,
       sameSite: "Lax",
     });
@@ -178,8 +176,19 @@ export const authRoutesMiddleware = createMiddleware(async (c, next) => {
   return authApp.fetch(c.req.raw);
 });
 
+export const previewAuthMiddleware = createMiddleware(async (c, next) => {
+  await next();
+  if (!getCookie(c, CONFIG.indicatorCookieName)) {
+    setCookie(c, CONFIG.indicatorCookieName, "1", {
+      secure: true,
+      maxAge: CONFIG.sessionMaxAge - 60,
+      sameSite: "Lax",
+    });
+  }
+});
+
 export const authCheckMiddleware = createMiddleware(async (c, next) => {
-  if (IS_TEST || isPreview) return await next();
+  if (IS_TEST || IS_PREVIEW) return await next();
 
   const email = await getSessionEmail(c);
   if (email === CONFIG.allowedEmail) return await next();

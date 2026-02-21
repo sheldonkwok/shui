@@ -1,4 +1,6 @@
 export const IS_TEST = Boolean(process?.env.VITEST);
+export const IS_PREVIEW = process.env.VERCEL_ENV === "preview";
+export const IS_PRODUCTION = process.env.VERCEL_ENV === "production";
 
 const WEEK = 7;
 
