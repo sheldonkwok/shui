@@ -3,6 +3,7 @@
 import { cva, cx } from "class-variance-authority";
 import { useRef, useState } from "react";
 import { useRouter } from "waku";
+import { apiClient } from "../api/client.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
@@ -63,10 +64,9 @@ function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
     setIsEditing(false);
     const trimmed = name.trim();
     if (trimmed && trimmed !== plantName) {
-      await fetch(`/api/plants/${plantId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: trimmed }),
+      await apiClient.api.plants[":id"].$patch({
+        param: { id: String(plantId) },
+        json: { name: trimmed },
       });
       onRenamed();
     } else {
@@ -116,20 +116,18 @@ export function PlantActionsDialog({
   const router = useRouter();
 
   const handleWaterWithFertilizer = async () => {
-    await fetch(`/api/plants/${plantId}/water`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fertilized: true }),
+    await apiClient.api.plants[":id"].water.$post({
+      param: { id: String(plantId) },
+      json: { fertilized: true },
     });
     onOpenChange(false);
     router.reload();
   };
 
   const handleWater = async () => {
-    await fetch(`/api/plants/${plantId}/water`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fertilized: false }),
+    await apiClient.api.plants[":id"].water.$post({
+      param: { id: String(plantId) },
+      json: { fertilized: false },
     });
     onOpenChange(false);
     router.reload();

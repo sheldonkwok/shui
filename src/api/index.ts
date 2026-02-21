@@ -4,6 +4,8 @@ import { plantsRouter } from "./plants.ts";
 
 export const app = new Hono().basePath("/api").route("/plants", plantsRouter);
 
+export type AppType = typeof app;
+
 export const apiMiddleware = createMiddleware(async (c, next) => {
   if (!c.req.path.startsWith("/api/")) return await next();
 
