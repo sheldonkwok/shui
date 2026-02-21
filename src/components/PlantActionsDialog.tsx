@@ -1,11 +1,11 @@
 "use client";
 
 import { cva, cx } from "class-variance-authority";
+import { X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.ts";
-import { formatCalendarDaysAgo } from "../utils.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
 interface PlantActionsDialogProps {
@@ -23,18 +23,18 @@ const fertilizeButton = cva(
 const waterButton = cva(
   "bg-[#6d94c5] text-white border-none px-4 py-2 rounded text-[0.9em] transition-colors hover:bg-[#357abd] disabled:opacity-40 disabled:cursor-not-allowed",
 );
-const buttonContainer = cva("flex flex-row items-center justify-end gap-2 mt-3");
-const lastWateredStyle = cva("text-[#999] text-[0.85em] mt-1");
-const lastFertilizedStyle = cva("text-[#999] text-[0.85em] mt-1");
+const buttonContainer = cva("flex flex-row items-end justify-end gap-4 mt-3");
+const buttonGroup = cva("flex flex-col items-center gap-1");
+const lastWateredStyle = cva("text-[#999] text-[0.85em] text-center my-[0.25em]");
+const lastFertilizedStyle = cva("text-[#999] text-[0.85em] text-center my-[0.25em]");
 
-const formatMostRecentWatering = (date: Date | null) => {
-  if (!date) return "Most recent watering: never";
-  return `Most recent watering ${formatCalendarDaysAgo(date).toLowerCase()}`;
-};
-
-const formatLastFertilized = (date: Date | null) => {
-  if (!date) return "Not fertilized recently";
-  return `Last fertilized ${formatCalendarDaysAgo(date).toLowerCase()}`;
+const formatDaysAgo = (date: Date | null): { days: number } | null => {
+  if (!date) return null;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const days = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
+  return { days };
 };
 
 const nameContainer = cva("relative");
@@ -146,20 +146,34 @@ export function PlantActionsDialog({
           onRenamed={() => router.reload()}
           canEdit={loggedIn}
         />
-        <p className={lastWateredStyle()}>{formatMostRecentWatering(lastWateredDate)}</p>
-        <p className={lastFertilizedStyle()}>{formatLastFertilized(lastFertilizedDate)}</p>
         <div className={buttonContainer()}>
-          <button
-            className={fertilizeButton()}
-            type="button"
-            onClick={handleWaterWithFertilizer}
-            disabled={!loggedIn}
-          >
-            Fertilize
-          </button>
-          <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
-            Water
-          </button>
+          <div className={buttonGroup()}>
+            <p className={lastFertilizedStyle()}>
+              {(() => {
+                const r = formatDaysAgo(lastFertilizedDate);
+                return r ? `${r.days}d` : <X size={14} />;
+              })()}
+            </p>
+            <button
+              className={fertilizeButton()}
+              type="button"
+              onClick={handleWaterWithFertilizer}
+              disabled={!loggedIn}
+            >
+              Fertilize
+            </button>
+          </div>
+          <div className={buttonGroup()}>
+            <p className={lastWateredStyle()}>
+              {(() => {
+                const r = formatDaysAgo(lastWateredDate);
+                return r ? `${r.days}d` : <X size={14} />;
+              })()}
+            </p>
+            <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
+              Water
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
