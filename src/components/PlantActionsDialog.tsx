@@ -1,12 +1,13 @@
 "use client";
 
 import { cva, cx } from "class-variance-authority";
-import { X } from "lucide-react";
+import { Droplets, Sprout, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
+import { Toggle } from "./ui/Toggle.tsx";
 
 interface PlantActionsDialogProps {
   plantId: number;
@@ -17,16 +18,13 @@ interface PlantActionsDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-const fertilizeButton = cva(
-  "bg-[#d8b88b] text-white border-none px-4 py-2 rounded text-[0.9em] transition-colors hover:bg-[#965a3e] disabled:opacity-40 disabled:cursor-not-allowed",
-);
 const waterButton = cva(
-  "bg-[#6d94c5] text-white border-none px-4 py-2 rounded text-[0.9em] transition-colors hover:bg-[#357abd] disabled:opacity-40 disabled:cursor-not-allowed",
+  "bg-[#6d94c5] text-white border-none h-9 px-3 rounded text-[0.9em] transition-colors hover:bg-[#357abd] hover:[&>svg]:fill-current disabled:opacity-40 disabled:cursor-not-allowed",
 );
 const buttonContainer = cva("flex flex-row items-end justify-end gap-4 mt-3");
 const buttonGroup = cva("flex flex-col items-center gap-1");
-const lastWateredStyle = cva("text-[#999] text-[0.85em] text-center my-[0.25em]");
-const lastFertilizedStyle = cva("text-[#999] text-[0.85em] text-center my-[0.25em]");
+const lastWateredStyle = cva("text-[#999] text-[0.85em] flex items-center justify-center my-[0.25em]");
+const lastFertilizedStyle = cva("text-[#999] text-[0.85em] flex items-center justify-center my-[0.25em]");
 
 const formatDaysAgo = (date: Date | null): { days: number } | null => {
   if (!date) return null;
@@ -118,27 +116,25 @@ export function PlantActionsDialog({
 }: PlantActionsDialogProps) {
   const router = useRouter();
   const { loggedIn } = useSession();
-
-  const handleWaterWithFertilizer = async () => {
-    await apiClient.api.plants[":id"].water.$post({
-      param: { id: String(plantId) },
-      json: { fertilized: true },
-    });
-    onOpenChange(false);
-    router.reload();
-  };
+  const [fertilizeToggled, setFertilizeToggled] = useState(false);
 
   const handleWater = async () => {
     await apiClient.api.plants[":id"].water.$post({
       param: { id: String(plantId) },
-      json: { fertilized: false },
+      json: { fertilized: fertilizeToggled },
     });
+    setFertilizeToggled(false);
     onOpenChange(false);
     router.reload();
   };
 
+  const handleOpenChange = (next: boolean) => {
+    if (!next) setFertilizeToggled(false);
+    onOpenChange(next);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent>
         <EditableName
           plantId={plantId}
@@ -154,14 +150,15 @@ export function PlantActionsDialog({
                 return r ? `${r.days}d` : <X size={14} />;
               })()}
             </p>
-            <button
-              className={fertilizeButton()}
-              type="button"
-              onClick={handleWaterWithFertilizer}
+            <Toggle
+              pressed={fertilizeToggled}
+              onPressedChange={setFertilizeToggled}
               disabled={!loggedIn}
+              variant="outline"
+              aria-label="Toggle fertilize"
             >
-              Fertilize
-            </button>
+              <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
+            </Toggle>
           </div>
           <div className={buttonGroup()}>
             <p className={lastWateredStyle()}>
@@ -171,7 +168,7 @@ export function PlantActionsDialog({
               })()}
             </p>
             <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
-              Water
+              <Droplets size={18} />
             </button>
           </div>
         </div>
