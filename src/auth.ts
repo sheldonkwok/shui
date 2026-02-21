@@ -13,6 +13,7 @@ import { IS_TEST } from "./utils.ts";
 const CONFIG = {
   allowedEmail: "me@sheldonk.com",
   cookieName: "auth_session",
+  indicatorCookieName: "is_authenticated",
   stateCookieName: "oauth_state",
   verifierCookieName: "oauth_verifier",
   sessionMaxAge: 60 * 60 * 24 * 30, // 30 days
@@ -31,7 +32,6 @@ function getEnvOrThrow(key: string): string {
 
 const isProduction = process.env.VERCEL_ENV === "production";
 const isPreview = process.env.VERCEL_ENV === "preview";
-const isDev = process.env.NODE_ENV === "development";
 const authSecret = getEnvOrThrow("AUTH_SECRET");
 
 function getGoogle(): Google {
@@ -87,6 +87,7 @@ async function getSessionEmail(c: Context): Promise<string | null> {
 
 function handleLogout(c: Context): Response {
   deleteCookie(c, CONFIG.cookieName);
+  deleteCookie(c, CONFIG.indicatorCookieName);
   return c.redirect("/");
 }
 
@@ -149,6 +150,11 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
       maxAge: CONFIG.sessionMaxAge,
       sameSite: "Lax",
     });
+    setCookie(c, CONFIG.indicatorCookieName, "1", {
+      secure: isProduction,
+      maxAge: CONFIG.sessionMaxAge - 60,
+      sameSite: "Lax",
+    });
 
     return c.redirect("/");
   } catch (error) {
@@ -173,10 +179,10 @@ export const authRoutesMiddleware = createMiddleware(async (c, next) => {
 });
 
 export const authCheckMiddleware = createMiddleware(async (c, next) => {
-  if (IS_TEST || isDev || isPreview) return await next();
+  if (IS_TEST || isPreview) return await next();
 
   const email = await getSessionEmail(c);
   if (email === CONFIG.allowedEmail) return await next();
 
-  return c.redirect("/auth/google");
+  return c.text("Unauthorized", 401);
 });
