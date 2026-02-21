@@ -3,7 +3,7 @@
 import { cva, cx } from "class-variance-authority";
 import { useRef, useState } from "react";
 import { useRouter } from "waku";
-import { renamePlant, waterPlant } from "../actions/plants.ts";
+import { waterPlant } from "../actions/plants.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
@@ -64,7 +64,11 @@ function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
     setIsEditing(false);
     const trimmed = name.trim();
     if (trimmed && trimmed !== plantName) {
-      await renamePlant(plantId, trimmed);
+      await fetch(`/api/plants/${plantId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed }),
+      });
       onRenamed();
     } else {
       setName(plantName);

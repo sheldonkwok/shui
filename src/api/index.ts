@@ -1,0 +1,11 @@
+import { Hono } from "hono";
+import { createMiddleware } from "hono/factory";
+import { plantsRouter } from "./plants.ts";
+
+export const app = new Hono().basePath("/api").route("/plants", plantsRouter);
+
+export const apiMiddleware = createMiddleware(async (c, next) => {
+  if (!c.req.path.startsWith("/api/")) return await next();
+
+  return app.fetch(c.req.raw);
+});
