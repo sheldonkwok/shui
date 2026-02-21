@@ -3,6 +3,7 @@
 import { cva } from "class-variance-authority";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "waku";
+import { apiClient } from "../api/client.ts";
 
 const form = cva("flex items-center gap-2");
 const input = cva(
@@ -20,11 +21,7 @@ export function AddPlantForm() {
     const formData = new FormData(e.currentTarget);
     const name = formData.get("name") as string;
 
-    await fetch("/api/plants", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
+    await apiClient.api.plants.$post({ json: { name } });
     // Refresh the page to show the new plant
     router.reload();
     // Reset the form
