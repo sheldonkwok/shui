@@ -23,7 +23,7 @@ const fertilizeButton = cva(
 const waterButton = cva(
   "bg-[#6d94c5] text-white border-none px-4 py-2 rounded text-[0.9em] transition-colors hover:bg-[#357abd] disabled:opacity-40 disabled:cursor-not-allowed",
 );
-const buttonContainer = cva("flex flex-col items-end gap-2 mt-3");
+const buttonContainer = cva("flex flex-row items-center justify-end gap-2 mt-3");
 const lastWateredStyle = cva("text-[#999] text-[0.85em] mt-1");
 const lastFertilizedStyle = cva("text-[#999] text-[0.85em] mt-1");
 
