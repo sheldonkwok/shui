@@ -2,6 +2,7 @@
 
 import { cva } from "class-variance-authority";
 import { Menu } from "lucide-react";
+import { useSession } from "../hooks/useSession.ts";
 import { AddPlantForm } from "./AddPlantForm.tsx";
 import {
   DropdownMenu,
@@ -16,8 +17,10 @@ const title = cva("text-2xl font-bold");
 const menuButton = cva(
   "ml-auto bg-transparent border-none cursor-pointer p-1 rounded text-[#666] hover:bg-[#f0f0f0]",
 );
+const authLink = cva("no-underline text-inherit");
 
 export function Menubar() {
+  const { loggedIn } = useSession();
   return (
     <div className={menubar()}>
       <img src="/shui.png" alt="Shui" className={logo()} />
@@ -29,10 +32,16 @@ export function Menubar() {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-            <AddPlantForm />
+          {loggedIn && (
+            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+              <AddPlantForm />
+            </DropdownMenuItem>
+          )}
+          <DropdownMenuItem asChild>
+            <a href={loggedIn ? "/auth/logout" : "/auth/google"} className={authLink()}>
+              {loggedIn ? "Logout" : "Login"}
+            </a>
           </DropdownMenuItem>
-          <DropdownMenuItem>Logout</DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </div>

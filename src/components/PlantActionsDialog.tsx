@@ -4,6 +4,7 @@ import { cva, cx } from "class-variance-authority";
 import { useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
+import { useSession } from "../hooks/useSession.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
 
@@ -17,10 +18,10 @@ interface PlantActionsDialogProps {
 }
 
 const fertilizeButton = cva(
-  "bg-[#d8b88b] text-white border-none px-4 py-2 rounded text-[0.9em] cursor-pointer transition-colors hover:bg-[#965a3e]",
+  "bg-[#d8b88b] text-white border-none px-4 py-2 rounded text-[0.9em] transition-colors hover:bg-[#965a3e] disabled:opacity-40 disabled:cursor-not-allowed",
 );
 const waterButton = cva(
-  "bg-[#6d94c5] text-white border-none px-4 py-2 rounded text-[0.9em] cursor-pointer transition-colors hover:bg-[#357abd]",
+  "bg-[#6d94c5] text-white border-none px-4 py-2 rounded text-[0.9em] transition-colors hover:bg-[#357abd] disabled:opacity-40 disabled:cursor-not-allowed",
 );
 const buttonContainer = cva("flex flex-col items-end gap-2 mt-3");
 const lastWateredStyle = cva("text-[#999] text-[0.85em] mt-1");
@@ -48,14 +49,16 @@ interface EditableNameProps {
   plantId: number;
   plantName: string;
   onRenamed: () => void;
+  canEdit: boolean;
 }
 
-function EditableName({ plantId, plantName, onRenamed }: EditableNameProps) {
+function EditableName({ plantId, plantName, onRenamed, canEdit }: EditableNameProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(plantName);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleNameClick = () => {
+    if (!canEdit) return;
     setIsEditing(true);
     setTimeout(() => inputRef.current?.focus(), 0);
   };
@@ -114,6 +117,7 @@ export function PlantActionsDialog({
   onOpenChange,
 }: PlantActionsDialogProps) {
   const router = useRouter();
+  const { loggedIn } = useSession();
 
   const handleWaterWithFertilizer = async () => {
     await apiClient.api.plants[":id"].water.$post({
@@ -136,14 +140,24 @@ export function PlantActionsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
-        <EditableName plantId={plantId} plantName={plantName} onRenamed={() => router.reload()} />
+        <EditableName
+          plantId={plantId}
+          plantName={plantName}
+          onRenamed={() => router.reload()}
+          canEdit={loggedIn}
+        />
         <p className={lastWateredStyle()}>{formatMostRecentWatering(lastWateredDate)}</p>
         <p className={lastFertilizedStyle()}>{formatLastFertilized(lastFertilizedDate)}</p>
         <div className={buttonContainer()}>
-          <button className={fertilizeButton()} type="button" onClick={handleWaterWithFertilizer}>
+          <button
+            className={fertilizeButton()}
+            type="button"
+            onClick={handleWaterWithFertilizer}
+            disabled={!loggedIn}
+          >
             Fertilize
           </button>
-          <button className={waterButton()} type="button" onClick={handleWater}>
+          <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
             Water
           </button>
         </div>
