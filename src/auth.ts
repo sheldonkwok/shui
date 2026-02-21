@@ -1,5 +1,6 @@
 import { Google } from "arctic";
 import type { Context } from "hono";
+import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
@@ -157,23 +158,25 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
 }
 
 // =============================================================================
-// Main Middleware
+// Middlewares
 // =============================================================================
 
-export const authMiddleware = createMiddleware(async (c, next) => {
-  // Skip auth in test, dev, and preview environments
+const authApp = new Hono()
+  .basePath("/auth")
+  .get("/logout", handleLogout)
+  .get("/google", handleGoogleAuth)
+  .get("/callback", handleOAuthCallback);
+
+export const authRoutesMiddleware = createMiddleware(async (c, next) => {
+  if (!c.req.path.startsWith("/auth/")) return await next();
+  return authApp.fetch(c.req.raw);
+});
+
+export const authCheckMiddleware = createMiddleware(async (c, next) => {
   if (IS_TEST || isDev || isPreview) return await next();
-
-  const path = new URL(c.req.url).pathname;
-
-  // Handle auth routes
-  if (path === "/auth/logout") return handleLogout(c);
-  if (path === "/auth/google") return handleGoogleAuth(c);
-  if (path === "/auth/callback") return await handleOAuthCallback(c);
 
   const email = await getSessionEmail(c);
   if (email === CONFIG.allowedEmail) return await next();
 
-  // Not authorized - redirect to login
   return c.redirect("/auth/google");
 });
