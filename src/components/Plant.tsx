@@ -2,6 +2,7 @@
 
 import { cva } from "class-variance-authority";
 import { useState } from "react";
+import { cls, colors } from "../styles/palette.ts";
 import type { PlantWithStats } from "../types.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
 import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
@@ -13,15 +14,14 @@ interface PlantProps {
 const plantItem = cva(
   "relative flex justify-between items-center h-[28px] after:content-[''] after:absolute after:bottom-0 after:left-0 after:right-0 after:h-px after:[background:linear-gradient(to_right,var(--border-color),var(--water-gradient-color))]",
 );
-const plantName = cva(
-  "bg-transparent border-none text-left font-medium text-[#2d5f3f] text-base flex items-center select-none cursor-pointer focus:outline-none active:bg-transparent [-webkit-tap-highlight-color:transparent]",
-);
-const lastWatered = cva(
-  "bg-transparent border-none text-left text-[#999] text-[0.8em] whitespace-nowrap flex items-center cursor-pointer select-none focus:outline-none active:bg-transparent [-webkit-tap-highlight-color:transparent]",
-);
-
-const WATER_COLOR_RGB = "109, 148, 197";
-const BORDER_COLOR = "#e9ecef";
+const plantName = cva([
+  cls.textPrimaryGreen,
+  "bg-transparent border-none text-left font-medium text-base flex items-center select-none cursor-pointer focus:outline-none active:bg-transparent [-webkit-tap-highlight-color:transparent]",
+]);
+const lastWatered = cva([
+  cls.textSecondary,
+  "bg-transparent border-none text-left text-[0.8em] whitespace-nowrap flex items-center cursor-pointer select-none focus:outline-none active:bg-transparent [-webkit-tap-highlight-color:transparent]",
+]);
 const MAX_DAYS_SCALE = 4;
 
 function getWaterRatio(daysUntilNextWatering: number | null): number {
@@ -45,8 +45,8 @@ export function Plant({ plant }: PlantProps) {
       className={plantItem()}
       style={
         {
-          "--border-color": BORDER_COLOR,
-          "--water-gradient-color": `rgba(${WATER_COLOR_RGB}, ${ratio})`,
+          "--border-color": colors.borderList,
+          "--water-gradient-color": `rgba(${colors.waterBlueRgb}, ${ratio})`,
         } as React.CSSProperties
       }
     >
