@@ -4,6 +4,7 @@ import * as DropdownMenuPrimitive from "@radix-ui/react-dropdown-menu";
 import { type ClassValue, clsx } from "clsx";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
+import { cls } from "../../styles/palette.ts";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -34,7 +35,8 @@ export const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none hover:bg-[#f0f0f0]",
+      "relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+      cls.hoverBgHover,
       className,
     )}
     {...props}

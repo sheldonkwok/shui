@@ -4,14 +4,20 @@ import { cva } from "class-variance-authority";
 import { ChevronRight } from "lucide-react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
+import { cls } from "../styles/palette.ts";
 
 const form = cva("flex items-center gap-2");
-const input = cva(
-  "flex-1 p-2.5 border border-[#ddd] rounded text-base box-border focus:outline-none focus:border-[#2d5f3f] focus:shadow-[0_0_0_2px_rgba(45,95,63,0.2)]",
-);
-const submitButton = cva(
-  "bg-[#2d5f3f] text-white border-none rounded cursor-pointer flex items-center justify-center p-2.5 transition-colors duration-200 hover:bg-[#1e3f2b] active:translate-y-px",
-);
+const input = cva([
+  "flex-1 p-2.5 border rounded text-base box-border focus:outline-none",
+  cls.borderInput,
+  cls.focusBorderPrimaryGreen,
+  cls.focusShadowPrimaryGreen,
+]);
+const submitButton = cva([
+  cls.bgPrimaryGreen,
+  cls.hoverBgPrimaryGreenDark,
+  "text-white border-none rounded cursor-pointer flex items-center justify-center p-2.5 transition-colors duration-200 active:translate-y-px",
+]);
 
 export function AddPlantForm() {
   const router = useRouter();

@@ -3,6 +3,7 @@
 import { cva } from "class-variance-authority";
 import { Menu } from "lucide-react";
 import { useSession } from "../hooks/useSession.ts";
+import { cls } from "../styles/palette.ts";
 import { AddPlantForm } from "./AddPlantForm.tsx";
 import {
   DropdownMenu,
@@ -14,9 +15,11 @@ import {
 const menubar = cva("flex items-center gap-2 pb-2");
 const logo = cva("w-[30px] h-[30px]");
 const title = cva("text-2xl font-bold");
-const menuButton = cva(
-  "ml-auto bg-transparent border-none cursor-pointer p-1 rounded text-[#666] hover:bg-[#f0f0f0]",
-);
+const menuButton = cva([
+  "ml-auto bg-transparent border-none cursor-pointer p-1 rounded",
+  cls.textIcon,
+  cls.hoverBgHover,
+]);
 const authLink = cva("no-underline text-inherit");
 
 export function Menubar() {
