@@ -2,7 +2,7 @@
 
 import { cva, cx } from "class-variance-authority";
 import { Droplets, Sprout, TreeDeciduous, X } from "lucide-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.ts";
@@ -25,7 +25,7 @@ const waterButton = cva([
   cls.hoverBgWaterBlueDark,
   "text-white border-none h-9 px-3 rounded text-[0.9em] transition-colors hover:[&>svg]:fill-current disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
-const buttonContainer = cva("flex flex-row items-end justify-end gap-4 mt-3");
+const buttonContainer = cva("flex flex-row items-end justify-end gap-4 mt-auto pb-3");
 const buttonGroup = cva("flex flex-col items-center gap-1");
 const lastWateredStyle = cva([
   cls.textSecondary,
@@ -49,7 +49,7 @@ const imagePlaceholder = cva(
   "w-44 h-44 flex-shrink-0 bg-gray-50 flex items-center justify-center rounded-l-lg p-4",
 );
 const dialogBody = cva("flex flex-row overflow-hidden p-0");
-const dialogRightContent = cva("flex flex-col p-6 flex-1");
+const dialogRightContent = cva("flex flex-col px-4 flex-1");
 
 const nameContainer = cva("relative");
 const editableName = cva("cursor-pointer hover:opacity-70");
@@ -59,6 +59,74 @@ const nameInput = cva([
   cls.borderBPrimaryGreen,
 ]);
 const nameInputHidden = cva("invisible pointer-events-none");
+
+interface ButtonContainerProps {
+  plantId: number;
+  lastWateredDate: Date | null;
+  lastFertilizedDate: Date | null;
+  loggedIn: boolean;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+function ButtonContainer({
+  plantId,
+  lastWateredDate,
+  lastFertilizedDate,
+  loggedIn,
+  open,
+  onOpenChange,
+}: ButtonContainerProps) {
+  const router = useRouter();
+  const [fertilizeToggled, setFertilizeToggled] = useState(false);
+
+  useEffect(() => {
+    if (!open) setFertilizeToggled(false);
+  }, [open]);
+
+  const handleWater = async () => {
+    await apiClient.api.plants[":id"].water.$post({
+      param: { id: String(plantId) },
+      json: { fertilized: fertilizeToggled },
+    });
+    setFertilizeToggled(false);
+    onOpenChange(false);
+    router.reload();
+  };
+
+  return (
+    <div className={buttonContainer()}>
+      <div className={buttonGroup()}>
+        <p className={lastFertilizedStyle()}>
+          {(() => {
+            const r = formatDaysAgo(lastFertilizedDate);
+            return r ? `${r.days}d` : <X size={14} />;
+          })()}
+        </p>
+        <Toggle
+          pressed={fertilizeToggled}
+          onPressedChange={setFertilizeToggled}
+          disabled={!loggedIn}
+          variant="outline"
+          aria-label="Toggle fertilize"
+        >
+          <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
+        </Toggle>
+      </div>
+      <div className={buttonGroup()}>
+        <p className={lastWateredStyle()}>
+          {(() => {
+            const r = formatDaysAgo(lastWateredDate);
+            return r ? `${r.days}d` : <X size={14} />;
+          })()}
+        </p>
+        <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
+          <Droplets size={18} />
+        </button>
+      </div>
+    </div>
+  );
+}
 
 interface EditableNameProps {
   plantId: number;
@@ -141,25 +209,9 @@ export function PlantActionsDialog({
 }: PlantActionsDialogProps) {
   const router = useRouter();
   const { loggedIn } = useSession();
-  const [fertilizeToggled, setFertilizeToggled] = useState(false);
-
-  const handleWater = async () => {
-    await apiClient.api.plants[":id"].water.$post({
-      param: { id: String(plantId) },
-      json: { fertilized: fertilizeToggled },
-    });
-    setFertilizeToggled(false);
-    onOpenChange(false);
-    router.reload();
-  };
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next) setFertilizeToggled(false);
-    onOpenChange(next);
-  };
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={dialogBody()}>
         <PlantImagePlaceholder />
         <Separator orientation="vertical" />
@@ -170,36 +222,14 @@ export function PlantActionsDialog({
             onRenamed={() => router.reload()}
             canEdit={loggedIn}
           />
-          <div className={buttonContainer()}>
-            <div className={buttonGroup()}>
-              <p className={lastFertilizedStyle()}>
-                {(() => {
-                  const r = formatDaysAgo(lastFertilizedDate);
-                  return r ? `${r.days}d` : <X size={14} />;
-                })()}
-              </p>
-              <Toggle
-                pressed={fertilizeToggled}
-                onPressedChange={setFertilizeToggled}
-                disabled={!loggedIn}
-                variant="outline"
-                aria-label="Toggle fertilize"
-              >
-                <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
-              </Toggle>
-            </div>
-            <div className={buttonGroup()}>
-              <p className={lastWateredStyle()}>
-                {(() => {
-                  const r = formatDaysAgo(lastWateredDate);
-                  return r ? `${r.days}d` : <X size={14} />;
-                })()}
-              </p>
-              <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
-                <Droplets size={18} />
-              </button>
-            </div>
-          </div>
+          <ButtonContainer
+            plantId={plantId}
+            lastWateredDate={lastWateredDate}
+            lastFertilizedDate={lastFertilizedDate}
+            loggedIn={loggedIn}
+            open={open}
+            onOpenChange={onOpenChange}
+          />
         </div>
       </DialogContent>
     </Dialog>
