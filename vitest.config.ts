@@ -6,6 +6,7 @@ export default defineConfig({
     globals: true,
     env: {
       PGLITE_DIR: "./pglite-test",
+      AUTH_SECRET: "test",
     },
     globalSetup: "./vitest.global-setup.ts",
     fileParallelism: false,

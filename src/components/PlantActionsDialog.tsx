@@ -1,13 +1,14 @@
 "use client";
 
 import { cva, cx } from "class-variance-authority";
-import { Droplets, Sprout, X } from "lucide-react";
+import { Droplets, Sprout, TreeDeciduous, X } from "lucide-react";
 import { useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.ts";
 import { cls } from "../styles/palette.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
+import { Separator } from "./ui/Separator.tsx";
 import { Toggle } from "./ui/Toggle.tsx";
 
 interface PlantActionsDialogProps {
@@ -44,6 +45,12 @@ const formatDaysAgo = (date: Date | null): { days: number } | null => {
   return { days };
 };
 
+const imagePlaceholder = cva(
+  "w-44 h-44 flex-shrink-0 bg-gray-50 flex items-center justify-center rounded-l-lg p-4",
+);
+const dialogBody = cva("flex flex-row overflow-hidden p-0");
+const dialogRightContent = cva("flex flex-col p-6 flex-1");
+
 const nameContainer = cva("relative");
 const editableName = cva("cursor-pointer hover:opacity-70");
 const editableNameHidden = cva("invisible pointer-events-none");
@@ -58,6 +65,14 @@ interface EditableNameProps {
   plantName: string;
   onRenamed: () => void;
   canEdit: boolean;
+}
+
+function PlantImagePlaceholder() {
+  return (
+    <div className={imagePlaceholder()}>
+      <TreeDeciduous className="w-full h-full text-gray-400" />
+    </div>
+  );
 }
 
 function EditableName({ plantId, plantName, onRenamed, canEdit }: EditableNameProps) {
@@ -145,41 +160,45 @@ export function PlantActionsDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent>
-        <EditableName
-          plantId={plantId}
-          plantName={plantName}
-          onRenamed={() => router.reload()}
-          canEdit={loggedIn}
-        />
-        <div className={buttonContainer()}>
-          <div className={buttonGroup()}>
-            <p className={lastFertilizedStyle()}>
-              {(() => {
-                const r = formatDaysAgo(lastFertilizedDate);
-                return r ? `${r.days}d` : <X size={14} />;
-              })()}
-            </p>
-            <Toggle
-              pressed={fertilizeToggled}
-              onPressedChange={setFertilizeToggled}
-              disabled={!loggedIn}
-              variant="outline"
-              aria-label="Toggle fertilize"
-            >
-              <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
-            </Toggle>
-          </div>
-          <div className={buttonGroup()}>
-            <p className={lastWateredStyle()}>
-              {(() => {
-                const r = formatDaysAgo(lastWateredDate);
-                return r ? `${r.days}d` : <X size={14} />;
-              })()}
-            </p>
-            <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
-              <Droplets size={18} />
-            </button>
+      <DialogContent className={dialogBody()}>
+        <PlantImagePlaceholder />
+        <Separator orientation="vertical" />
+        <div className={dialogRightContent()}>
+          <EditableName
+            plantId={plantId}
+            plantName={plantName}
+            onRenamed={() => router.reload()}
+            canEdit={loggedIn}
+          />
+          <div className={buttonContainer()}>
+            <div className={buttonGroup()}>
+              <p className={lastFertilizedStyle()}>
+                {(() => {
+                  const r = formatDaysAgo(lastFertilizedDate);
+                  return r ? `${r.days}d` : <X size={14} />;
+                })()}
+              </p>
+              <Toggle
+                pressed={fertilizeToggled}
+                onPressedChange={setFertilizeToggled}
+                disabled={!loggedIn}
+                variant="outline"
+                aria-label="Toggle fertilize"
+              >
+                <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
+              </Toggle>
+            </div>
+            <div className={buttonGroup()}>
+              <p className={lastWateredStyle()}>
+                {(() => {
+                  const r = formatDaysAgo(lastWateredDate);
+                  return r ? `${r.days}d` : <X size={14} />;
+                })()}
+              </p>
+              <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
+                <Droplets size={18} />
+              </button>
+            </div>
           </div>
         </div>
       </DialogContent>
