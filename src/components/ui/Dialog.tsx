@@ -2,10 +2,8 @@
 
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { type ClassValue, clsx } from "clsx";
-import { X } from "lucide-react";
 import * as React from "react";
 import { twMerge } from "tailwind-merge";
-import { cls } from "../../styles/palette.ts";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -29,15 +27,6 @@ export const DialogContent = React.forwardRef<
       {...props}
     >
       {children}
-      <DialogPrimitive.Close
-        className={cn(
-          "absolute top-3 right-3 bg-transparent border-none cursor-pointer p-1 rounded",
-          cls.textIcon,
-          cls.hoverBgHover,
-        )}
-      >
-        <X size={16} />
-      </DialogPrimitive.Close>
     </DialogPrimitive.Content>
   </DialogPrimitive.Portal>
 ));
@@ -55,6 +44,6 @@ export const DialogDescription = React.forwardRef<
   React.ComponentRef<typeof DialogPrimitive.Description>,
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
-  <DialogPrimitive.Description ref={ref} className={cn("text-sm mb-4", cls.textIcon, className)} {...props} />
+  <DialogPrimitive.Description ref={ref} className={cn("text-sm mb-4 text-gray-500", className)} {...props} />
 ));
 DialogDescription.displayName = DialogPrimitive.Description.displayName;
