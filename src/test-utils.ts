@@ -1,14 +1,16 @@
 import { sql } from "drizzle-orm";
 import { getDB } from "./db.ts";
-import { plants, wateringSummary, waterings } from "./schema.ts";
+import { plantDelays, plants, wateringSummary, waterings } from "./schema.ts";
 
 export async function cleanupTestDB() {
   const db = getDB();
+  await db.delete(plantDelays);
   await db.delete(waterings);
   await db.delete(plants);
   // Reset sequences so IDs are predictable
   await db.execute(sql`ALTER SEQUENCE plants_id_seq RESTART WITH 1`);
   await db.execute(sql`ALTER SEQUENCE waterings_id_seq RESTART WITH 1`);
+  await db.execute(sql`ALTER SEQUENCE plant_delays_id_seq RESTART WITH 1`);
   await db.refreshMaterializedView(wateringSummary);
 }
 

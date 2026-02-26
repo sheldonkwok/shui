@@ -9,6 +9,7 @@ import {
   serial,
   text,
   timestamp,
+  unique,
 } from "drizzle-orm/pg-core";
 
 export const plants = pgTable("plants", {
@@ -28,6 +29,19 @@ export const waterings = pgTable("waterings", {
 });
 
 export const wateringInsertSchema = createInsertSchema(waterings);
+
+export const plantDelays = pgTable(
+  "plant_delays",
+  {
+    id: serial("id").primaryKey(),
+    plantId: integer("plant_id")
+      .notNull()
+      .references(() => plants.id),
+    dateAdded: timestamp("date_added", { withTimezone: true }).defaultNow().notNull(),
+    numDays: integer("num_days").notNull(),
+  },
+  (table) => [unique().on(table.plantId)],
+);
 
 export const wateringSummary = pgMaterializedView("watering_summary", {
   plantId: integer("plant_id"),
