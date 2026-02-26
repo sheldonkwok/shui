@@ -86,6 +86,90 @@ describe("POST /api/plants/:id/water", () => {
   });
 });
 
+describe("POST /api/plants/:id/delay", () => {
+  beforeEach(async () => {
+    await cleanupTestDB();
+  });
+
+  it("should add a delay successfully", async () => {
+    const plantId = await seedPlant("Orchid");
+
+    const res = await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 7 }),
+    });
+
+    expect(res.status).toBe(201);
+    const body = await res.json();
+    expect(body).toEqual({ ok: true });
+  });
+
+  it("should return 409 when a delay already exists for the plant", async () => {
+    const plantId = await seedPlant("Cactus");
+
+    await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 3 }),
+    });
+
+    const res = await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 5 }),
+    });
+
+    expect(res.status).toBe(409);
+  });
+
+  it("should return 400 for a non-integer plant ID", async () => {
+    const res = await app.request("/api/plants/abc/delay", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 7 }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for an invalid numDays (zero)", async () => {
+    const plantId = await seedPlant("Fern");
+
+    const res = await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 0 }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for an invalid numDays (non-integer)", async () => {
+    const plantId = await seedPlant("Ivy");
+
+    const res = await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 1.5 }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for a missing numDays", async () => {
+    const plantId = await seedPlant("Pothos");
+
+    const res = await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("PATCH /api/plants/:id", () => {
   beforeEach(async () => {
     await cleanupTestDB();
