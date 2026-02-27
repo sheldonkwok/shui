@@ -8,6 +8,7 @@ import { apiClient } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.ts";
 import { cls } from "../styles/palette.ts";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
+import { Input } from "./ui/Input.tsx";
 import { Separator } from "./ui/Separator.tsx";
 import { Toggle } from "./ui/Toggle.tsx";
 
@@ -34,6 +35,14 @@ const lastWateredStyle = cva([
 const lastFertilizedStyle = cva([
   cls.textSecondary,
   "text-[0.85em] flex items-center justify-center my-[0.25em]",
+]);
+const delayRow = cva("flex flex-row items-center gap-2 mb-3");
+const delayButton = cva([
+  "h-9 px-3 rounded text-[0.9em] border transition-colors",
+  "border-[#2d5f3f]",
+  cls.textPrimaryGreen,
+  cls.hoverBgHover,
+  "disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
 
 const formatDaysAgo = (date: Date | null): { days: number } | null => {
@@ -79,10 +88,24 @@ function ButtonContainer({
 }: ButtonContainerProps) {
   const router = useRouter();
   const [fertilizeToggled, setFertilizeToggled] = useState(false);
+  const [delayDays, setDelayDays] = useState<number | "">(1);
 
   useEffect(() => {
-    if (!open) setFertilizeToggled(false);
+    if (!open) {
+      setFertilizeToggled(false);
+      setDelayDays(1);
+    }
   }, [open]);
+
+  const handleDelay = async () => {
+    if (!delayDays || delayDays < 1) return;
+    await apiClient.api.plants[":id"].delay.$post({
+      param: { id: String(plantId) },
+      json: { numDays: delayDays },
+    });
+    onOpenChange(false);
+    router.reload();
+  };
 
   const handleWater = async () => {
     await apiClient.api.plants[":id"].water.$post({
@@ -95,36 +118,57 @@ function ButtonContainer({
   };
 
   return (
-    <div className={buttonContainer()}>
-      <div className={buttonGroup()}>
-        <p className={lastFertilizedStyle()}>
-          {(() => {
-            const r = formatDaysAgo(lastFertilizedDate);
-            return r ? `${r.days}d` : <X size={14} />;
-          })()}
-        </p>
-        <Toggle
-          pressed={fertilizeToggled}
-          onPressedChange={setFertilizeToggled}
+    <>
+      <div className={delayRow()}>
+        <Input
+          type="number"
+          min={1}
+          value={delayDays}
+          onChange={(e) => setDelayDays(e.target.value === "" ? "" : Number(e.target.value))}
           disabled={!loggedIn}
-          variant="outline"
-          aria-label="Toggle fertilize"
+          aria-label="Delay days"
+          className="w-20 text-center"
+        />
+        <button
+          className={delayButton()}
+          type="button"
+          onClick={handleDelay}
+          disabled={!loggedIn || !delayDays || delayDays < 1}
         >
-          <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
-        </Toggle>
-      </div>
-      <div className={buttonGroup()}>
-        <p className={lastWateredStyle()}>
-          {(() => {
-            const r = formatDaysAgo(lastWateredDate);
-            return r ? `${r.days}d` : <X size={14} />;
-          })()}
-        </p>
-        <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
-          <Droplets size={18} />
+          Delay
         </button>
       </div>
-    </div>
+      <div className={buttonContainer()}>
+        <div className={buttonGroup()}>
+          <p className={lastFertilizedStyle()}>
+            {(() => {
+              const r = formatDaysAgo(lastFertilizedDate);
+              return r ? `${r.days}d` : <X size={14} />;
+            })()}
+          </p>
+          <Toggle
+            pressed={fertilizeToggled}
+            onPressedChange={setFertilizeToggled}
+            disabled={!loggedIn}
+            variant="outline"
+            aria-label="Toggle fertilize"
+          >
+            <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
+          </Toggle>
+        </div>
+        <div className={buttonGroup()}>
+          <p className={lastWateredStyle()}>
+            {(() => {
+              const r = formatDaysAgo(lastWateredDate);
+              return r ? `${r.days}d` : <X size={14} />;
+            })()}
+          </p>
+          <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
+            <Droplets size={18} />
+          </button>
+        </div>
+      </div>
+    </>
   );
 }
 
