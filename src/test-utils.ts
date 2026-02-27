@@ -31,3 +31,8 @@ export async function seedWatering(plantId: number, wateringTime: Date, fertiliz
   });
   await db.refreshMaterializedView(wateringSummary);
 }
+
+export async function seedDelay(plantId: number, numDays: number, dateAdded: Date) {
+  const db = getDB();
+  await db.insert(plantDelays).values({ plantId, numDays, dateAdded });
+}

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
+import { cleanupTestDB, seedDelay, seedPlant, seedWatering } from "../test-utils.ts";
 import { getPlants } from "./plants.ts";
 
 const DAY = 24 * 60 * 60 * 1000;
@@ -136,6 +136,48 @@ describe("getPlants - watering intervals", () => {
 
     // Average of 0.5 and 0.5 = 0.5
     expect(result[0]?.avgWateringIntervalDays).toBe(0.5);
+  });
+
+  it("should add delay days to daysUntilNextWatering when delay has not expired", async () => {
+    const plantId = await seedPlant("Delayed Plant");
+    // Last watered 6 days ago, avg interval 7 days => daysUntilNextWatering = 1 without delay
+    await seedWatering(plantId, new Date(time - 6 * DAY));
+    await seedWatering(plantId, new Date(time - 13 * DAY));
+    // Add a 3-day delay initiated just now (0 calendar days have passed)
+    await seedDelay(plantId, 3, now);
+
+    const result = await getPlants();
+
+    // daysUntilNextWatering = 7 - 6 + 3 = 4
+    expect(result[0]?.daysUntilNextWatering).toBe(4);
+  });
+
+  it("should not use the delay when calendar days elapsed exceeds the delay", async () => {
+    const plantId = await seedPlant("Expired Delay Plant");
+    // Last watered 6 days ago, avg interval 7 days => daysUntilNextWatering = 1 without delay
+    await seedWatering(plantId, new Date(time - 6 * DAY));
+    await seedWatering(plantId, new Date(time - 13 * DAY));
+    // Add a 3-day delay that was initiated 4 days ago (4 > 3, so it has expired)
+    await seedDelay(plantId, 3, new Date(time - 4 * DAY));
+
+    const result = await getPlants();
+
+    // Delay is expired, so daysUntilNextWatering = 7 - 6 = 1
+    expect(result[0]?.daysUntilNextWatering).toBe(1);
+  });
+
+  it("should not use the delay when calendar days elapsed equals the delay", async () => {
+    const plantId = await seedPlant("Exactly Expired Delay Plant");
+    // Last watered 6 days ago, avg interval 7 days => daysUntilNextWatering = 1 without delay
+    await seedWatering(plantId, new Date(time - 6 * DAY));
+    await seedWatering(plantId, new Date(time - 13 * DAY));
+    // Add a 3-day delay that was initiated exactly 3 days ago (3 >= 3, so it has expired)
+    await seedDelay(plantId, 3, new Date(time - 3 * DAY));
+
+    const result = await getPlants();
+
+    // Delay is expired, so daysUntilNextWatering = 7 - 6 = 1
+    expect(result[0]?.daysUntilNextWatering).toBe(1);
   });
 
   it("should sort plants by daysUntilNextWatering ascending", async () => {
