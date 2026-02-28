@@ -129,7 +129,7 @@ function ButtonContainer({
             onChange={(e) => setDelayDays(e.target.value === "" ? "" : Number(e.target.value))}
             disabled={!loggedIn}
             aria-label="Delay days"
-            className="w-4 text-center"
+            className="w-14 text-center"
           />
           <button
             className={delayGroupButton()}
