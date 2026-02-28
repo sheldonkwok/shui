@@ -39,7 +39,7 @@ const lastFertilizedStyle = cva([
 ]);
 const delayRow = cva("mb-3");
 const delayGroupButton = cva([
-  "inline-flex items-center justify-center h-9 w-9 border bg-transparent transition-colors",
+  "inline-flex items-center justify-center self-stretch w-9 border bg-transparent transition-colors",
   cls.borderInput,
   cls.textPrimaryGreen,
   cls.hoverBgHover,
