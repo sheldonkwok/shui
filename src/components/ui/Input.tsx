@@ -1,5 +1,6 @@
 import { cva } from "class-variance-authority";
 import * as React from "react";
+import { twMerge } from "tailwind-merge";
 import { cls } from "../../styles/palette.ts";
 
 const inputVariants = cva([
@@ -17,7 +18,7 @@ export interface InputProps extends React.ComponentProps<"input"> {
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(({ className, type, ...props }, ref) => {
-  return <input type={type} className={inputVariants({ class: className })} ref={ref} {...props} />;
+  return <input type={type} className={twMerge(inputVariants(), className)} ref={ref} {...props} />;
 });
 
 Input.displayName = "Input";
