@@ -1,13 +1,15 @@
 "use client";
 
 import { cva, cx } from "class-variance-authority";
-import { Droplets, Sprout, TreeDeciduous, X } from "lucide-react";
+import { Droplets, Sprout, TimerReset, TreeDeciduous, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.ts";
 import { cls } from "../styles/palette.ts";
+import { ButtonGroup } from "./ui/ButtonGroup.tsx";
 import { Dialog, DialogContent, DialogTitle } from "./ui/Dialog.tsx";
+import { Input } from "./ui/Input.tsx";
 import { Separator } from "./ui/Separator.tsx";
 import { Toggle } from "./ui/Toggle.tsx";
 
@@ -35,15 +37,12 @@ const lastFertilizedStyle = cva([
   cls.textSecondary,
   "text-[0.85em] flex items-center justify-center my-[0.25em]",
 ]);
-const delayButtonGroup = cva("flex flex-row mb-3");
-const delayPresetButton = cva([
-  "h-8 px-2.5 text-xs border transition-colors",
-  "border-[#2d5f3f]",
+const delayRow = cva("mb-3");
+const delayGroupButton = cva([
+  "inline-flex items-center justify-center h-9 w-9 border bg-transparent transition-colors",
+  cls.borderInput,
   cls.textPrimaryGreen,
   cls.hoverBgHover,
-  "first:rounded-l-md last:rounded-r-md",
-  "-ml-px first:ml-0",
-  "relative hover:z-10",
   "disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
 
@@ -90,17 +89,20 @@ function ButtonContainer({
 }: ButtonContainerProps) {
   const router = useRouter();
   const [fertilizeToggled, setFertilizeToggled] = useState(false);
+  const [delayDays, setDelayDays] = useState<number | "">(1);
 
   useEffect(() => {
     if (!open) {
       setFertilizeToggled(false);
+      setDelayDays(1);
     }
   }, [open]);
 
-  const handleDelay = async (days: number) => {
+  const handleDelay = async () => {
+    if (!delayDays || delayDays < 1) return;
     await apiClient.api.plants[":id"].delay.$post({
       param: { id: String(plantId) },
-      json: { numDays: days },
+      json: { numDays: delayDays },
     });
     onOpenChange(false);
     router.reload();
@@ -118,19 +120,27 @@ function ButtonContainer({
 
   return (
     <>
-      <div className={delayButtonGroup()}>
-        {[1, 3, 7, 14].map((days) => (
-          <button
-            key={days}
-            className={delayPresetButton()}
-            type="button"
-            onClick={() => handleDelay(days)}
+      <div className={delayRow()}>
+        <ButtonGroup>
+          <Input
+            type="number"
+            min={1}
+            value={delayDays}
+            onChange={(e) => setDelayDays(e.target.value === "" ? "" : Number(e.target.value))}
             disabled={!loggedIn}
-            aria-label={`Delay ${days} days`}
+            aria-label="Delay days"
+            className="w-12 text-center"
+          />
+          <button
+            className={delayGroupButton()}
+            type="button"
+            onClick={handleDelay}
+            disabled={!loggedIn || !delayDays || delayDays < 1}
+            aria-label="Delay watering"
           >
-            {days}d
+            <TimerReset size={18} />
           </button>
-        ))}
+        </ButtonGroup>
       </div>
       <div className={buttonContainer()}>
         <div className={buttonGroup()}>
