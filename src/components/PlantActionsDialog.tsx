@@ -1,7 +1,7 @@
 "use client";
 
 import { cva, cx } from "class-variance-authority";
-import { Droplets, Sprout, TreeDeciduous, X } from "lucide-react";
+import { Droplets, Sprout, TimerReset, TreeDeciduous, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
@@ -38,10 +38,11 @@ const lastFertilizedStyle = cva([
 ]);
 const delayRow = cva("flex flex-row items-center gap-2 mb-3");
 const delayButton = cva([
-  "h-9 px-3 rounded text-[0.9em] border transition-colors",
+  "inline-flex items-center justify-center h-9 w-9 rounded border transition-colors",
   "border-[#2d5f3f]",
   cls.textPrimaryGreen,
   cls.hoverBgHover,
+  "hover:[&>svg]:fill-current",
   "disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
 
@@ -127,15 +128,16 @@ function ButtonContainer({
           onChange={(e) => setDelayDays(e.target.value === "" ? "" : Number(e.target.value))}
           disabled={!loggedIn}
           aria-label="Delay days"
-          className="w-20 text-center"
+          className="w-12 text-center"
         />
         <button
           className={delayButton()}
           type="button"
           onClick={handleDelay}
           disabled={!loggedIn || !delayDays || delayDays < 1}
+          aria-label="Delay watering"
         >
-          Delay
+          <TimerReset size={18} />
         </button>
       </div>
       <div className={buttonContainer()}>
