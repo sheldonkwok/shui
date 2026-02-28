@@ -36,9 +36,9 @@ const lastFertilizedStyle = cva([
   cls.textSecondary,
   "text-[0.85em] flex items-center justify-center my-[0.25em]",
 ]);
-const delayRow = cva("flex flex-row items-center gap-2 mb-3");
+const delayRow = cva("flex flex-row items-stretch gap-2 mb-3");
 const delayButton = cva([
-  "inline-flex items-center justify-center h-9 w-9 rounded border transition-colors",
+  "inline-flex items-center justify-center h-full w-9 rounded border transition-colors",
   "border-[#2d5f3f]",
   cls.textPrimaryGreen,
   cls.hoverBgHover,
