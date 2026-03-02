@@ -5,7 +5,7 @@ import { useState } from "react";
 import { cls, colors } from "../styles/palette.ts";
 import type { PlantWithStats } from "../types.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
-import { PlantActionsDialog } from "./PlantActionsDialog.tsx";
+import { PlantActionsDialog } from "./PlantActionsDialog";
 
 interface PlantProps {
   plant: PlantWithStats;
