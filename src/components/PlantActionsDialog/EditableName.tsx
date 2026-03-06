@@ -4,14 +4,9 @@ import { apiClient } from "../../api/client.ts";
 import { cls } from "../../styles/palette.ts";
 import { DialogTitle } from "../ui/Dialog.tsx";
 
-const nameContainer = cva("relative");
-const editableName = cva("cursor-pointer hover:opacity-70");
-const editableNameHidden = cva("invisible pointer-events-none");
-const nameInput = cva([
-  "absolute top-0 left-0 text-lg leading-normal font-semibold p-0 border-none border-b-2 rounded-none bg-transparent focus:outline-none",
-  cls.borderBPrimaryGreen,
-]);
-const nameInputHidden = cva("invisible pointer-events-none");
+const nameInput = cva("w-full text-lg mb-2 pt-1 pb-0 border-0 border-b-2 bg-transparent focus:outline-none");
+const nameInputReadOnly = cva("border-b-transparent cursor-pointer hover:opacity-70");
+const nameInputEditing = cva(["cursor-text", cls.borderBPrimaryGreen]);
 
 interface EditableNameProps {
   plantId: number;
@@ -28,7 +23,7 @@ export function EditableName({ plantId, plantName, onRenamed, canEdit }: Editabl
   const handleNameClick = () => {
     if (!canEdit) return;
     setIsEditing(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
+    inputRef.current?.focus();
   };
 
   const handleNameBlur = async () => {
@@ -56,22 +51,18 @@ export function EditableName({ plantId, plantName, onRenamed, canEdit }: Editabl
   };
 
   return (
-    <div className={nameContainer()}>
-      <DialogTitle
-        className={cx(editableName(), isEditing && editableNameHidden())}
-        onClick={handleNameClick}
-      >
-        {name}
-      </DialogTitle>
+    <>
+      <DialogTitle className="sr-only">{name}</DialogTitle>
       <input
         ref={inputRef}
-        className={cx(nameInput(), !isEditing && nameInputHidden())}
-        size={Math.max(1, name.length)}
+        className={cx(nameInput(), isEditing ? nameInputEditing() : nameInputReadOnly())}
+        readOnly={!isEditing}
         value={name}
         onChange={(e) => setName(e.target.value)}
+        onClick={handleNameClick}
         onBlur={handleNameBlur}
         onKeyDown={handleNameKeyDown}
       />
-    </div>
+    </>
   );
 }
