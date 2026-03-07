@@ -7,11 +7,13 @@ import { Dialog, DialogContent } from "../ui/Dialog.tsx";
 import { Separator } from "../ui/Separator.tsx";
 import { ButtonContainer } from "./ButtonContainer.tsx";
 import { EditableName } from "./EditableName.tsx";
+import { EditableSpecies } from "./EditableSpecies.tsx";
 import { PlantImagePlaceholder } from "./PlantImagePlaceholder.tsx";
 
 interface PlantActionsDialogProps {
   plantId: number;
   plantName: string;
+  species: string | null;
   lastWatered: Date | null;
   lastFertilized: Date | null;
   open: boolean;
@@ -24,6 +26,7 @@ const dialogRightContent = cva("flex flex-col px-4 flex-1");
 export function PlantActionsDialog({
   plantId,
   plantName,
+  species,
   lastWatered: lastWateredDate,
   lastFertilized: lastFertilizedDate,
   open,
@@ -42,6 +45,12 @@ export function PlantActionsDialog({
             plantId={plantId}
             plantName={plantName}
             onRenamed={() => router.reload()}
+            canEdit={loggedIn}
+          />
+          <EditableSpecies
+            plantId={plantId}
+            species={species}
+            onClassified={() => router.reload()}
             canEdit={loggedIn}
           />
           <ButtonContainer

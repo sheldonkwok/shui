@@ -4,7 +4,7 @@ import { apiClient } from "../../api/client.ts";
 import { cls } from "../../styles/palette.ts";
 import { DialogTitle } from "../ui/Dialog.tsx";
 
-const nameInput = cva("w-full text-lg mb-2 pt-1 pb-0 border-0 border-b-2 bg-transparent focus:outline-none");
+const nameInput = cva("w-full text-lg pt-1 pb-0 border-0 border-b-2 bg-transparent focus:outline-none");
 const nameInputReadOnly = cva("border-b-transparent cursor-pointer hover:opacity-70");
 const nameInputEditing = cva(["cursor-text", cls.borderBPrimaryGreen]);
 

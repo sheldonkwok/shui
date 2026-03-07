@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanupTestDB, seedPlant } from "../test-utils.ts";
 import { app } from "./index.ts";
 
@@ -164,6 +164,73 @@ describe("POST /api/plants/:id/delay", () => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({}),
+    });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("POST /api/plants/:id/classify", () => {
+  beforeEach(async () => {
+    await cleanupTestDB();
+    vi.spyOn(global, "fetch");
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("should classify a plant successfully", async () => {
+    const plantId = await seedPlant("Dracaena");
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ matchType: "EXACT", scientificName: "Dracaena marginata" }), {
+        status: 200,
+      }),
+    );
+
+    const res = await app.request(`/api/plants/${plantId}/classify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ species: "Dracaena marginata" }),
+    });
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body).toEqual({ ok: true });
+  });
+
+  it("should return 422 for an unknown species", async () => {
+    const plantId = await seedPlant("Mystery Plant");
+    vi.mocked(global.fetch).mockResolvedValueOnce(
+      new Response(JSON.stringify({ matchType: "NONE" }), { status: 200 }),
+    );
+
+    const res = await app.request(`/api/plants/${plantId}/classify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ species: "xyzzy gibberish" }),
+    });
+
+    expect(res.status).toBe(422);
+  });
+
+  it("should return 400 for a non-integer plant ID", async () => {
+    const res = await app.request("/api/plants/abc/classify", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ species: "Dracaena marginata" }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for an invalid body", async () => {
+    const plantId = await seedPlant("Rose");
+
+    const res = await app.request(`/api/plants/${plantId}/classify`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ species: 123 }),
     });
 
     expect(res.status).toBe(400);
