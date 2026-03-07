@@ -12,6 +12,21 @@ Use execa instead of execSync for shelling out.
 
 Always use Tailwind CSS with `cva` (class-variance-authority) for component styling. Define styles as `cva(...)` constants at the top of the file and apply them as `styleName()` in JSX.
 
+## External APIs 
+GBIF API — Plant Species Lookup
+
+Base URL: https://api.gbif.org/v1
+No authentication required for read-only endpoints.
+Species match (exact lookup by name):
+
+GET /species/match?name=Dracaena+marginata
+Returns full taxonomic hierarchy, confidence score, and match type.
+Species search (search by query string):
+
+GET /species/search?q=dracaena&rank=SPECIES&status=ACCEPTED
+Returns paginated list of matching species. Use limit and offset for pagination. status=ACCEPTED filters out synonyms.
+Response fields of note: scientificName, canonicalName, rank, status, confidence, matchType, kingdom, phylum, order, family, genus, speciesKey.
+
 ## Code Quality Checks
 
 **CRITICAL: After generating or modifying any code, you MUST run the following checks:**

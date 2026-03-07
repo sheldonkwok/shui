@@ -2,6 +2,7 @@ import { arktypeValidator } from "@hono/arktype-validator";
 import { type } from "arktype";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
+import { classifyPlant } from "../actions/plants.ts";
 import { refreshWateringSummary } from "../actions/plants-helper.ts";
 import { getDB } from "../db.ts";
 import { plantDelays, plants, waterings } from "../schema.ts";
@@ -10,6 +11,7 @@ const renameSchema = type({ name: "string" });
 const addPlantSchema = type({ name: "string" });
 const wateringSchema = type({ fertilized: "boolean" });
 const delaySchema = type({ numDays: "number.integer > 0" });
+const classifySchema = type({ species: "string" });
 
 export const plantsRouter = new Hono()
   .post("/", arktypeValidator("json", addPlantSchema), async (c) => {
@@ -44,6 +46,16 @@ export const plantsRouter = new Hono()
       }
       throw error;
     }
+  })
+  .post("/:id/classify", arktypeValidator("json", classifySchema), async (c) => {
+    const plantId = Number(c.req.param("id"));
+    if (!Number.isInteger(plantId) || plantId <= 0) {
+      return c.json({ error: "Invalid plant ID" }, 400);
+    }
+    const { species } = c.req.valid("json");
+    const result = await classifyPlant(plantId, species);
+    if ("error" in result) return c.json(result, 422);
+    return c.json(result);
   })
   .patch("/:id", arktypeValidator("json", renameSchema), async (c) => {
     const plantId = Number(c.req.param("id"));

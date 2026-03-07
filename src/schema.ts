@@ -15,6 +15,7 @@ import {
 export const plants = pgTable("plants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
+  species: text("species"),
 });
 
 export const plantInsertSchema = createInsertSchema(plants);

@@ -7,6 +7,7 @@ export async function listPlants() {
     .select({
       id: plants.id,
       name: plants.name,
+      species: plants.species,
       wateringCount: sql<number>`COALESCE(${wateringSummary.wateringCount}, 0)`,
       lastWatered: wateringSummary.lastWatered,
       avgIntervalDays: wateringSummary.avgIntervalDays,
