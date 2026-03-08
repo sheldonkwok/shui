@@ -121,6 +121,21 @@ git commit -m "fix stuff"
 git commit -m "WIP"
 ```
 
+## Environment Variables
+
+| Variable | Required | Description |
+|---|---|---|
+| `MCP_API_KEY` | No | Bearer token for MCP endpoint auth. If unset, the endpoint is open. |
+| `DATABASE_URL` | No | External Postgres URL. If unset, PGlite is used. |
+| `PGLITE_DIR` | No | Directory for PGlite data files. Defaults to `./pglite`. |
+| `VERCEL_ENV` | No | Set by Vercel (`preview`, `production`). Used to gate preview auth. |
+
+### Generating MCP_API_KEY
+
+```bash
+openssl rand -base64 32
+```
+
 ## Workflow Summary
 
 1. Never touch the .envrc file
@@ -132,3 +147,16 @@ git commit -m "WIP"
 1. Push your changes
 
 Following these guidelines ensures code quality and maintains a clean, understandable commit history.
+
+
+## Plan Management
+
+When creating or updating a plan:
+- Plans live in `plan.md` at the repo root
+- Never overwrite `plan.md` entirely
+- If `plan.md` already exists, append a new section at the bottom:
+  `## Revision N — YYYY-MM-DD` (increment N from the last revision)
+- Each revision must include:
+  - What changed from the prior revision and why
+  - The full updated plan (not just a diff)
+- Do not delete or modify any prior revision sections
