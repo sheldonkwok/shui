@@ -11,7 +11,7 @@ import { Toggle } from "../ui/Toggle.tsx";
 const waterButton = cva([
   cls.bgWaterBlue,
   cls.hoverBgWaterBlueDark,
-  "text-white border-none h-9 px-3 rounded text-[0.9em] transition-colors hover:[&>svg]:fill-current disabled:opacity-40 disabled:cursor-not-allowed",
+  "text-white border-none h-9 px-3 rounded text-[0.9em] transition-colors [&>svg]:fill-white/0 [&>svg]:transition-[fill] [&>svg]:duration-1000 hover:[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite] disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
 const buttonContainer = cva("flex flex-col items-end mt-auto pb-3 gap-2");
 const buttonRow = cva("flex flex-row items-end gap-4");
