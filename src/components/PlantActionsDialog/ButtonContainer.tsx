@@ -61,11 +61,13 @@ export function ButtonContainer({
   const router = useRouter();
   const [fertilizeToggled, setFertilizeToggled] = useState(false);
   const [delayDays, setDelayDays] = useState<number | "">(1);
+  const [isWatering, setIsWatering] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setFertilizeToggled(false);
       setDelayDays(1);
+      setIsWatering(false);
     }
   }, [open]);
 
@@ -80,11 +82,13 @@ export function ButtonContainer({
   };
 
   const handleWater = async () => {
+    setIsWatering(true);
     await apiClient.api.plants[":id"].water.$post({
       param: { id: String(plantId) },
       json: { fertilized: fertilizeToggled },
     });
     setFertilizeToggled(false);
+    setIsWatering(false);
     onOpenChange(false);
     router.reload();
   };
@@ -136,7 +140,12 @@ export function ButtonContainer({
               return r ? `${r.days}d` : <X size={14} />;
             })()}
           </p>
-          <button className={waterButton()} type="button" onClick={handleWater} disabled={!loggedIn}>
+          <button
+            className={`${waterButton()} ${isWatering ? "[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite]" : ""}`}
+            type="button"
+            onClick={handleWater}
+            disabled={!loggedIn || isWatering}
+          >
             <Droplets size={18} />
           </button>
         </div>
