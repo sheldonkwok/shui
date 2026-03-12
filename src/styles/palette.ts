@@ -8,6 +8,7 @@ export const colors = {
   primaryGreen: "#2d5f3f",
   primaryGreenDark: "#1e3f2b",
   primaryGreenFocusShadow: "rgba(45,95,63,0.2)",
+  lightGreen: "#C7D9B7",
 
   // Water blue: watering action button
   waterBlue: "#6d94c5",
