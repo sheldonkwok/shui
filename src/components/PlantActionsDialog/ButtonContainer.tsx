@@ -3,7 +3,7 @@ import { Droplets, Sprout, TimerReset, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../../api/client.ts";
-import { cls } from "../../styles/palette.ts";
+import { cls, colors } from "../../styles/palette.ts";
 import { ButtonGroup } from "../ui/ButtonGroup.tsx";
 import { Input } from "../ui/Input.tsx";
 import { Toggle } from "../ui/Toggle.tsx";
@@ -130,7 +130,11 @@ export function ButtonContainer({
             variant="outline"
             aria-label="Toggle fertilize"
           >
-            <Sprout size={18} fill={fertilizeToggled ? "currentColor" : "none"} />
+            <Sprout
+              size={18}
+              fill={fertilizeToggled ? colors.lightGreen : "none"}
+              color={fertilizeToggled ? colors.lightGreen : undefined}
+            />
           </Toggle>
         </div>
         <div className={buttonGroup()}>
