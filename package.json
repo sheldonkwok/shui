@@ -38,6 +38,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.2",
+    "@playwright/test": "^1.56.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "~25.0.10",
@@ -50,11 +51,14 @@
   },
   "scripts": {
     "build": "waku build",
+    "build:e2e": "WAKU_ADAPTER=node waku build && cp node_modules/@electric-sql/pglite/dist/pglite.data dist/server/assets/ && cp node_modules/@electric-sql/pglite/dist/pglite.wasm dist/server/assets/",
     "check": "biome check --write . && tsc --noEmit",
     "dev": "pnpm run /^dev:/",
     "start": "waku start",
+    "start:e2e": "WAKU_ADAPTER=node waku start --port 3000",
     "migrate": "drizzle-kit push && node --experimental-strip-types scripts/sync-views.ts",
     "test": "vitest run",
+    "test:e2e": "playwright test",
     "dev:waku": "waku dev"
   },
   "keywords": [],
