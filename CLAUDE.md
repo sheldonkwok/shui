@@ -2,6 +2,43 @@
 
 This document provides guidelines for AI agents working on the shui project.
 
+## Repository Structure
+
+```
+src/
+├── actions/        # Server-only business logic ("use server"). Calls DB helpers and external APIs.
+├── api/            # REST API routes (Hono). Thin HTTP layer over the same business logic.
+├── components/     # React components (UI layer). Mix of server and client components.
+│   ├── ui/         # Reusable low-level primitives (Dialog, Input, Toggle, …).
+│   └── PlantActionsDialog/  # Sub-components for the plant action dialog.
+├── pages/          # Waku page/layout entry points.
+├── hooks/          # Custom React hooks (e.g. useSession).
+├── styles/         # Tailwind config, palette, global CSS.
+├── db.ts           # Database initialisation (PGlite or external Postgres).
+├── schema.ts       # Drizzle ORM table definitions.
+├── types.ts        # Shared TypeScript types.
+└── api/client.ts   # Type-safe Hono client used by UI components.
+```
+
+**`actions/` vs `components/`** — `actions/` contains server-side functions that query the database or call external APIs; they are never bundled into the client. `components/` contains the React rendering layer; server components call actions directly, while client components hit the REST API via `api/client.ts`.
+
+### Plant List
+
+The plant list is split across three files:
+
+- `components/PlantList.tsx` — async server component that calls `getPlants()` and passes the result down.
+- `components/PlantListClient.tsx` — client component that renders the list and owns local UI state (e.g. optimistic updates).
+- `components/Plant.tsx` — individual list item; shows the plant name, a last-watered timestamp, and a colour gradient indicating watering urgency. Clicking a row opens the Plant Action Dialog.
+
+### Plant Action Dialog
+
+`components/PlantActionsDialog/` is a modal dialog that opens when the user clicks a plant. It is composed of:
+
+- `index.tsx` — outer dialog shell and layout.
+- `EditableName.tsx` — click-to-edit plant name; saves via `PATCH /api/plants/:id`.
+- `EditableSpecies.tsx` — click-to-edit species with live GBIF autocomplete; saves via `POST /api/plants/:id/classify`.
+- `ButtonContainer.tsx` — Water button (logs a watering event), Fertilize toggle, and Delay control for snoozing the next watering reminder.
+
 ## Technical Notes
 
 The project uses PGlite (in-process PostgreSQL) for its database. No external database process is needed — PGlite runs embedded in Node.js. Data is stored in the `./pglite` directory. Run `pnpm migrate` to push the schema.
