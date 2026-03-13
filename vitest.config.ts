@@ -10,5 +10,6 @@ export default defineConfig({
     },
     globalSetup: "./vitest.global-setup.ts",
     fileParallelism: false,
+    exclude: ["**/node_modules/**", "**/e2e/**"],
   },
 });
