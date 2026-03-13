@@ -1,3 +1,18 @@
 {
-  "plansDirectory": ".claude/plans"
+  "plansDirectory": ".claude/plans",
+  "permissions": {
+    "allow": [
+      "Bash(pnpm install)",
+      "Bash(pnpm check)",
+      "Bash(pnpm test)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push *)",
+      "Bash(git status *)",
+      "Bash(git branch *)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git fetch *)"
+    ]
+  }
 }
