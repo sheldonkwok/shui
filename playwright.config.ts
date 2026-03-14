@@ -25,6 +25,7 @@ export default defineConfig({
     timeout: 120000,
     env: {
       AUTH_SECRET: "playwright-test-secret",
+      VERCEL_ENV: "preview",
     },
   },
 });
