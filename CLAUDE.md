@@ -69,7 +69,6 @@ Response fields of note: scientificName, canonicalName, rank, status, confidence
 **CRITICAL: After generating or modifying any code, you MUST run the following checks:**
 
 ```bash
-pnpm install  # Run this first if you are Claude. Do NOT run if you are Codex.
 pnpm check  # Check and fix code formatting/linting
 pnpm test    # Run all tests to ensure nothing broke
 ```
@@ -177,7 +176,6 @@ openssl rand -base64 32
 
 1. Never touch the .envrc file
 1. Make your code changes
-1. Run `pnpm install` to ensure dependencies are installed
 1. Run `pnpm test` and ensure all tests pass
 1. Stage your changes with `git add`
 1. Commit with conventional commit style
