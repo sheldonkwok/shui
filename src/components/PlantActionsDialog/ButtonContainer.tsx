@@ -149,6 +149,7 @@ export function ButtonContainer({
             type="button"
             onClick={handleWater}
             disabled={!loggedIn || isWatering}
+            aria-label="Water plant"
           >
             <Droplets size={18} />
           </button>

@@ -16,7 +16,8 @@ describe("POST /api/plants", () => {
 
     expect(res.status).toBe(201);
     const body = await res.json();
-    expect(body).toEqual({ ok: true });
+    expect(body).toMatchObject({ ok: true });
+    expect(typeof body.id).toBe("number");
   });
 
   it("should return 400 for an invalid body", async () => {

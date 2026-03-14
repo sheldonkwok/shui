@@ -16,8 +16,8 @@ const classifySchema = type({ species: "string" });
 export const plantsRouter = new Hono()
   .post("/", arktypeValidator("json", addPlantSchema), async (c) => {
     const { name } = c.req.valid("json");
-    await getDB().insert(plants).values({ name });
-    return c.json({ ok: true }, 201);
+    const [plant] = await getDB().insert(plants).values({ name }).returning();
+    return c.json({ ok: true, id: plant!.id }, 201);
   })
   .post("/:id/water", arktypeValidator("json", wateringSchema), async (c) => {
     const plantId = Number(c.req.param("id"));
@@ -66,5 +66,15 @@ export const plantsRouter = new Hono()
     const { name } = c.req.valid("json");
     await getDB().update(plants).set({ name }).where(eq(plants.id, plantId));
 
+    return c.json({ ok: true });
+  })
+  .delete("/:id", async (c) => {
+    const plantId = Number(c.req.param("id"));
+    if (!Number.isInteger(plantId) || plantId <= 0) {
+      return c.json({ error: "Invalid plant ID" }, 400);
+    }
+    await getDB().delete(waterings).where(eq(waterings.plantId, plantId));
+    await getDB().delete(plantDelays).where(eq(plantDelays.plantId, plantId));
+    await getDB().delete(plants).where(eq(plants.id, plantId));
     return c.json({ ok: true });
   });
