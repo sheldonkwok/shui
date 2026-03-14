@@ -1,6 +1,21 @@
 {
   "plansDirectory": ".claude/plans",
   "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pnpm exec biome check --write ."
+          },
+          {
+            "type": "command",
+            "command": "/home/user/shui/.claude/hooks/tsc-if-ts-changed.sh"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "matcher": "",
