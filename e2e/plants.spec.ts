@@ -51,17 +51,21 @@ test.describe("Plant watering", () => {
       }
     });
 
-    // Add a new plant via the form
+    // Open the dropdown menu and add a new plant via the form
+    const menuButton = page.locator('button[aria-haspopup="menu"]');
+    await menuButton.click();
     const nameInput = page.getByPlaceholder("Add a new plant");
     await nameInput.fill("E2E Test Plant");
-    await nameInput.press("Enter");
+    await page.locator('form button[type="submit"]').click();
 
-    // Wait for the plant to appear in the list
+    // Wait for the plant to appear in the list, then close the dropdown
     await expect(page.getByText("E2E Test Plant")).toBeVisible();
     plantId = capturedId;
+    await page.keyboard.press("Escape");
 
     // Click the plant name to open the actions dialog
-    await page.getByText("E2E Test Plant").click();
+    const plantButton = page.getByRole("listitem").getByRole("button", { name: "E2E Test Plant" });
+    await plantButton.click();
 
     // Click the water button
     const waterButton = page.getByRole("button", { name: "Water plant" });

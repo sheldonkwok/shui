@@ -7,11 +7,23 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm exec biome check --write ."
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/biome-check.sh"
           },
           {
             "type": "command",
-            "command": "/home/user/shui/.claude/hooks/tsc-if-ts-changed.sh"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/tsc-if-ts-changed.sh"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/migrate.sh"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/test.sh"
+          },
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/test-e2e.sh"
           }
         ]
       }
@@ -22,7 +34,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "pnpm install"
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
           }
         ]
       }

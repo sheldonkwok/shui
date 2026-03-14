@@ -64,37 +64,6 @@ GET /species/search?q=dracaena&rank=SPECIES&status=ACCEPTED
 Returns paginated list of matching species. Use limit and offset for pagination. status=ACCEPTED filters out synonyms.
 Response fields of note: scientificName, canonicalName, rank, status, confidence, matchType, kingdom, phylum, order, family, genus, speciesKey.
 
-## Code Quality Checks
-
-**CRITICAL: After generating or modifying any code, you MUST run the following checks:**
-
-```bash
-pnpm check  # Check and fix code formatting/linting
-pnpm test    # Run all tests to ensure nothing broke
-```
-
-### When to Run
-
-- Immediately after creating or editing any source code files
-- After adding or modifying functionality
-- Before considering a task complete
-
-### What to Do If Checks Fail
-
-**If `pnpm check` fails:**
-
-- Review the linting errors reported
-- Fix the issues (check will auto-fix most formatting issues)
-- Re-run `pnpm check` to verify fixes
-
-**If `pnpm test` fails:**
-
-- Read the test failure output carefully
-- Fix the broken functionality or update tests if behavior intentionally changed
-- Do NOT proceed until all tests pass
-
-**Important:** Code is not considered complete until both `pnpm check` and `pnpm test` pass successfully.
-
 ## Pre-Commit Requirements
 
 ### 1. Always Use pnpm Instead of npm
@@ -176,13 +145,54 @@ openssl rand -base64 32
 
 1. Never touch the .envrc file
 1. Make your code changes
-1. Run `pnpm test` and ensure all tests pass
 1. Stage your changes with `git add`
 1. Commit with conventional commit style
 1. Push your changes
 
 Following these guidelines ensures code quality and maintains a clean, understandable commit history.
 
+
+## Hooks
+
+Claude Code hooks live in `.claude/hooks/` and are registered in `.claude/settings.json`. There are two hook events in use:
+
+- **SessionStart** — runs when a remote session begins (installs dependencies, Playwright browsers)
+- **Stop** — runs after every session (linting, type checking, migrations, unit tests, e2e tests)
+
+### Creating a Hook
+
+Each hook is a standalone bash script. Follow this pattern:
+
+```bash
+#!/bin/bash
+set -euo pipefail
+
+cd "$CLAUDE_PROJECT_DIR"
+pnpm exec <binary> [args]   # use pnpm exec for local package binaries
+                             # node and git are system binaries — no pnpm exec needed
+```
+
+Register it in `.claude/settings.json` under the appropriate event:
+
+```json
+{ "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/your-hook.sh" }
+```
+
+### Evaluating a Hook
+
+Verify each hook errors correctly by making a targeted breaking change, running the script directly, checking the exit code, then reverting:
+
+```bash
+# introduce a breaking change
+echo 'const _x: number = "oops"' >> src/utils.ts
+
+# run the hook directly
+CLAUDE_PROJECT_DIR=$(pwd) ./.claude/hooks/tsc-if-ts-changed.sh 2>&1
+echo "Exit: ${PIPESTATUS[0]}"   # must be non-zero
+
+# revert
+git checkout src/utils.ts
+```
 
 ## Plan Management
 
