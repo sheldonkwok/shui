@@ -180,7 +180,7 @@ export const previewAuthMiddleware = createMiddleware(async (c, next) => {
   await next();
   if (!getCookie(c, CONFIG.indicatorCookieName)) {
     setCookie(c, CONFIG.indicatorCookieName, "1", {
-      secure: true,
+      secure: IS_PRODUCTION,
       maxAge: CONFIG.sessionMaxAge - 60,
       sameSite: "Lax",
     });
