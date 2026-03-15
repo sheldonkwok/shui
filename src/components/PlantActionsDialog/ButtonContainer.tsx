@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority";
-import { Droplets, Sprout, TimerReset, X } from "lucide-react";
+import { Droplets, RefreshCcw, Sprout, TimerReset, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../../api/client.ts";
@@ -24,6 +24,10 @@ const lastFertilizedStyle = cva([
   cls.textSecondary,
   "text-[0.85em] flex items-center justify-center my-[0.25em]",
 ]);
+const avgIntervalStyle = cva([
+  cls.textSecondary,
+  "text-[0.85em] flex items-center justify-center my-[0.25em]",
+]);
 const delayGroupButton = cva([
   "inline-flex items-center justify-center self-stretch w-9 border bg-transparent transition-colors",
   cls.borderInput,
@@ -45,6 +49,7 @@ interface ButtonContainerProps {
   plantId: number;
   lastWateredDate: Date | null;
   lastFertilizedDate: Date | null;
+  avgWateringIntervalDays: number | null;
   loggedIn: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -54,6 +59,7 @@ export function ButtonContainer({
   plantId,
   lastWateredDate,
   lastFertilizedDate,
+  avgWateringIntervalDays,
   loggedIn,
   open,
   onOpenChange,
@@ -116,6 +122,18 @@ export function ButtonContainer({
         </button>
       </ButtonGroup>
       <div className={buttonRow()}>
+        <div className={buttonGroup()}>
+          <p className={avgIntervalStyle()}>
+            {avgWateringIntervalDays !== null ? `~${Math.round(avgWateringIntervalDays)}d` : <X size={14} />}
+          </p>
+          <div
+            className="h-9 w-9 flex items-center justify-center"
+            role="img"
+            aria-label="Average watering interval"
+          >
+            <RefreshCcw size={18} className="opacity-40" />
+          </div>
+        </div>
         <div className={buttonGroup()}>
           <p className={lastFertilizedStyle()}>
             {(() => {
