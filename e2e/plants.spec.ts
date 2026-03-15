@@ -39,6 +39,28 @@ test.describe("Plant watering", () => {
     }
   });
 
+  test("last watered in action dialog shows 0d after watering today", async ({ page, request }) => {
+    const res = await request.post("/api/plants", { data: { name: "E2E Dialog Watered Plant" } });
+    const { id } = await res.json();
+    plantId = id;
+
+    await request.post(`/api/plants/${id}/water`, { data: { fertilized: false } });
+
+    await page.goto("/");
+
+    // Plant list shows "Today"
+    const plantRow = page.getByRole("listitem").filter({ hasText: "E2E Dialog Watered Plant" });
+    await expect(plantRow.getByText("Today")).toBeVisible();
+
+    // Open the action dialog
+    await plantRow.getByRole("button", { name: "E2E Dialog Watered Plant" }).click();
+
+    // Dialog should show "0d" for last watered (above the Water plant button)
+    const dialog = page.getByRole("dialog");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByText("0d")).toBeVisible();
+  });
+
   test("add a plant, water it, and verify it was watered today", async ({ page }) => {
     await page.goto("/");
 

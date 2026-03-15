@@ -16,6 +16,7 @@ interface PlantActionsDialogProps {
   species: string | null;
   lastWatered: Date | null;
   lastFertilized: Date | null;
+  avgWateringIntervalDays: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -29,6 +30,7 @@ export function PlantActionsDialog({
   species,
   lastWatered: lastWateredDate,
   lastFertilized: lastFertilizedDate,
+  avgWateringIntervalDays,
   open,
   onOpenChange,
 }: PlantActionsDialogProps) {
@@ -57,6 +59,7 @@ export function PlantActionsDialog({
             plantId={plantId}
             lastWateredDate={lastWateredDate}
             lastFertilizedDate={lastFertilizedDate}
+            avgWateringIntervalDays={avgWateringIntervalDays}
             loggedIn={loggedIn}
             open={open}
             onOpenChange={onOpenChange}

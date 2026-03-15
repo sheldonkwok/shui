@@ -2,4 +2,4 @@
 set -euo pipefail
 
 cd "$CLAUDE_PROJECT_DIR"
-pnpm exec playwright test
+CI=1 pnpm exec playwright test

@@ -5,6 +5,7 @@ node_modules
 pglite
 pglite-test
 pglite-e2e-test
+pglite-e2e
 dist
 
 # Local Netlify folder
