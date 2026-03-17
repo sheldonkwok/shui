@@ -178,6 +178,28 @@ Register it in `.claude/settings.json` under the appropriate event:
 { "type": "command", "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/your-hook.sh" }
 ```
 
+### Triggering Hooks Manually (Claude.ai cloud agents only)
+
+Claude.ai cloud agents do not execute hooks automatically — hooks only fire in the local Claude Code CLI. If you are a cloud agent, you **must** run the hook scripts manually at the appropriate points in your workflow.
+
+**On session start** (once, before any other work):
+
+```bash
+CLAUDE_PROJECT_DIR=$(pwd) ./.claude/hooks/session-start.sh
+```
+
+**Before finishing** (after all changes are committed, in place of the Stop hooks):
+
+```bash
+CLAUDE_PROJECT_DIR=$(pwd) ./.claude/hooks/biome-check.sh
+CLAUDE_PROJECT_DIR=$(pwd) ./.claude/hooks/tsc-if-ts-changed.sh
+CLAUDE_PROJECT_DIR=$(pwd) ./.claude/hooks/migrate.sh
+CLAUDE_PROJECT_DIR=$(pwd) ./.claude/hooks/test.sh
+CLAUDE_PROJECT_DIR=$(pwd) ./.claude/hooks/test-e2e.sh
+```
+
+If any script exits non-zero, fix the problem before proceeding.
+
 ### Evaluating a Hook
 
 Verify each hook errors correctly by making a targeted breaking change, running the script directly, checking the exit code, then reverting:
