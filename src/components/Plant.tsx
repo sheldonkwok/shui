@@ -5,6 +5,7 @@ import { useState } from "react";
 import { cls, colors } from "../styles/palette.ts";
 import type { PlantWithStats } from "../types.ts";
 import { formatCalendarDaysAgo } from "../utils.ts";
+import { getWaterRatio } from "../water-utils.ts";
 import { PlantActionsDialog } from "./PlantActionsDialog";
 
 interface PlantProps {
@@ -22,14 +23,6 @@ const lastWatered = cva([
   cls.textSecondary,
   "bg-transparent border-none text-left text-[0.8em] whitespace-nowrap flex items-center cursor-pointer select-none focus:outline-none active:bg-transparent [-webkit-tap-highlight-color:transparent]",
 ]);
-const MAX_DAYS_SCALE = 4;
-
-function getWaterRatio(daysUntilNextWatering: number | null): number {
-  if (daysUntilNextWatering === null) return 0;
-  if (daysUntilNextWatering <= 0) return 1;
-  if (daysUntilNextWatering >= MAX_DAYS_SCALE) return 0;
-  return 1 - daysUntilNextWatering / MAX_DAYS_SCALE;
-}
 
 const formatLastWatered = (date: Date | null) => {
   if (!date) return "Never watered";
