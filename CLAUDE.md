@@ -144,6 +144,7 @@ openssl rand -base64 32
 ## Workflow Summary
 
 1. Never touch the .envrc file
+1. Fetch and rebase main before committing: `git fetch origin main && git rebase origin/main`
 1. Make your code changes
 1. Stage your changes with `git add`
 1. Commit with conventional commit style
