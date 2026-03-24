@@ -30,7 +30,7 @@ export function PlantCard({ plant }: PlantCardProps) {
     <li
       className={cardWrapper()}
       style={{
-        background: `linear-gradient(135deg, ${colors.borderList}, rgba(${colors.waterBlueRgb}, ${ratio}))`,
+        background: `rgba(${colors.waterBlueRgb}, ${ratio}), ${colors.borderList}`,
       }}
     >
       <button type="button" className={cardInner()} onClick={() => setIsDialogOpen(true)}>
