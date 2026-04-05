@@ -1,4 +1,4 @@
-import { asc, eq, sql } from "drizzle-orm";
+import { asc, eq, isNull, sql } from "drizzle-orm";
 import { getDB } from "../db.ts";
 import { plantDelays, plants, wateringSummary } from "../schema.ts";
 
@@ -37,6 +37,7 @@ export async function listPlants() {
     .from(plants)
     .leftJoin(wateringSummary, eq(plants.id, wateringSummary.plantId))
     .leftJoin(plantDelays, eq(plants.id, plantDelays.plantId))
+    .where(isNull(plants.deletedAt))
     .orderBy(asc(wateringSummary.lastWatered));
 
   return data;

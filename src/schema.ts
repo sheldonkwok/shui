@@ -16,6 +16,7 @@ export const plants = pgTable("plants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   species: text("species"),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
 export const plantInsertSchema = createInsertSchema(plants);
