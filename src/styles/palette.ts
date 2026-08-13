@@ -31,6 +31,9 @@ export const colors = {
 // Complete Tailwind class name strings. Defined as literals here so Tailwind's
 // scanner can detect them and generate the corresponding CSS.
 export const cls = {
+  // Page background
+  bgPageBackground: "bg-[#fffdf6]",
+
   // Primary green
   textPrimaryGreen: "text-[#2d5f3f]",
   bgPrimaryGreen: "bg-[#2d5f3f]",
@@ -53,5 +56,6 @@ export const cls = {
   textMuted: "text-[#6c757d]",
   textIcon: "text-[#666]",
   borderInput: "border-[#ddd]",
+  bgBorderList: "bg-[#e9ecef]",
   hoverBgHover: "hover:bg-[#f0f0f0]",
 };

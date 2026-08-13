@@ -12,11 +12,9 @@ import {
   DropdownMenuTrigger,
 } from "./ui/DropdownMenu.tsx";
 
-const menubar = cva("flex items-center gap-2 pb-2");
-const logo = cva("w-[30px] h-[30px]");
-const title = cva("text-2xl font-bold");
+const menubar = cva("flex justify-end pb-2");
 const menuButton = cva([
-  "ml-auto bg-transparent border-none cursor-pointer p-1 rounded",
+  "bg-transparent border-none cursor-pointer w-10 h-10 rounded-xl flex items-center justify-center",
   cls.textIcon,
   cls.hoverBgHover,
 ]);
@@ -26,8 +24,6 @@ export function Menubar() {
   const { loggedIn } = useSession();
   return (
     <div className={menubar()}>
-      <img src="/shui.png" alt="Shui" className={logo()} />
-      <span className={title()}>Shui</span>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <button type="button" className={menuButton()}>

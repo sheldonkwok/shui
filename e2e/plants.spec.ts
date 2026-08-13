@@ -1,9 +1,9 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Plant list page", () => {
-  test("shows the Shui title", async ({ page }) => {
+  test("shows the Shui brand mark", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText("Shui")).toBeVisible();
+    await expect(page.getByAltText("Shui")).toBeVisible();
   });
 
   test("shows empty state when no plants exist", async ({ page }) => {
