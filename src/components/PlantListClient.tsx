@@ -1,27 +1,21 @@
 "use client";
 
 import { cva } from "class-variance-authority";
-import { LayoutGrid, List } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { cls } from "../styles/palette.ts";
 import type { PlantWithStats } from "../types.ts";
 import { Plant } from "./Plant.tsx";
-import { PlantCard } from "./PlantCard.tsx";
-import { ButtonGroup } from "./ui/ButtonGroup.tsx";
-import { Toggle } from "./ui/Toggle.tsx";
 
 const container = cva("mb-10");
-const toolbar = cva("flex justify-end mb-3");
 // pt-[52px] reserves room above the panel for the logo mark, which sinks
 // 12px into the panel's top edge (64px mark, 52px of it stays above).
 const panelWrap = cva("relative pt-[52px]");
 const logoMark = cva("absolute top-0 left-1/2 -translate-x-1/2 w-16 h-16 z-10 [image-rendering:pixelated]");
 const panelCard = cva([cls.bgPageBackground, "rounded-[20px] shadow-sm overflow-hidden pt-[14px] pb-1.5"]);
 const list = cva("list-none p-0 m-0");
-const grid = cva("list-none p-0 m-0 grid grid-cols-2 sm:grid-cols-3 gap-3");
 const noPlants = cva(["text-center italic p-5", cls.textMuted]);
 
-/** Thirst band: 0 = thirsty, 1 = coming up, 2 = settled. Mirrors getWaterRatio's thresholds. */
+/** Thirst band: 0 = thirsty, 1 = coming up, 2 = settled. */
 function thirstBand(daysUntilNextWatering: number | null): number {
   if (daysUntilNextWatering === null) return 2;
   if (daysUntilNextWatering <= 1) return 0;
@@ -48,54 +42,21 @@ interface PlantListClientProps {
 }
 
 export function PlantListClient({ plants }: PlantListClientProps) {
-  const [viewMode, setViewMode] = useState<"list" | "grid">("list");
   const sortedPlants = useMemo(() => sortByThirst(plants), [plants]);
 
   return (
     <div className={container()}>
       {plants.length > 0 ? (
-        <>
-          <div className={toolbar()}>
-            <ButtonGroup>
-              <Toggle
-                variant="outline"
-                size="sm"
-                pressed={viewMode === "list"}
-                onPressedChange={() => setViewMode("list")}
-                aria-label="List view"
-              >
-                <List className="h-4 w-4" />
-              </Toggle>
-              <Toggle
-                variant="outline"
-                size="sm"
-                pressed={viewMode === "grid"}
-                onPressedChange={() => setViewMode("grid")}
-                aria-label="Grid view"
-              >
-                <LayoutGrid className="h-4 w-4" />
-              </Toggle>
-            </ButtonGroup>
-          </div>
-          {viewMode === "list" ? (
-            <div className={panelWrap()}>
-              <img src="/shui.png" alt="Shui" className={logoMark()} />
-              <div className={panelCard()}>
-                <ul className={list()}>
-                  {sortedPlants.map(({ plant, gap }) => (
-                    <Plant key={plant.id} plant={plant} gap={gap} />
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ) : (
-            <ul className={grid()}>
-              {plants.map((plant) => (
-                <PlantCard key={plant.id} plant={plant} />
+        <div className={panelWrap()}>
+          <img src="/shui.png" alt="Shui" className={logoMark()} />
+          <div className={panelCard()}>
+            <ul className={list()}>
+              {sortedPlants.map(({ plant, gap }) => (
+                <Plant key={plant.id} plant={plant} gap={gap} />
               ))}
             </ul>
-          )}
-        </>
+          </div>
+        </div>
       ) : (
         <p className={noPlants()}>No plants yet. Add your first plant below!</p>
       )}
