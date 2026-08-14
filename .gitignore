@@ -14,3 +14,7 @@ dist
 # Playwright
 test-results/
 playwright-report/
+
+# Plan files are not persisted
+.claude/plans/
+plan.md
