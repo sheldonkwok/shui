@@ -1,4 +1,5 @@
 export const IS_TEST = Boolean(process?.env.VITEST);
+export const IS_DEV = process.env.NODE_ENV !== "production";
 export const IS_PREVIEW = process.env.VERCEL_ENV === "preview";
 export const IS_PRODUCTION = process.env.VERCEL_ENV === "production";
 

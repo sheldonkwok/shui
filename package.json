@@ -26,14 +26,15 @@
     "drizzle-arktype": "~0.1.3",
     "drizzle-kit": "~0.31.10",
     "drizzle-orm": "~0.45.2",
-    "hono": "~4.11.10",
+    "hono": "~4.13.2",
     "lucide-react": "^0.562.0",
     "postgres": "^3.4.9",
     "react": "~19.2.8",
     "react-dom": "~19.2.8",
+    "react-server-dom-webpack": "~19.2.8",
     "tailwind-merge": "^3.6.0",
     "tailwindcss": "^4.3.3",
-    "waku": "1.0.0-alpha.2",
+    "waku": "1.0.0-beta.9",
     "zod": "^4.4.3"
   },
   "devDependencies": {

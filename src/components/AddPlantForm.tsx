@@ -24,14 +24,15 @@ export function AddPlantForm() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const formData = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const formData = new FormData(form);
     const name = formData.get("name") as string;
 
     await apiClient.api.plants.$post({ json: { name } });
+    // Reset the form before reloading, since reload unmounts it
+    form.reset();
     // Refresh the page to show the new plant
     router.reload();
-    // Reset the form
-    e.currentTarget.reset();
   };
 
   return (

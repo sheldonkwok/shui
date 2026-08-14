@@ -4,7 +4,7 @@ import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
 
-import { IS_PREVIEW, IS_PRODUCTION, IS_TEST } from "./utils.ts";
+import { IS_DEV, IS_PREVIEW, IS_PRODUCTION, IS_TEST } from "./utils.ts";
 
 // =============================================================================
 // Configuration
@@ -188,7 +188,7 @@ export const previewAuthMiddleware = createMiddleware(async (c, next) => {
 });
 
 export const authCheckMiddleware = createMiddleware(async (c, next) => {
-  if (IS_TEST || IS_PREVIEW) return await next();
+  if (IS_TEST || IS_PREVIEW || IS_DEV) return await next();
 
   const email = await getSessionEmail(c);
   if (email === CONFIG.allowedEmail) return await next();
