@@ -216,15 +216,3 @@ echo "Exit: ${PIPESTATUS[0]}"   # must be non-zero
 # revert
 git checkout src/utils.ts
 ```
-
-## Plan Management
-
-When creating or updating a plan:
-- Plans live in `plan.md` at the repo root
-- Never overwrite `plan.md` entirely
-- If `plan.md` already exists, append a new section at the bottom:
-  `## Revision N — YYYY-MM-DD` (increment N from the last revision)
-- Each revision must include:
-  - What changed from the prior revision and why
-  - The full updated plan (not just a diff)
-- Do not delete or modify any prior revision sections
