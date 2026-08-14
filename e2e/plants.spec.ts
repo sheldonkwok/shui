@@ -1,9 +1,17 @@
 import { expect, test } from "@playwright/test";
 
 test.describe("Plant list page", () => {
-  test("shows the Shui brand mark", async ({ page }) => {
-    await page.goto("/");
-    await expect(page.getByAltText("Shui")).toBeVisible();
+  test("shows the Shui brand mark", async ({ page, request }) => {
+    // The brand mark sits inside the paper panel, which only renders when there's
+    // at least one plant, so seed one before asserting.
+    const res = await request.post("/api/plants", { data: { name: "E2E Brand Mark Plant" } });
+    const { id } = await res.json();
+    try {
+      await page.goto("/");
+      await expect(page.getByAltText("Shui")).toBeVisible();
+    } finally {
+      await request.delete(`/api/plants/${id}`);
+    }
   });
 
   test("shows empty state when no plants exist", async ({ page }) => {

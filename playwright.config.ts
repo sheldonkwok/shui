@@ -22,9 +22,8 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
-  globalSetup: "./e2e/global-setup.ts",
   webServer: {
-    command: "pnpm build:e2e && pnpm start:e2e",
+    command: "node --experimental-strip-types scripts/reset-e2e-db.ts && pnpm build:e2e && pnpm start:e2e",
     url: "http://localhost:3000",
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
