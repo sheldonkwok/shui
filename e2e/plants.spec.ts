@@ -16,24 +16,12 @@ test.describe("Plant list page", () => {
 
   test("shows empty state when no plants exist", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByText("No plants yet. Add your first plant below!")).toBeVisible();
+    await expect(page.getByText("No plants yet. Add your first plant above!")).toBeVisible();
   });
 
-  test("has a menu button", async ({ page }) => {
+  test("has an add-plant sprout button", async ({ page }) => {
     await page.goto("/");
-    // The hamburger menu button
-    const menuButton = page
-      .getByRole("button")
-      .filter({ has: page.locator("svg") })
-      .first();
-    await expect(menuButton).toBeVisible();
-  });
-
-  test("menu button has correct ARIA attributes for accessibility", async ({ page }) => {
-    await page.goto("/");
-    const menuButton = page.locator('button[aria-haspopup="menu"]');
-    await expect(menuButton).toBeVisible();
-    await expect(menuButton).toHaveAttribute("data-state", "closed");
+    await expect(page.getByRole("button", { name: "Add a new plant" })).toBeVisible();
   });
 });
 
@@ -81,14 +69,14 @@ test.describe("Plant watering", () => {
       }
     });
 
-    // Open the dropdown menu and add a new plant via the form
-    const menuButton = page.locator('button[aria-haspopup="menu"]');
-    await menuButton.click();
+    // Click the sprout button to reveal the inline add-plant field, then submit with Enter
+    const sproutButton = page.getByRole("button", { name: "Add a new plant" });
+    await sproutButton.click();
     const nameInput = page.getByPlaceholder("Add a new plant");
     await nameInput.fill("E2E Test Plant");
-    await page.locator('form button[type="submit"]').click();
+    await nameInput.press("Enter");
 
-    // Wait for the plant to appear in the list, then close the dropdown
+    // Wait for the plant to appear in the list, then close the (still open) inline field
     await expect(page.getByText("E2E Test Plant")).toBeVisible();
     plantId = capturedId;
     await page.keyboard.press("Escape");

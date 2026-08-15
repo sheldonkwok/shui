@@ -1,17 +1,11 @@
 import type { ReactNode } from "react";
-import { Menubar } from "../components/Menubar";
 
 interface LayoutProps {
   children: ReactNode;
 }
 
 export default async function Layout({ children }: LayoutProps) {
-  return (
-    <>
-      <Menubar />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }
 
 export const getConfig = async () => {
