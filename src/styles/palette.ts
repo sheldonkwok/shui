@@ -36,6 +36,8 @@ export const cls = {
 
   // Primary green
   textPrimaryGreen: "text-[#2d5f3f]",
+  textPrimaryGreenDark: "text-[#1e3f2b]",
+  hoverTextPrimaryGreenDark: "hover:text-[#1e3f2b]",
   bgPrimaryGreen: "bg-[#2d5f3f]",
   hoverBgPrimaryGreenDark: "hover:bg-[#1e3f2b]",
   borderBPrimaryGreen: "border-b-[#2d5f3f]",
@@ -47,6 +49,7 @@ export const cls = {
   hoverBgWaterBlueDark: "hover:bg-[#357abd]",
 
   // Toggle (tan/beige)
+  bgToggleActive: "bg-[#d8b88b]",
   dataOnBgToggleActive: "data-[state=on]:bg-[#d8b88b]",
   hoverBgToggleHover: "hover:bg-[#f5e9d8]",
   borderToggleActive: "border-[#d8b88b]",
