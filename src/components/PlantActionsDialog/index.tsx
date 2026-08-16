@@ -4,11 +4,11 @@ import { cva } from "class-variance-authority";
 import { useRouter } from "waku";
 import { useSession } from "../../hooks/useSession.ts";
 import { Dialog, DialogContent } from "../ui/Dialog.tsx";
-import { Separator } from "../ui/Separator.tsx";
 import { ButtonContainer } from "./ButtonContainer.tsx";
 import { EditableName } from "./EditableName.tsx";
 import { EditableSpecies } from "./EditableSpecies.tsx";
-import { PlantImagePlaceholder } from "./PlantImagePlaceholder.tsx";
+import { PlantStats } from "./PlantStats.tsx";
+import { WateringHistoryGrid } from "./WateringHistoryGrid.tsx";
 
 interface PlantActionsDialogProps {
   plantId: number;
@@ -22,7 +22,10 @@ interface PlantActionsDialogProps {
 }
 
 const dialogBody = cva("flex flex-row overflow-hidden p-0");
-const dialogRightContent = cva("flex flex-col px-4 flex-1");
+const leftBlock = cva(
+  "w-[186px] box-border flex-shrink-0 pt-[18px] pr-3 pb-[18px] pl-5 flex flex-col gap-3.5",
+);
+const nameBlock = cva("flex flex-col gap-0.5");
 
 export function PlantActionsDialog({
   plantId,
@@ -40,31 +43,29 @@ export function PlantActionsDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={dialogBody()} onOpenAutoFocus={(e) => e.preventDefault()}>
-        <PlantImagePlaceholder />
-        <Separator orientation="vertical" />
-        <div className={dialogRightContent()}>
-          <EditableName
-            plantId={plantId}
-            plantName={plantName}
-            onRenamed={() => router.reload()}
-            canEdit={loggedIn}
-          />
-          <EditableSpecies
-            plantId={plantId}
-            species={species}
-            onClassified={() => router.reload()}
-            canEdit={loggedIn}
-          />
-          <ButtonContainer
-            plantId={plantId}
+        <div className={leftBlock()}>
+          <div className={nameBlock()}>
+            <EditableName
+              plantId={plantId}
+              plantName={plantName}
+              onRenamed={() => router.reload()}
+              canEdit={loggedIn}
+            />
+            <EditableSpecies
+              plantId={plantId}
+              species={species}
+              onClassified={() => router.reload()}
+              canEdit={loggedIn}
+            />
+          </div>
+          <PlantStats
             lastWateredDate={lastWateredDate}
-            lastFertilizedDate={lastFertilizedDate}
             avgWateringIntervalDays={avgWateringIntervalDays}
-            loggedIn={loggedIn}
-            open={open}
-            onOpenChange={onOpenChange}
+            lastFertilizedDate={lastFertilizedDate}
           />
         </div>
+        <WateringHistoryGrid plantId={plantId} open={open} />
+        <ButtonContainer plantId={plantId} loggedIn={loggedIn} open={open} onOpenChange={onOpenChange} />
       </DialogContent>
     </Dialog>
   );

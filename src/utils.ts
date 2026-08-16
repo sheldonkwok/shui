@@ -5,11 +5,16 @@ export const IS_PRODUCTION = process.env.VERCEL_ENV === "production";
 
 const WEEK = 7;
 
-export function formatCalendarDaysAgo(date: Date): string {
+/** Calendar-day difference between now and `date`, ignoring time of day. */
+export function calendarDaysAgo(date: Date): number {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const diffDays = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+export function formatCalendarDaysAgo(date: Date): string {
+  const diffDays = calendarDaysAgo(date);
 
   if (diffDays === 0) return "Today";
   if (diffDays === 1) return "Yesterday";
