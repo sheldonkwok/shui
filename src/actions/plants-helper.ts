@@ -1,6 +1,6 @@
-import { asc, eq, isNull, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNull, sql } from "drizzle-orm";
 import { getDB } from "../db.ts";
-import { plantDelays, plants, wateringSummary } from "../schema.ts";
+import { plantDelays, plants, wateringSummary, waterings } from "../schema.ts";
 
 export async function listPlants() {
   const data = await getDB()
@@ -45,4 +45,14 @@ export async function listPlants() {
 
 export async function refreshWateringSummary() {
   await getDB().refreshMaterializedView(wateringSummary);
+}
+
+/** Raw watering events for a plant within the last `days` days, oldest first. */
+export async function getWateringHistory(plantId: number, days: number) {
+  const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+  return getDB()
+    .select({ wateringTime: waterings.wateringTime, fertilized: waterings.fertilized })
+    .from(waterings)
+    .where(and(eq(waterings.plantId, plantId), gte(waterings.wateringTime, since)))
+    .orderBy(asc(waterings.wateringTime));
 }

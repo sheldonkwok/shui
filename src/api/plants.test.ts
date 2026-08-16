@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanupTestDB, seedPlant } from "../test-utils.ts";
+import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
 import { app } from "./index.ts";
 
 describe("POST /api/plants", () => {
@@ -82,6 +82,62 @@ describe("POST /api/plants/:id/water", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fertilized: "yes" }),
     });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("GET /api/plants/:id/waterings", () => {
+  beforeEach(async () => {
+    await cleanupTestDB();
+  });
+
+  it("should return waterings within the last 42 days", async () => {
+    const plantId = await seedPlant("Fern");
+    const now = new Date();
+    const tenDaysAgo = new Date(now.getTime() - 10 * 24 * 60 * 60 * 1000);
+    await seedWatering(plantId, now, false);
+    await seedWatering(plantId, tenDaysAgo, true);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings`);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.waterings).toHaveLength(2);
+    expect(body.waterings).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ fertilized: false }),
+        expect.objectContaining({ fertilized: true }),
+      ]),
+    );
+  });
+
+  it("should exclude waterings older than 42 days", async () => {
+    const plantId = await seedPlant("Cactus");
+    const now = new Date();
+    const tooOld = new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000);
+    await seedWatering(plantId, now, false);
+    await seedWatering(plantId, tooOld, false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings`);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.waterings).toHaveLength(1);
+  });
+
+  it("should return an empty list for a plant with no waterings", async () => {
+    const plantId = await seedPlant("Never Watered");
+
+    const res = await app.request(`/api/plants/${plantId}/waterings`);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.waterings).toEqual([]);
+  });
+
+  it("should return 400 for a non-integer plant ID", async () => {
+    const res = await app.request("/api/plants/abc/waterings");
 
     expect(res.status).toBe(400);
   });

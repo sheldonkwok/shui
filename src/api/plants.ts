@@ -3,7 +3,7 @@ import { type } from "arktype";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { classifyPlant } from "../actions/plants.ts";
-import { refreshWateringSummary } from "../actions/plants-helper.ts";
+import { getWateringHistory, refreshWateringSummary } from "../actions/plants-helper.ts";
 import { getDB } from "../db.ts";
 import { plantDelays, plants, waterings } from "../schema.ts";
 
@@ -12,6 +12,9 @@ const addPlantSchema = type({ name: "string" });
 const wateringSchema = type({ fertilized: "boolean" });
 const delaySchema = type({ numDays: "number.integer > 0" });
 const classifySchema = type({ species: "string" });
+
+// 6 weeks of daily history, shown in the plant action dialog.
+const WATERING_HISTORY_DAYS = 42;
 
 export const plantsRouter = new Hono()
   .post("/", arktypeValidator("json", addPlantSchema), async (c) => {
@@ -28,6 +31,19 @@ export const plantsRouter = new Hono()
     await getDB().insert(waterings).values({ plantId, fertilized });
     await refreshWateringSummary();
     return c.json({ ok: true }, 201);
+  })
+  .get("/:id/waterings", async (c) => {
+    const plantId = Number(c.req.param("id"));
+    if (!Number.isInteger(plantId) || plantId <= 0) {
+      return c.json({ error: "Invalid plant ID" }, 400);
+    }
+    const history = await getWateringHistory(plantId, WATERING_HISTORY_DAYS);
+    return c.json({
+      waterings: history.map((w) => ({
+        wateringTime: w.wateringTime.toISOString(),
+        fertilized: w.fertilized ?? false,
+      })),
+    });
   })
   .post("/:id/delay", arktypeValidator("json", delaySchema), async (c) => {
     const plantId = Number(c.req.param("id"));

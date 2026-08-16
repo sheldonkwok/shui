@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority";
-import { Droplets, RefreshCcw, Sprout, TimerReset, X } from "lucide-react";
+import { Droplets, Sprout, TimerReset } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../../api/client.ts";
@@ -11,59 +11,28 @@ import { Toggle } from "../ui/Toggle.tsx";
 const waterButton = cva([
   cls.bgWaterBlue,
   cls.hoverBgWaterBlueDark,
-  "text-white border-none h-9 px-3 rounded text-[0.9em] transition-colors [&>svg]:fill-white/0 [&>svg]:transition-[fill] [&>svg]:duration-1000 hover:[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite] disabled:opacity-40 disabled:cursor-not-allowed",
+  "flex-1 min-h-[76px] flex items-center justify-center text-white border-none rounded transition-colors active:translate-y-px [&>svg]:fill-white/0 [&>svg]:transition-[fill] [&>svg]:duration-1000 hover:[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite] disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
-const buttonContainer = cva("flex flex-col items-end mt-auto pb-3 gap-2");
-const buttonRow = cva("flex flex-row items-end gap-4");
-const buttonGroup = cva("flex flex-col items-center gap-1");
-const lastWateredStyle = cva([
-  cls.textSecondary,
-  "text-[0.85em] flex items-center justify-center my-[0.25em]",
-]);
-const lastFertilizedStyle = cva([
-  cls.textSecondary,
-  "text-[0.85em] flex items-center justify-center my-[0.25em]",
-]);
-const avgIntervalStyle = cva([
-  cls.textSecondary,
-  "text-[0.85em] flex items-center justify-center my-[0.25em]",
+const buttonContainer = cva([
+  cls.bgPageBackground,
+  "w-[122px] box-border flex-shrink-0 mt-[18px] pt-0 pr-3.5 pb-[18px] pl-3.5 flex flex-col gap-2.5 border-l border-[#e5e7eb]",
 ]);
 const delayGroupButton = cva([
-  "inline-flex items-center justify-center self-stretch w-9 border bg-transparent transition-colors",
+  "inline-flex flex-1 items-center justify-center self-stretch border bg-transparent transition-colors",
   cls.borderInput,
   cls.textPrimaryGreen,
   cls.hoverBgHover,
   "disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
 
-const formatDaysAgo = (date: Date | null): { days: number } | null => {
-  if (!date) return null;
-  const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-  const days = Math.round((today.getTime() - target.getTime()) / (1000 * 60 * 60 * 24));
-  return { days };
-};
-
 interface ButtonContainerProps {
   plantId: number;
-  lastWateredDate: Date | null;
-  lastFertilizedDate: Date | null;
-  avgWateringIntervalDays: number | null;
   loggedIn: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-export function ButtonContainer({
-  plantId,
-  lastWateredDate,
-  lastFertilizedDate,
-  avgWateringIntervalDays,
-  loggedIn,
-  open,
-  onOpenChange,
-}: ButtonContainerProps) {
+export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: ButtonContainerProps) {
   const router = useRouter();
   const [fertilizeToggled, setFertilizeToggled] = useState(false);
   const [delayDays, setDelayDays] = useState<number | "">(1);
@@ -101,7 +70,31 @@ export function ButtonContainer({
 
   return (
     <div className={buttonContainer()}>
-      <ButtonGroup>
+      <button
+        className={`${waterButton()} ${isWatering ? "[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite]" : ""}`}
+        type="button"
+        onClick={handleWater}
+        disabled={!loggedIn || isWatering}
+        aria-label="Water plant"
+      >
+        <Droplets size={30} />
+      </button>
+      <Toggle
+        pressed={fertilizeToggled}
+        onPressedChange={setFertilizeToggled}
+        disabled={!loggedIn}
+        variant="outline"
+        size="lg"
+        aria-label="Toggle fertilize"
+        className="w-full"
+      >
+        <Sprout
+          size={18}
+          fill={fertilizeToggled ? colors.lightGreen : "none"}
+          color={fertilizeToggled ? colors.lightGreen : undefined}
+        />
+      </Toggle>
+      <ButtonGroup className="w-full">
         <Input
           type="number"
           min={1}
@@ -118,61 +111,9 @@ export function ButtonContainer({
           disabled={!loggedIn || !delayDays || delayDays < 1}
           aria-label="Delay watering"
         >
-          <TimerReset size={18} />
+          <TimerReset size={16} />
         </button>
       </ButtonGroup>
-      <div className={buttonRow()}>
-        <div className={buttonGroup()}>
-          <p className={avgIntervalStyle()}>
-            {avgWateringIntervalDays !== null ? `~${Math.round(avgWateringIntervalDays)}d` : <X size={14} />}
-          </p>
-          <div
-            className="h-9 w-9 flex items-center justify-center"
-            role="img"
-            aria-label="Average watering interval"
-          >
-            <RefreshCcw size={18} className="opacity-40" />
-          </div>
-        </div>
-        <div className={buttonGroup()}>
-          <p className={lastFertilizedStyle()}>
-            {(() => {
-              const r = formatDaysAgo(lastFertilizedDate);
-              return r ? `${r.days}d` : <X size={14} />;
-            })()}
-          </p>
-          <Toggle
-            pressed={fertilizeToggled}
-            onPressedChange={setFertilizeToggled}
-            disabled={!loggedIn}
-            variant="outline"
-            aria-label="Toggle fertilize"
-          >
-            <Sprout
-              size={18}
-              fill={fertilizeToggled ? colors.lightGreen : "none"}
-              color={fertilizeToggled ? colors.lightGreen : undefined}
-            />
-          </Toggle>
-        </div>
-        <div className={buttonGroup()}>
-          <p className={lastWateredStyle()}>
-            {(() => {
-              const r = formatDaysAgo(lastWateredDate);
-              return r ? `${r.days}d` : <X size={14} />;
-            })()}
-          </p>
-          <button
-            className={`${waterButton()} ${isWatering ? "[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite]" : ""}`}
-            type="button"
-            onClick={handleWater}
-            disabled={!loggedIn || isWatering}
-            aria-label="Water plant"
-          >
-            <Droplets size={18} />
-          </button>
-        </div>
-      </div>
     </div>
   );
 }
