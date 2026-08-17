@@ -15,7 +15,7 @@ const waterButton = cva([
 ]);
 const buttonContainer = cva([
   cls.bgPageBackground,
-  "w-[122px] box-border flex-shrink-0 mt-[18px] pt-0 pr-3.5 pb-[18px] pl-3.5 flex flex-col gap-2.5 border-l border-[#e5e7eb]",
+  "w-[104px] min-[480px]:w-[122px] box-border flex-shrink-0 mt-[18px] pt-0 pr-2.5 pb-[18px] pl-2.5 min-[480px]:pr-3.5 min-[480px]:pl-3.5 flex flex-col gap-2.5 border-l border-[#e5e7eb]",
 ]);
 const delayGroupButton = cva([
   "inline-flex flex-1 items-center justify-center self-stretch border bg-transparent transition-colors",
@@ -102,7 +102,9 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
           onChange={(e) => setDelayDays(e.target.value === "" ? "" : Number(e.target.value))}
           disabled={!loggedIn}
           aria-label="Delay days"
-          className="w-14 text-center"
+          // min-w-0 so the number input's intrinsic size (spinner + default cols)
+          // doesn't win over the width and push the delay button out of the dialog.
+          className="w-12 min-w-0 px-1 min-[480px]:w-14 min-[480px]:px-3 text-center"
         />
         <button
           className={delayGroupButton()}
