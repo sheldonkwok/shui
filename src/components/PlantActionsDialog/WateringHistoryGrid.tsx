@@ -52,16 +52,20 @@ export function WateringHistoryGrid({ plantId, open }: WateringHistoryGridProps)
 
   return (
     <div
-      className="flex flex-1 min-w-0 box-border flex-col items-center justify-center gap-1 py-[18px] px-1.5"
+      className="flex flex-1 min-w-fit box-border flex-col items-center justify-center gap-[3px] py-[18px] px-1 min-[480px]:gap-1 min-[480px]:px-1.5"
       role="img"
       aria-label="Watering history, past 6 weeks"
     >
       {Array.from({ length: WEEKS }, (_, week) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: fixed-size calendar grid, position is the identity
-        <div key={week} className="flex flex-row items-center gap-1">
+        <div key={week} className="flex flex-row items-center gap-[3px] min-[480px]:gap-1">
           {dayColors.slice(week * DAYS_PER_WEEK, week * DAYS_PER_WEEK + DAYS_PER_WEEK).map((color, day) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: fixed-size calendar grid, position is the identity
-            <div key={day} className="w-3 h-3 rounded-[3px]" style={{ background: color }} />
+            <div
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed-size calendar grid, position is the identity
+              key={day}
+              className="w-2.5 h-2.5 min-[480px]:w-3 min-[480px]:h-3 rounded-[3px]"
+              style={{ background: color }}
+            />
           ))}
         </div>
       ))}

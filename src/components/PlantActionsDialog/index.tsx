@@ -22,8 +22,10 @@ interface PlantActionsDialogProps {
 }
 
 const dialogBody = cva("flex flex-row overflow-hidden p-0");
+// The calendar rail and button column hold their intrinsic widths; this block is
+// the only one that gives way when the dialog is narrower than the three columns.
 const leftBlock = cva(
-  "w-[186px] box-border flex-shrink-0 pt-[18px] pr-3 pb-[18px] pl-5 flex flex-col gap-3.5",
+  "w-[186px] min-w-0 box-border pt-[18px] pr-2 pb-[18px] pl-3.5 min-[480px]:pr-3 min-[480px]:pl-5 flex flex-col gap-3.5",
 );
 const nameBlock = cva("flex flex-col gap-0.5");
 
