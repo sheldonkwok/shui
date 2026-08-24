@@ -1,72 +1,86 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { apiClient } from "../../api/client.ts";
+import { cva } from "class-variance-authority";
+import { useMemo } from "react";
 import { colors } from "../../styles/palette.ts";
+import type { WateringEntry } from "../../types.ts";
+import { formatWateringDay } from "../../utils.ts";
 
 const WEEKS = 6;
 const DAYS_PER_WEEK = 7;
 const SPAN = WEEKS * DAYS_PER_WEEK;
+const DAY_MS = 1000 * 60 * 60 * 24;
+
+const grid = cva(
+  "flex flex-1 min-w-fit box-border flex-col items-center justify-center gap-[3px] py-[18px] px-1 min-[480px]:gap-1 min-[480px]:px-1.5",
+);
+const weekRow = cva("flex flex-row items-center gap-[3px] min-[480px]:gap-1");
+const dayCell = cva("w-2.5 h-2.5 min-[480px]:w-3 min-[480px]:h-3 rounded-[3px] p-0 border-none", {
+  variants: {
+    watered: {
+      true: "cursor-pointer transition-transform hover:scale-125 focus-visible:outline-none focus-visible:scale-125",
+      false: "",
+    },
+  },
+  defaultVariants: { watered: false },
+});
 
 function startOfDay(date: Date): number {
   return new Date(date.getFullYear(), date.getMonth(), date.getDate()).getTime();
 }
 
 interface WateringHistoryGridProps {
-  plantId: number;
-  open: boolean;
+  waterings: WateringEntry[];
+  /** Opens the edit view for the clicked day's watering. */
+  onSelectWatering: (wateringId: number) => void;
 }
 
-export function WateringHistoryGrid({ plantId, open }: WateringHistoryGridProps) {
-  const [dayColors, setDayColors] = useState<string[]>(() => Array(SPAN).fill(colors.borderList));
-
-  useEffect(() => {
-    if (!open) return;
-    let cancelled = false;
-
-    (async () => {
-      const res = await apiClient.api.plants[":id"].waterings.$get({ param: { id: String(plantId) } });
-      if (!res.ok || cancelled) return;
-      const { waterings } = await res.json();
-
-      const today = startOfDay(new Date());
-      const fertilizedByDaysAgo = new Map<number, boolean>();
-      for (const w of waterings) {
-        const daysAgo = Math.round((today - startOfDay(new Date(w.wateringTime))) / (1000 * 60 * 60 * 24));
-        if (daysAgo < 0 || daysAgo >= SPAN) continue;
-        fertilizedByDaysAgo.set(daysAgo, fertilizedByDaysAgo.get(daysAgo) || w.fertilized);
-      }
-
-      const next = Array.from({ length: SPAN }, (_, i) => {
-        const daysAgo = SPAN - 1 - i;
-        if (!fertilizedByDaysAgo.has(daysAgo)) return colors.borderList;
-        return fertilizedByDaysAgo.get(daysAgo) ? colors.toggleActive : colors.waterBlue;
-      });
-      if (!cancelled) setDayColors(next);
-    })();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [plantId, open]);
+export function WateringHistoryGrid({ waterings, onSelectWatering }: WateringHistoryGridProps) {
+  // Waterings bucketed by how many calendar days ago they happened, newest last
+  // within a bucket (the API returns them oldest first).
+  const byDaysAgo = useMemo(() => {
+    const today = startOfDay(new Date());
+    const buckets = new Map<number, WateringEntry[]>();
+    for (const w of waterings) {
+      const daysAgo = Math.round((today - startOfDay(new Date(w.wateringTime))) / DAY_MS);
+      if (daysAgo < 0 || daysAgo >= SPAN) continue;
+      const bucket = buckets.get(daysAgo);
+      if (bucket) bucket.push(w);
+      else buckets.set(daysAgo, [w]);
+    }
+    return buckets;
+  }, [waterings]);
 
   return (
-    <div
-      className="flex flex-1 min-w-fit box-border flex-col items-center justify-center gap-[3px] py-[18px] px-1 min-[480px]:gap-1 min-[480px]:px-1.5"
-      role="img"
-      aria-label="Watering history, past 6 weeks"
-    >
+    // biome-ignore lint/a11y/useSemanticElements: a labelled grid of day buttons, not a form fieldset
+    <div className={grid()} role="group" aria-label="Watering history, past 6 weeks">
       {Array.from({ length: WEEKS }, (_, week) => (
         // biome-ignore lint/suspicious/noArrayIndexKey: fixed-size calendar grid, position is the identity
-        <div key={week} className="flex flex-row items-center gap-[3px] min-[480px]:gap-1">
-          {dayColors.slice(week * DAYS_PER_WEEK, week * DAYS_PER_WEEK + DAYS_PER_WEEK).map((color, day) => (
-            <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: fixed-size calendar grid, position is the identity
-              key={day}
-              className="w-2.5 h-2.5 min-[480px]:w-3 min-[480px]:h-3 rounded-[3px]"
-              style={{ background: color }}
-            />
-          ))}
+        <div key={week} className={weekRow()}>
+          {Array.from({ length: DAYS_PER_WEEK }, (_, day) => {
+            const daysAgo = SPAN - 1 - (week * DAYS_PER_WEEK + day);
+            const dayWaterings = byDaysAgo.get(daysAgo);
+
+            if (!dayWaterings) {
+              return <div key={daysAgo} className={dayCell()} style={{ background: colors.borderList }} />;
+            }
+
+            // The last watering of the day is the one the cell edits; extra ones
+            // are reachable from the edit view.
+            const latest = dayWaterings[dayWaterings.length - 1]!;
+            const fertilized = dayWaterings.some((w) => w.fertilized);
+
+            return (
+              <button
+                key={daysAgo}
+                type="button"
+                className={dayCell({ watered: true })}
+                style={{ background: fertilized ? colors.toggleActive : colors.waterBlue }}
+                onClick={() => onSelectWatering(latest.id)}
+                aria-label={`Edit watering on ${formatWateringDay(new Date(latest.wateringTime))}`}
+              />
+            );
+          })}
         </div>
       ))}
     </div>

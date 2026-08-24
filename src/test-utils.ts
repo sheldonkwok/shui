@@ -22,14 +22,19 @@ export async function seedPlant(name: string): Promise<number> {
   return result[0]!.id;
 }
 
-export async function seedWatering(plantId: number, wateringTime: Date, fertilized = false) {
+export async function seedWatering(plantId: number, wateringTime: Date, fertilized = false): Promise<number> {
   const db = getDB();
-  await db.insert(waterings).values({
-    plantId,
-    wateringTime,
-    fertilized,
-  });
+  const result = await db
+    .insert(waterings)
+    .values({
+      plantId,
+      wateringTime,
+      fertilized,
+    })
+    .returning();
   await db.refreshMaterializedView(wateringSummary);
+
+  return result[0]!.id;
 }
 
 export async function seedDelay(plantId: number, numDays: number, dateAdded: Date) {

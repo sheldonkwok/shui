@@ -51,8 +51,27 @@ export async function refreshWateringSummary() {
 export async function getWateringHistory(plantId: number, days: number) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   return getDB()
-    .select({ wateringTime: waterings.wateringTime, fertilized: waterings.fertilized })
+    .select({ id: waterings.id, wateringTime: waterings.wateringTime, fertilized: waterings.fertilized })
     .from(waterings)
     .where(and(eq(waterings.plantId, plantId), gte(waterings.wateringTime, since)))
     .orderBy(asc(waterings.wateringTime));
+}
+
+/** Flips the fertilized flag on a single watering. Returns false if it isn't this plant's. */
+export async function setWateringFertilized(plantId: number, wateringId: number, fertilized: boolean) {
+  const updated = await getDB()
+    .update(waterings)
+    .set({ fertilized })
+    .where(and(eq(waterings.id, wateringId), eq(waterings.plantId, plantId)))
+    .returning();
+  return updated.length > 0;
+}
+
+/** Removes a single watering. Returns false if it isn't this plant's. */
+export async function deleteWatering(plantId: number, wateringId: number) {
+  const deleted = await getDB()
+    .delete(waterings)
+    .where(and(eq(waterings.id, wateringId), eq(waterings.plantId, plantId)))
+    .returning();
+  return deleted.length > 0;
 }

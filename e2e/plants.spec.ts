@@ -98,3 +98,80 @@ test.describe("Plant watering", () => {
     await expect(page.getByText("Today")).toBeVisible();
   });
 });
+
+test.describe("Watering editing", () => {
+  let plantId: number;
+
+  test.afterEach(async ({ request }) => {
+    if (plantId) {
+      await request.delete(`/api/plants/${plantId}`);
+      plantId = 0;
+    }
+  });
+
+  test("edit and delete a watering from the calendar rail", async ({ page, request }) => {
+    const res = await request.post("/api/plants", { data: { name: "E2E Watering Edit Plant" } });
+    const { id } = await res.json();
+    plantId = id;
+
+    await request.post(`/api/plants/${id}/water`, { data: { fertilized: false } });
+
+    await page.goto("/");
+
+    const plantRow = page.getByRole("listitem").filter({ hasText: "E2E Watering Edit Plant" });
+    await plantRow.getByRole("button", { name: "E2E Watering Edit Plant" }).click();
+
+    const dialog = page.getByRole("dialog");
+    const wateringCell = dialog.getByRole("button", { name: /^Edit watering on / });
+    await expect(wateringCell).toHaveCount(1);
+    await wateringCell.click();
+
+    // The dialog becomes an edit window: the plant actions are gone and the
+    // watering's own stats are shown.
+    const backButton = dialog.getByRole("button", { name: "Back to plant actions" });
+    await expect(backButton).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Water plant" })).toHaveCount(0);
+    await expect(dialog.getByText("Today")).toBeVisible();
+    await expect(dialog.getByText("Not fertilized")).toBeVisible();
+
+    // Fertilizer can be toggled on the watering itself.
+    await dialog.getByRole("button", { name: "Toggle fertilize" }).click();
+    await expect(dialog.getByText("Fertilized", { exact: true })).toBeVisible();
+
+    // Back returns to the original modal.
+    await backButton.click();
+    await expect(dialog.getByRole("button", { name: "Water plant" })).toBeVisible();
+
+    // Deleting the watering empties the rail and returns to the actions view.
+    await dialog.getByRole("button", { name: /^Edit watering on / }).click();
+    await dialog.getByRole("button", { name: "Delete watering" }).click();
+    await expect(dialog.getByRole("button", { name: "Water plant" })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: /^Edit watering on / })).toHaveCount(0);
+  });
+
+  test("clicking outside the edit view returns to the plant list", async ({ page, request }) => {
+    const res = await request.post("/api/plants", { data: { name: "E2E Watering Dismiss Plant" } });
+    const { id } = await res.json();
+    plantId = id;
+
+    await request.post(`/api/plants/${id}/water`, { data: { fertilized: false } });
+
+    await page.goto("/");
+
+    const plantRow = page.getByRole("listitem").filter({ hasText: "E2E Watering Dismiss Plant" });
+    await plantRow.getByRole("button", { name: "E2E Watering Dismiss Plant" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: /^Edit watering on / }).click();
+    await expect(dialog.getByRole("button", { name: "Back to plant actions" })).toBeVisible();
+
+    // Clicking the overlay dismisses the whole dialog, not just the edit view.
+    await page.mouse.click(5, 5);
+    await expect(dialog).not.toBeVisible();
+    await expect(plantRow).toBeVisible();
+
+    // Reopening starts back on the plant actions view.
+    await plantRow.getByRole("button", { name: "E2E Watering Dismiss Plant" }).click();
+    await expect(dialog.getByRole("button", { name: "Water plant" })).toBeVisible();
+  });
+});
