@@ -8,11 +8,24 @@ import { ButtonGroup } from "../ui/ButtonGroup.tsx";
 import { Input } from "../ui/Input.tsx";
 import { Toggle } from "../ui/Toggle.tsx";
 
-const waterButton = cva([
-  cls.bgWaterBlue,
-  cls.hoverBgWaterBlueDark,
-  "flex-1 min-h-[76px] flex items-center justify-center text-white border-none rounded transition-colors active:translate-y-px [&>svg]:fill-white/0 [&>svg]:transition-[fill] [&>svg]:duration-1000 hover:[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite] disabled:opacity-40 disabled:cursor-not-allowed",
-]);
+// Google OAuth entry point; a full navigation is required since it is a server
+// route outside the client router.
+const LOGIN_PATH = "/auth/google";
+
+const waterButton = cva(
+  [
+    cls.bgWaterBlue,
+    cls.hoverBgWaterBlueDark,
+    "flex-1 min-h-[76px] flex items-center justify-center text-white border-none rounded transition-colors active:translate-y-px [&>svg]:fill-white/0 [&>svg]:transition-[fill] [&>svg]:duration-1000 hover:[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite] disabled:opacity-40 disabled:cursor-not-allowed",
+  ],
+  {
+    variants: {
+      // Logged out the button keeps its greyed-out look, but stays clickable so
+      // it can send the user to the login flow.
+      loggedOut: { true: "opacity-40" },
+    },
+  },
+);
 const buttonContainer = cva([
   cls.bgPageBackground,
   "w-[104px] min-[480px]:w-[122px] box-border flex-shrink-0 mt-[18px] pt-0 pr-2.5 pb-[18px] pl-2.5 min-[480px]:pr-3.5 min-[480px]:pl-3.5 flex flex-col gap-2.5 border-l border-[#e5e7eb]",
@@ -57,6 +70,11 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
   };
 
   const handleWater = async () => {
+    if (!loggedIn) {
+      window.location.href = LOGIN_PATH;
+      return;
+    }
+
     setIsWatering(true);
     await apiClient.api.plants[":id"].water.$post({
       param: { id: String(plantId) },
@@ -71,11 +89,11 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
   return (
     <div className={buttonContainer()}>
       <button
-        className={`${waterButton()} ${isWatering ? "[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite]" : ""}`}
+        className={`${waterButton({ loggedOut: !loggedIn })} ${isWatering ? "[&>svg]:animate-[fill-pulse_1s_ease-in-out_infinite]" : ""}`}
         type="button"
         onClick={handleWater}
-        disabled={!loggedIn || isWatering}
-        aria-label="Water plant"
+        disabled={isWatering}
+        aria-label={loggedIn ? "Water plant" : "Log in to water plant"}
       >
         <Droplets size={30} />
       </button>
