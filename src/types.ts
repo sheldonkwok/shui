@@ -8,3 +8,11 @@ export interface PlantWithStats {
   avgWateringIntervalDays: number | null;
   daysUntilNextWatering: number | null;
 }
+
+/** A single watering event, as returned by `GET /api/plants/:id/waterings`. */
+export interface WateringEntry {
+  id: number;
+  /** ISO-8601 timestamp. */
+  wateringTime: string;
+  fertilized: boolean;
+}

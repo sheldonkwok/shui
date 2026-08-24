@@ -3,7 +3,12 @@ import { type } from "arktype";
 import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { classifyPlant } from "../actions/plants.ts";
-import { getWateringHistory, refreshWateringSummary } from "../actions/plants-helper.ts";
+import {
+  deleteWatering,
+  getWateringHistory,
+  refreshWateringSummary,
+  setWateringFertilized,
+} from "../actions/plants-helper.ts";
 import { getDB } from "../db.ts";
 import { plantDelays, plants, waterings } from "../schema.ts";
 
@@ -12,9 +17,14 @@ const addPlantSchema = type({ name: "string" });
 const wateringSchema = type({ fertilized: "boolean" });
 const delaySchema = type({ numDays: "number.integer > 0" });
 const classifySchema = type({ species: "string" });
+const editWateringSchema = type({ fertilized: "boolean" });
 
 // 6 weeks of daily history, shown in the plant action dialog.
 const WATERING_HISTORY_DAYS = 42;
+
+function isValidId(id: number) {
+  return Number.isInteger(id) && id > 0;
+}
 
 export const plantsRouter = new Hono()
   .post("/", arktypeValidator("json", addPlantSchema), async (c) => {
@@ -40,10 +50,34 @@ export const plantsRouter = new Hono()
     const history = await getWateringHistory(plantId, WATERING_HISTORY_DAYS);
     return c.json({
       waterings: history.map((w) => ({
+        id: w.id,
         wateringTime: w.wateringTime.toISOString(),
         fertilized: w.fertilized ?? false,
       })),
     });
+  })
+  .patch("/:id/waterings/:wateringId", arktypeValidator("json", editWateringSchema), async (c) => {
+    const plantId = Number(c.req.param("id"));
+    const wateringId = Number(c.req.param("wateringId"));
+    if (!isValidId(plantId) || !isValidId(wateringId)) {
+      return c.json({ error: "Invalid ID" }, 400);
+    }
+    const { fertilized } = c.req.valid("json");
+    const updated = await setWateringFertilized(plantId, wateringId, fertilized);
+    if (!updated) return c.json({ error: "Watering not found" }, 404);
+    await refreshWateringSummary();
+    return c.json({ ok: true });
+  })
+  .delete("/:id/waterings/:wateringId", async (c) => {
+    const plantId = Number(c.req.param("id"));
+    const wateringId = Number(c.req.param("wateringId"));
+    if (!isValidId(plantId) || !isValidId(wateringId)) {
+      return c.json({ error: "Invalid ID" }, 400);
+    }
+    const deleted = await deleteWatering(plantId, wateringId);
+    if (!deleted) return c.json({ error: "Watering not found" }, 404);
+    await refreshWateringSummary();
+    return c.json({ ok: true });
   })
   .post("/:id/delay", arktypeValidator("json", delaySchema), async (c) => {
     const plantId = Number(c.req.param("id"));

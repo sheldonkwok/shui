@@ -22,3 +22,13 @@ export function formatCalendarDaysAgo(date: Date): string {
 
   return `${Math.floor(diffDays / WEEK)} weeks ago`;
 }
+
+/** Day label for a single watering, e.g. "Mon, Aug 12". */
+export function formatWateringDay(date: Date): string {
+  return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+}
+
+/** Time-of-day label for a single watering, e.g. "2:34 PM". */
+export function formatWateringTime(date: Date): string {
+  return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+}

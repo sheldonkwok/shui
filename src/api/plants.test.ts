@@ -143,6 +143,113 @@ describe("GET /api/plants/:id/waterings", () => {
   });
 });
 
+describe("PATCH /api/plants/:id/waterings/:wateringId", () => {
+  beforeEach(async () => {
+    await cleanupTestDB();
+  });
+
+  it("should toggle fertilized on a watering", async () => {
+    const plantId = await seedPlant("Fern");
+    const wateringId = await seedWatering(plantId, new Date(), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: true }),
+    });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+
+    const list = await app.request(`/api/plants/${plantId}/waterings`);
+    const body = await list.json();
+    expect(body.waterings).toEqual([expect.objectContaining({ id: wateringId, fertilized: true })]);
+  });
+
+  it("should return 404 for a watering belonging to another plant", async () => {
+    const plantId = await seedPlant("Fern");
+    const otherPlantId = await seedPlant("Cactus");
+    const wateringId = await seedWatering(otherPlantId, new Date(), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: true }),
+    });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("should return 400 for a non-integer watering ID", async () => {
+    const plantId = await seedPlant("Fern");
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/abc`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: true }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for an invalid body", async () => {
+    const plantId = await seedPlant("Fern");
+    const wateringId = await seedWatering(plantId, new Date(), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: "yes" }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("DELETE /api/plants/:id/waterings/:wateringId", () => {
+  beforeEach(async () => {
+    await cleanupTestDB();
+  });
+
+  it("should delete a single watering and leave the others", async () => {
+    const plantId = await seedPlant("Fern");
+    const now = new Date();
+    const doomed = await seedWatering(plantId, now, false);
+    const kept = await seedWatering(plantId, new Date(now.getTime() - 24 * 60 * 60 * 1000), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${doomed}`, { method: "DELETE" });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+
+    const list = await app.request(`/api/plants/${plantId}/waterings`);
+    const body = await list.json();
+    expect(body.waterings).toEqual([expect.objectContaining({ id: kept })]);
+  });
+
+  it("should return 404 for a watering belonging to another plant", async () => {
+    const plantId = await seedPlant("Fern");
+    const otherPlantId = await seedPlant("Cactus");
+    const wateringId = await seedWatering(otherPlantId, new Date(), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, { method: "DELETE" });
+
+    expect(res.status).toBe(404);
+
+    const list = await app.request(`/api/plants/${otherPlantId}/waterings`);
+    const body = await list.json();
+    expect(body.waterings).toHaveLength(1);
+  });
+
+  it("should return 400 for a non-integer watering ID", async () => {
+    const plantId = await seedPlant("Fern");
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/abc`, { method: "DELETE" });
+
+    expect(res.status).toBe(400);
+  });
+});
+
 describe("POST /api/plants/:id/delay", () => {
   beforeEach(async () => {
     await cleanupTestDB();
