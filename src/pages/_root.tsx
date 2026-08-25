@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ErrorBoundary } from "waku/router/client";
 import "../styles/global.css";
 import "../styles/tailwind.css";
 
@@ -23,18 +24,22 @@ if (typeof crypto !== "undefined" && typeof crypto.randomUUID !== "function" && 
 }
 `;
 
+// Waku's default root element wraps the document in its ErrorBoundary. Customising
+// the root replaces that default, so the boundary has to be re-added here.
 export default function Root({ children }: RootProps) {
   return (
-    <html lang="en">
-      <head>
-        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static inline polyfill, not user input */}
-        <script dangerouslySetInnerHTML={{ __html: CRYPTO_RANDOM_UUID_POLYFILL }} />
-        <link rel="icon" type="image/png" href="/shui.png" />
-        <title>Shui App</title>
-      </head>
-      <body>
-        <div id="app">{children}</div>
-      </body>
-    </html>
+    <ErrorBoundary>
+      <html lang="en">
+        <head>
+          {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static inline polyfill, not user input */}
+          <script dangerouslySetInnerHTML={{ __html: CRYPTO_RANDOM_UUID_POLYFILL }} />
+          <link rel="icon" type="image/png" href="/shui.png" />
+          <title>Shui App</title>
+        </head>
+        <body>
+          <div id="app">{children}</div>
+        </body>
+      </html>
+    </ErrorBoundary>
   );
 }

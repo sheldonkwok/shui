@@ -50,7 +50,7 @@ interface WateringEditPanelProps {
   onSelectWatering: (wateringId: number) => void;
   onBack: () => void;
   /** Called after the watering was changed or removed, so the caller can refresh. */
-  onChanged: () => void;
+  onChanged: () => Promise<void> | void;
 }
 
 export function WateringEditPanel({
@@ -80,7 +80,7 @@ export function WateringEditPanel({
         param: { id: String(plantId), wateringId: String(watering.id) },
         json: { fertilized },
       });
-      onChanged();
+      await onChanged();
     } finally {
       setPending(false);
     }
@@ -92,7 +92,7 @@ export function WateringEditPanel({
       await apiClient.api.plants[":id"].waterings[":wateringId"].$delete({
         param: { id: String(plantId), wateringId: String(watering.id) },
       });
-      onChanged();
+      await onChanged();
       onBack();
     } finally {
       setPending(false);

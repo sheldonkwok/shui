@@ -4,7 +4,6 @@ import { cva } from "class-variance-authority";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
-import { useSession } from "../hooks/useSession.ts";
 import { cls } from "../styles/palette.ts";
 import type { PlantWithStats } from "../types.ts";
 import { Plant } from "./Plant.tsx";
@@ -68,10 +67,10 @@ function sortByThirst(plants: PlantWithStats[]) {
 
 interface PlantListClientProps {
   plants: PlantWithStats[];
+  loggedIn: boolean;
 }
 
-export function PlantListClient({ plants }: PlantListClientProps) {
-  const { loggedIn } = useSession();
+export function PlantListClient({ plants, loggedIn }: PlantListClientProps) {
   const router = useRouter();
   const sortedPlants = useMemo(() => sortByThirst(plants), [plants]);
   const [adding, setAdding] = useState(false);
@@ -93,7 +92,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
     try {
       await apiClient.api.plants.$post({ json: { name } });
       setDraft("");
-      router.reload();
+      await router.reload();
     } finally {
       setPending(false);
     }
@@ -156,7 +155,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
           {plants.length > 0 ? (
             <ul className={list()}>
               {sortedPlants.map(({ plant, gap }) => (
-                <Plant key={plant.id} plant={plant} gap={gap} />
+                <Plant key={plant.id} plant={plant} gap={gap} loggedIn={loggedIn} />
               ))}
             </ul>
           ) : (
