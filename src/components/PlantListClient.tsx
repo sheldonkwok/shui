@@ -112,7 +112,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
     <div className={container()}>
       <div className={panelWrap()}>
         <img src="/shui.png" alt="Shui" className={logoMark()} />
-        {loggedIn && (
+        {loggedIn ? (
           <button
             type="button"
             aria-label="Add a new plant"
@@ -121,6 +121,10 @@ export function PlantListClient({ plants }: PlantListClientProps) {
           >
             <img src="/pixel-potted-leaf.png" alt="" className="w-8 h-8 [image-rendering:pixelated]" />
           </button>
+        ) : (
+          <a href="/auth/google" aria-label="Log in to add a plant" className={sproutButton()}>
+            <img src="/pixel-potted-leaf.png" alt="" className="w-8 h-8 [image-rendering:pixelated]" />
+          </a>
         )}
         <div className={panelCard()}>
           <div aria-hidden="true" className={dirtBed()} style={DIRT_STYLE} />
