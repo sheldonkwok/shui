@@ -2,7 +2,6 @@ import { StreamableHTTPTransport } from "@hono/mcp";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { createMiddleware } from "hono/factory";
 import { z } from "zod";
 import { listPlants } from "../actions/plants-helper.ts";
 import { getDB } from "../db.ts";
@@ -70,7 +69,7 @@ function createMcpServer() {
   return server;
 }
 
-const mcpApp = new Hono();
+export const mcpApp = new Hono();
 
 mcpApp.use("/mcp", async (c, next) => {
   const apiKey = process.env.MCP_API_KEY;
@@ -88,9 +87,4 @@ mcpApp.all("/mcp", async (c) => {
   const transport = new StreamableHTTPTransport();
   await server.connect(transport);
   return transport.handleRequest(c);
-});
-
-export const mcpMiddleware = createMiddleware(async (c, next) => {
-  if (!c.req.path.startsWith("/mcp")) return await next();
-  return mcpApp.fetch(c.req.raw);
 });

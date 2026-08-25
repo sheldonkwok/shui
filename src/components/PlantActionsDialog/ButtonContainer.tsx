@@ -53,7 +53,7 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
       json: { numDays: delayDays },
     });
     onOpenChange(false);
-    router.reload();
+    await router.reload();
   };
 
   const handleWater = async () => {
@@ -63,9 +63,9 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
       json: { fertilized: fertilizeToggled },
     });
     setFertilizeToggled(false);
-    setIsWatering(false);
     onOpenChange(false);
-    router.reload();
+    await router.reload();
+    setIsWatering(false);
   };
 
   return (

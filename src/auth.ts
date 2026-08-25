@@ -3,6 +3,7 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { createMiddleware } from "hono/factory";
+import { parse as parseCookieHeader } from "hono/utils/cookie";
 
 import { IS_DEV, IS_PREVIEW, IS_PRODUCTION, IS_TEST } from "./utils.ts";
 
@@ -13,7 +14,6 @@ import { IS_DEV, IS_PREVIEW, IS_PRODUCTION, IS_TEST } from "./utils.ts";
 const CONFIG = {
   allowedEmail: "me@sheldonk.com",
   cookieName: "auth_session",
-  indicatorCookieName: "is_authenticated",
   stateCookieName: "oauth_state",
   verifierCookieName: "oauth_verifier",
   sessionMaxAge: 60 * 60 * 24 * 30, // 30 days
@@ -68,8 +68,8 @@ async function verifySignedValue(signedValue: string): Promise<string | null> {
   return signedValue === expectedSigned ? value : null;
 }
 
-async function getSessionEmail(c: Context): Promise<string | null> {
-  const cookie = getCookie(c, CONFIG.cookieName);
+async function getSessionEmail(headers: Readonly<Record<string, string>>): Promise<string | null> {
+  const cookie = parseCookieHeader(headers.cookie ?? "", CONFIG.cookieName)[CONFIG.cookieName];
   if (!cookie) return null;
 
   try {
@@ -79,13 +79,22 @@ async function getSessionEmail(c: Context): Promise<string | null> {
   }
 }
 
+/**
+ * Whether the request carries a valid session. Shared by the API middleware and
+ * by server components, which read headers via Waku's `unstable_getHeaders`.
+ */
+export async function isLoggedIn(headers: Readonly<Record<string, string>>): Promise<boolean> {
+  if (IS_TEST || IS_PREVIEW || IS_DEV) return true;
+
+  return (await getSessionEmail(headers)) === CONFIG.allowedEmail;
+}
+
 // =============================================================================
 // Route Handlers
 // =============================================================================
 
 function handleLogout(c: Context): Response {
   deleteCookie(c, CONFIG.cookieName);
-  deleteCookie(c, CONFIG.indicatorCookieName);
   return c.redirect("/");
 }
 
@@ -148,11 +157,6 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
       maxAge: CONFIG.sessionMaxAge,
       sameSite: "Lax",
     });
-    setCookie(c, CONFIG.indicatorCookieName, "1", {
-      secure: IS_PRODUCTION,
-      maxAge: CONFIG.sessionMaxAge - 60,
-      sameSite: "Lax",
-    });
 
     return c.redirect("/");
   } catch (error) {
@@ -162,36 +166,17 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
 }
 
 // =============================================================================
-// Middlewares
+// Routes & Middleware
 // =============================================================================
 
-const authApp = new Hono()
+export const authApp = new Hono()
   .basePath("/auth")
   .get("/logout", handleLogout)
   .get("/google", handleGoogleAuth)
   .get("/callback", handleOAuthCallback);
 
-export const authRoutesMiddleware = createMiddleware(async (c, next) => {
-  if (!c.req.path.startsWith("/auth/")) return await next();
-  return authApp.fetch(c.req.raw);
-});
-
-export const previewAuthMiddleware = createMiddleware(async (c, next) => {
-  await next();
-  if (!getCookie(c, CONFIG.indicatorCookieName)) {
-    setCookie(c, CONFIG.indicatorCookieName, "1", {
-      secure: IS_PRODUCTION,
-      maxAge: CONFIG.sessionMaxAge - 60,
-      sameSite: "Lax",
-    });
-  }
-});
-
 export const authCheckMiddleware = createMiddleware(async (c, next) => {
-  if (IS_TEST || IS_PREVIEW || IS_DEV) return await next();
-
-  const email = await getSessionEmail(c);
-  if (email === CONFIG.allowedEmail) return await next();
+  if (await isLoggedIn(c.req.header())) return await next();
 
   return c.text("Unauthorized", 401);
 });

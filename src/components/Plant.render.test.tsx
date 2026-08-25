@@ -27,7 +27,7 @@ describe("Plant component rendering", () => {
     const plants = await getPlants();
     const plant = plants[0]!;
 
-    render(<Plant plant={plant} />);
+    render(<Plant plant={plant} loggedIn />);
 
     expect(screen.getByText("Test Fern")).toBeInTheDocument();
     expect(screen.getByText("Never watered")).toBeInTheDocument();
@@ -40,7 +40,7 @@ describe("Plant component rendering", () => {
     const plants = await getPlants();
     const plant = plants[0]!;
 
-    render(<Plant plant={plant} />);
+    render(<Plant plant={plant} loggedIn />);
 
     expect(screen.getByText("Watered Today Plant")).toBeInTheDocument();
     expect(screen.getByText("Today")).toBeInTheDocument();
@@ -55,7 +55,7 @@ describe("Plant component rendering", () => {
     const plants = await getPlants();
     const plant = plants[0]!;
 
-    render(<Plant plant={plant} />);
+    render(<Plant plant={plant} loggedIn />);
 
     expect(screen.getByText("Watered Yesterday Plant")).toBeInTheDocument();
     expect(screen.getByText("Yesterday")).toBeInTheDocument();
@@ -71,7 +71,7 @@ describe("Plant component rendering", () => {
     const plants = await getPlants();
     const plant = plants[0]!;
 
-    render(<Plant plant={plant} />);
+    render(<Plant plant={plant} loggedIn />);
 
     expect(screen.getByText("Late Yesterday Plant")).toBeInTheDocument();
     expect(screen.getByText("Yesterday")).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe("Plant component rendering", () => {
     const plants = await getPlants();
     const plant = plants[0]!;
 
-    render(<Plant plant={plant} />);
+    render(<Plant plant={plant} loggedIn />);
 
     expect(screen.getByText("Old Watering Plant")).toBeInTheDocument();
     expect(screen.getByText("5 days ago")).toBeInTheDocument();

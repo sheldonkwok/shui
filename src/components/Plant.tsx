@@ -10,6 +10,7 @@ import { PlantActionsDialog } from "./PlantActionsDialog";
 
 interface PlantProps {
   plant: PlantWithStats;
+  loggedIn: boolean;
   /** Renders a silent 14px spacer before the row — marks a thirst-band change. */
   gap?: boolean;
 }
@@ -34,7 +35,7 @@ const formatLastWatered = (date: Date | null) => {
   return formatCalendarDaysAgo(date);
 };
 
-export function Plant({ plant, gap = false }: PlantProps) {
+export function Plant({ plant, loggedIn, gap = false }: PlantProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const ratio = getExpectedDayRatio(plant.daysUntilNextWatering, plant.avgWateringIntervalDays);
 
@@ -65,6 +66,7 @@ export function Plant({ plant, gap = false }: PlantProps) {
           lastWatered={plant.lastWatered}
           lastFertilized={plant.lastFertilized}
           avgWateringIntervalDays={plant.avgWateringIntervalDays}
+          loggedIn={loggedIn}
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
         />

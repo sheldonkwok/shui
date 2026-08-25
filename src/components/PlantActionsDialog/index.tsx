@@ -3,7 +3,6 @@
 import { cva } from "class-variance-authority";
 import { useEffect, useState } from "react";
 import { useRouter } from "waku";
-import { useSession } from "../../hooks/useSession.ts";
 import { useWaterings } from "../../hooks/useWaterings.ts";
 import { Dialog, DialogContent } from "../ui/Dialog.tsx";
 import { ButtonContainer } from "./ButtonContainer.tsx";
@@ -20,6 +19,7 @@ interface PlantActionsDialogProps {
   lastWatered: Date | null;
   lastFertilized: Date | null;
   avgWateringIntervalDays: number | null;
+  loggedIn: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -42,11 +42,11 @@ export function PlantActionsDialog({
   lastWatered: lastWateredDate,
   lastFertilized: lastFertilizedDate,
   avgWateringIntervalDays,
+  loggedIn,
   open,
   onOpenChange,
 }: PlantActionsDialogProps) {
   const router = useRouter();
-  const { loggedIn } = useSession();
   const { waterings, reload } = useWaterings(plantId, open);
   const [editingId, setEditingId] = useState<number | null>(null);
 
@@ -73,9 +73,8 @@ export function PlantActionsDialog({
             loggedIn={loggedIn}
             onSelectWatering={setEditingId}
             onBack={() => setEditingId(null)}
-            onChanged={() => {
-              reload();
-              router.reload();
+            onChanged={async () => {
+              await Promise.all([reload(), router.reload()]);
             }}
           />
         ) : (
