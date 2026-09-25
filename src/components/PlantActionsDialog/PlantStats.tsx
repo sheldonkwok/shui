@@ -41,10 +41,12 @@ export function PlantStats({
         <Sprout size={16} />
         <DaysAgo date={lastFertilizedDate} />
       </div>
-      <div className={statRow()} role="img" aria-label="Last repotted">
-        <Cylinder size={16} />
-        <DaysAgo date={lastRepottedDate} />
-      </div>
+      {lastRepottedDate && (
+        <div className={statRow()} role="img" aria-label="Last repotted">
+          <Cylinder size={16} />
+          <span>{calendarDaysAgo(lastRepottedDate)}d</span>
+        </div>
+      )}
     </div>
   );
 }
