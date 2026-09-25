@@ -1,4 +1,4 @@
-import { Google } from "arctic";
+import { googleAuth } from "@hono/oauth-providers/google";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
@@ -14,10 +14,7 @@ const CONFIG = {
   allowedEmail: "me@sheldonk.com",
   cookieName: "auth_session",
   indicatorCookieName: "is_authenticated",
-  stateCookieName: "oauth_state",
-  verifierCookieName: "oauth_verifier",
   sessionMaxAge: 60 * 60 * 24 * 30, // 30 days
-  oauthCookieMaxAge: 60 * 10, // 10 minutes
 } as const;
 
 // =============================================================================
@@ -32,12 +29,13 @@ function getEnvOrThrow(key: string): string {
 
 const authSecret = getEnvOrThrow("AUTH_SECRET");
 
-function getGoogle(): Google {
-  const redirectUri = IS_PRODUCTION
-    ? "https://shui.fmj.io/auth/callback"
-    : "http://localhost:3000/auth/callback";
-
-  return new Google(getEnvOrThrow("GOOGLE_CLIENT_ID"), getEnvOrThrow("GOOGLE_CLIENT_SECRET"), redirectUri);
+function getGoogleAuth() {
+  return googleAuth({
+    client_id: getEnvOrThrow("GOOGLE_CLIENT_ID"),
+    client_secret: getEnvOrThrow("GOOGLE_CLIENT_SECRET"),
+    redirect_uri: IS_PRODUCTION ? "https://shui.fmj.io/auth/callback" : "http://localhost:3000/auth/callback",
+    scope: ["openid", "email"],
+  });
 }
 
 // =============================================================================
@@ -89,76 +87,31 @@ function handleLogout(c: Context): Response {
   return c.redirect("/");
 }
 
-function generateCodeVerifier(): string {
-  const bytes = crypto.getRandomValues(new Uint8Array(32));
-  return btoa(String.fromCharCode(...bytes))
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
-
-function handleGoogleAuth(c: Context): Response {
-  const google = getGoogle();
-  const state = crypto.randomUUID();
-  const codeVerifier = generateCodeVerifier();
-  const url = google.createAuthorizationURL(state, codeVerifier, ["openid", "email"]);
-
-  const cookieOptions = {
-    httpOnly: true,
-    secure: IS_PRODUCTION,
-    maxAge: CONFIG.oauthCookieMaxAge,
-    sameSite: "Lax" as const,
-  };
-
-  setCookie(c, CONFIG.stateCookieName, state, cookieOptions);
-  setCookie(c, CONFIG.verifierCookieName, codeVerifier, cookieOptions);
-
-  return c.redirect(url.toString());
-}
-
 async function handleOAuthCallback(c: Context): Promise<Response> {
-  const url = new URL(c.req.url);
-  const code = url.searchParams.get("code");
-  const state = url.searchParams.get("state");
-  const storedState = getCookie(c, CONFIG.stateCookieName);
-  const codeVerifier = getCookie(c, CONFIG.verifierCookieName);
-
-  // Clean up OAuth cookies
-  deleteCookie(c, CONFIG.stateCookieName);
-  deleteCookie(c, CONFIG.verifierCookieName);
-
-  if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
-    return c.text("Invalid OAuth state", 400);
-  }
-
-  try {
-    const tokens = await getGoogle().validateAuthorizationCode(code, codeVerifier);
-    const idToken = tokens.idToken();
-    const payload = JSON.parse(atob(idToken.split(".")[1]!));
-    const email = payload.email as string;
-
-    if (email !== CONFIG.allowedEmail) {
-      return c.text(`Access denied. Email ${email} is not authorized.`, 403);
-    }
-
-    const signedEmail = await signValue(email);
-    setCookie(c, CONFIG.cookieName, signedEmail, {
-      httpOnly: true,
-      secure: IS_PRODUCTION,
-      maxAge: CONFIG.sessionMaxAge,
-      sameSite: "Lax",
-    });
-    setCookie(c, CONFIG.indicatorCookieName, "1", {
-      secure: IS_PRODUCTION,
-      maxAge: CONFIG.sessionMaxAge - 60,
-      sameSite: "Lax",
-    });
-
-    return c.redirect("/");
-  } catch (error) {
-    console.error("OAuth error:", error);
+  const user = c.get("user-google");
+  if (!user?.email || !user.verified_email) {
     return c.text("Authentication failed", 500);
   }
+
+  const email = user.email;
+  if (email !== CONFIG.allowedEmail) {
+    return c.text(`Access denied. Email ${email} is not authorized.`, 403);
+  }
+
+  const signedEmail = await signValue(email);
+  setCookie(c, CONFIG.cookieName, signedEmail, {
+    httpOnly: true,
+    secure: IS_PRODUCTION,
+    maxAge: CONFIG.sessionMaxAge,
+    sameSite: "Lax",
+  });
+  setCookie(c, CONFIG.indicatorCookieName, "1", {
+    secure: IS_PRODUCTION,
+    maxAge: CONFIG.sessionMaxAge - 60,
+    sameSite: "Lax",
+  });
+
+  return c.redirect("/");
 }
 
 // =============================================================================
@@ -168,8 +121,9 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
 const authApp = new Hono()
   .basePath("/auth")
   .get("/logout", handleLogout)
-  .get("/google", handleGoogleAuth)
-  .get("/callback", handleOAuthCallback);
+  // googleAuth redirects to Google when there's no `code`, and exchanges it on the callback
+  .get("/google", (c, next) => getGoogleAuth()(c, next))
+  .get("/callback", (c, next) => getGoogleAuth()(c, next), handleOAuthCallback);
 
 export const authRoutesMiddleware = createMiddleware(async (c, next) => {
   if (!c.req.path.startsWith("/auth/")) return await next();
