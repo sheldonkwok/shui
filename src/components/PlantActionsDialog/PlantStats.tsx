@@ -1,5 +1,5 @@
 import { cva } from "class-variance-authority";
-import { Droplets, RefreshCcw, Sprout, X } from "lucide-react";
+import { Cylinder, Droplets, RefreshCcw, Sprout, X } from "lucide-react";
 import { cls } from "../../styles/palette.ts";
 import { calendarDaysAgo } from "../../utils.ts";
 
@@ -10,6 +10,7 @@ interface PlantStatsProps {
   lastWateredDate: Date | null;
   avgWateringIntervalDays: number | null;
   lastFertilizedDate: Date | null;
+  lastRepottedDate: Date | null;
 }
 
 function DaysAgo({ date }: { date: Date | null }) {
@@ -20,6 +21,7 @@ export function PlantStats({
   lastWateredDate,
   avgWateringIntervalDays,
   lastFertilizedDate,
+  lastRepottedDate,
 }: PlantStatsProps) {
   return (
     <div className={statsList()}>
@@ -38,6 +40,10 @@ export function PlantStats({
       <div className={statRow()} role="img" aria-label="Last fertilized">
         <Sprout size={16} />
         <DaysAgo date={lastFertilizedDate} />
+      </div>
+      <div className={statRow()} role="img" aria-label="Last repotted">
+        <Cylinder size={16} />
+        <DaysAgo date={lastRepottedDate} />
       </div>
     </div>
   );

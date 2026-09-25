@@ -19,6 +19,7 @@ interface PlantActionsDialogProps {
   species: string | null;
   lastWatered: Date | null;
   lastFertilized: Date | null;
+  lastRepotted: Date | null;
   avgWateringIntervalDays: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -41,6 +42,7 @@ export function PlantActionsDialog({
   species,
   lastWatered: lastWateredDate,
   lastFertilized: lastFertilizedDate,
+  lastRepotted: lastRepottedDate,
   avgWateringIntervalDays,
   open,
   onOpenChange,
@@ -99,6 +101,7 @@ export function PlantActionsDialog({
                 lastWateredDate={lastWateredDate}
                 avgWateringIntervalDays={avgWateringIntervalDays}
                 lastFertilizedDate={lastFertilizedDate}
+                lastRepottedDate={lastRepottedDate}
               />
             </div>
             <WateringHistoryGrid waterings={waterings} onSelectWatering={setEditingId} />

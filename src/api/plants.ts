@@ -7,7 +7,7 @@ import {
   deleteWatering,
   getWateringHistory,
   refreshWateringSummary,
-  setWateringFertilized,
+  updateWatering,
 } from "../actions/plants-helper.ts";
 import { getDB } from "../db.ts";
 import { plantDelays, plants, waterings } from "../schema.ts";
@@ -17,7 +17,7 @@ const addPlantSchema = type({ name: "string" });
 const wateringSchema = type({ fertilized: "boolean" });
 const delaySchema = type({ numDays: "number.integer > 0" });
 const classifySchema = type({ species: "string" });
-const editWateringSchema = type({ fertilized: "boolean" });
+const editWateringSchema = type({ "fertilized?": "boolean", "repot?": "boolean" });
 
 // 6 weeks of daily history, shown in the plant action dialog.
 const WATERING_HISTORY_DAYS = 42;
@@ -53,6 +53,7 @@ export const plantsRouter = new Hono()
         id: w.id,
         wateringTime: w.wateringTime.toISOString(),
         fertilized: w.fertilized ?? false,
+        repot: w.repot ?? false,
       })),
     });
   })
@@ -62,8 +63,11 @@ export const plantsRouter = new Hono()
     if (!isValidId(plantId) || !isValidId(wateringId)) {
       return c.json({ error: "Invalid ID" }, 400);
     }
-    const { fertilized } = c.req.valid("json");
-    const updated = await setWateringFertilized(plantId, wateringId, fertilized);
+    const { fertilized, repot } = c.req.valid("json");
+    if (fertilized === undefined && repot === undefined) {
+      return c.json({ error: "Nothing to update" }, 400);
+    }
+    const updated = await updateWatering(plantId, wateringId, { fertilized, repot });
     if (!updated) return c.json({ error: "Watering not found" }, 404);
     await refreshWateringSummary();
     return c.json({ ok: true });

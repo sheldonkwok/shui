@@ -19,6 +19,11 @@ export const colors = {
   toggleActive: "#d8b88b",
   toggleHover: "#f5e9d8",
 
+  // Repot toggle (slate)
+  repotActive: "#6e8095",
+  repotHover: "#e7ecf1",
+  lightSlate: "#dbe3ea",
+
   // Neutrals
   textSecondary: "#999",
   textMuted: "#6c757d",
@@ -53,6 +58,11 @@ export const cls = {
   dataOnBgToggleActive: "data-[state=on]:bg-[#d8b88b]",
   hoverBgToggleHover: "hover:bg-[#f5e9d8]",
   borderToggleActive: "border-[#d8b88b]",
+
+  // Repot toggle (slate)
+  dataOnBgRepotActive: "data-[state=on]:bg-[#6e8095]",
+  hoverBgRepotHover: "hover:bg-[#e7ecf1]",
+  borderRepotActive: "border-[#6e8095]",
 
   // Neutrals
   textSecondary: "text-[#999]",

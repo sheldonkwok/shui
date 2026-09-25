@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Cylinder,
   Droplets,
   Sprout,
   Trash2,
@@ -31,10 +32,9 @@ const siblingNav = cva(["flex items-center gap-0.5 text-[13px]", cls.textSeconda
 const statsList = cva("flex flex-col gap-2");
 const statRow = cva(["flex items-center gap-2 text-[13px]", cls.textSecondary]);
 const controls = cva("flex items-center gap-2.5");
-const fertilizeLabel = cva(["flex-1 min-w-0 text-[13px]", cls.textSecondary]);
 const deleteButton = cva([
   cls.borderInput,
-  "flex h-10 items-center gap-1.5 rounded-md border bg-transparent px-3 text-[13px] text-red-700 cursor-pointer transition-colors hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed",
+  "ml-auto flex h-10 items-center gap-1.5 rounded-md border bg-transparent px-3 text-[13px] text-red-700 cursor-pointer transition-colors hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
 
 function startOfDay(date: Date): number {
@@ -73,12 +73,12 @@ export function WateringEditPanel({
   }, [waterings, watering.wateringTime]);
   const position = sameDay.findIndex((w) => w.id === watering.id);
 
-  const handleFertilizedChange = async (fertilized: boolean) => {
+  const handleFlagChange = async (patch: { fertilized?: boolean; repot?: boolean }) => {
     setPending(true);
     try {
       await apiClient.api.plants[":id"].waterings[":wateringId"].$patch({
         param: { id: String(plantId), wateringId: String(watering.id) },
-        json: { fertilized },
+        json: patch,
       });
       onChanged();
     } finally {
@@ -155,7 +155,7 @@ export function WateringEditPanel({
       <div className={controls()}>
         <Toggle
           pressed={watering.fertilized}
-          onPressedChange={handleFertilizedChange}
+          onPressedChange={(fertilized) => handleFlagChange({ fertilized })}
           disabled={!loggedIn || pending}
           variant="outline"
           size="lg"
@@ -167,7 +167,21 @@ export function WateringEditPanel({
             color={watering.fertilized ? colors.lightGreen : undefined}
           />
         </Toggle>
-        <span className={fertilizeLabel()}>{watering.fertilized ? "Fertilized" : "Not fertilized"}</span>
+        <Toggle
+          pressed={watering.repot}
+          onPressedChange={(repot) => handleFlagChange({ repot })}
+          disabled={!loggedIn || pending}
+          variant="outline"
+          size="lg"
+          tone="slate"
+          aria-label="Toggle repot"
+        >
+          <Cylinder
+            size={18}
+            fill={watering.repot ? colors.lightSlate : "none"}
+            color={watering.repot ? colors.lightSlate : undefined}
+          />
+        </Toggle>
         <button
           type="button"
           className={deleteButton()}

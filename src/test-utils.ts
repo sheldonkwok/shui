@@ -22,7 +22,12 @@ export async function seedPlant(name: string): Promise<number> {
   return result[0]!.id;
 }
 
-export async function seedWatering(plantId: number, wateringTime: Date, fertilized = false): Promise<number> {
+export async function seedWatering(
+  plantId: number,
+  wateringTime: Date,
+  fertilized = false,
+  repot = false,
+): Promise<number> {
   const db = getDB();
   const result = await db
     .insert(waterings)
@@ -30,6 +35,7 @@ export async function seedWatering(plantId: number, wateringTime: Date, fertiliz
       plantId,
       wateringTime,
       fertilized,
+      repot,
     })
     .returning();
   await db.refreshMaterializedView(wateringSummary);

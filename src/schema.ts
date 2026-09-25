@@ -28,6 +28,7 @@ export const waterings = pgTable("waterings", {
     .references(() => plants.id),
   wateringTime: timestamp("watering_time", { withTimezone: true }).defaultNow().notNull(),
   fertilized: boolean("fertilized").default(false),
+  repot: boolean("repot").default(false),
 });
 
 export const wateringInsertSchema = createInsertSchema(waterings);
@@ -51,6 +52,7 @@ export const wateringSummary = pgMaterializedView("watering_summary", {
   lastWatered: timestamp("last_watered", { withTimezone: true }),
   avgIntervalDays: real("avg_interval_days"),
   lastFertilized: timestamp("last_fertilized", { withTimezone: true }),
+  lastRepotted: timestamp("last_repotted", { withTimezone: true }),
 }).as(sql`
   SELECT
     plant_id,
@@ -63,7 +65,11 @@ export const wateringSummary = pgMaterializedView("watering_summary", {
       )::real
       ELSE NULL
     END AS avg_interval_days,
-    MAX(watering_time) FILTER (WHERE fertilized) AS last_fertilized
+    MAX(watering_time) FILTER (WHERE fertilized) AS last_fertilized,
+    -- Repots are yearly and waterings weekly, so a FILTER over the 5-row window
+    -- below would almost always be NULL. This column looks at the whole history.
+    (SELECT MAX(w3.watering_time) FROM waterings w3
+     WHERE w3.plant_id = w1.plant_id AND w3.repot) AS last_repotted
   FROM waterings w1
   WHERE
     (SELECT COUNT(*) FROM waterings w2

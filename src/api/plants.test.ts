@@ -85,6 +85,21 @@ describe("POST /api/plants/:id/water", () => {
 
     expect(res.status).toBe(400);
   });
+
+  it("should ignore a repot flag when logging a new watering", async () => {
+    const plantId = await seedPlant("Fern");
+
+    const res = await app.request(`/api/plants/${plantId}/water`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: false, repot: true }),
+    });
+
+    expect(res.status).toBe(201);
+    const list = await app.request(`/api/plants/${plantId}/waterings`);
+    const body = await list.json();
+    expect(body.waterings).toEqual([expect.objectContaining({ repot: false })]);
+  });
 });
 
 describe("GET /api/plants/:id/waterings", () => {
@@ -140,6 +155,17 @@ describe("GET /api/plants/:id/waterings", () => {
     const res = await app.request("/api/plants/abc/waterings");
 
     expect(res.status).toBe(400);
+  });
+
+  it("should include the repot flag", async () => {
+    const plantId = await seedPlant("Fern");
+    await seedWatering(plantId, new Date(), false, true);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings`);
+
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.waterings).toEqual([expect.objectContaining({ fertilized: false, repot: true })]);
   });
 });
 
@@ -200,6 +226,70 @@ describe("PATCH /api/plants/:id/waterings/:wateringId", () => {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fertilized: "yes" }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should toggle repot on a watering without touching fertilized", async () => {
+    const plantId = await seedPlant("Fern");
+    const wateringId = await seedWatering(plantId, new Date(), true);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repot: true }),
+    });
+
+    expect(res.status).toBe(200);
+
+    const list = await app.request(`/api/plants/${plantId}/waterings`);
+    const body = await list.json();
+    expect(body.waterings).toEqual([
+      expect.objectContaining({ id: wateringId, fertilized: true, repot: true }),
+    ]);
+  });
+
+  it("should set both flags at once", async () => {
+    const plantId = await seedPlant("Fern");
+    const wateringId = await seedWatering(plantId, new Date(), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: true, repot: true }),
+    });
+
+    expect(res.status).toBe(200);
+
+    const list = await app.request(`/api/plants/${plantId}/waterings`);
+    const body = await list.json();
+    expect(body.waterings).toEqual([
+      expect.objectContaining({ id: wateringId, fertilized: true, repot: true }),
+    ]);
+  });
+
+  it("should return 400 for a non-boolean repot", async () => {
+    const plantId = await seedPlant("Fern");
+    const wateringId = await seedWatering(plantId, new Date(), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ repot: "yes" }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 for an empty body", async () => {
+    const plantId = await seedPlant("Fern");
+    const wateringId = await seedWatering(plantId, new Date(), false);
+
+    const res = await app.request(`/api/plants/${plantId}/waterings/${wateringId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
     });
 
     expect(res.status).toBe(400);

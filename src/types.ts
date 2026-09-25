@@ -5,6 +5,7 @@ export interface PlantWithStats {
   wateringCount: number;
   lastWatered: Date | null;
   lastFertilized: Date | null;
+  lastRepotted: Date | null;
   avgWateringIntervalDays: number | null;
   daysUntilNextWatering: number | null;
 }
@@ -15,4 +16,5 @@ export interface WateringEntry {
   /** ISO-8601 timestamp. */
   wateringTime: string;
   fertilized: boolean;
+  repot: boolean;
 }

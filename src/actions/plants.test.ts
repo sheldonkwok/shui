@@ -123,6 +123,37 @@ describe("getPlants - watering intervals", () => {
     expect(result[0]?.lastFertilized).toEqual(sevenDaysAgo);
   });
 
+  it("should return null lastRepotted when no watering is a repot", async () => {
+    const plantId = await seedPlant("Never Repotted Plant");
+
+    await seedWatering(plantId, now);
+    await seedWatering(plantId, new Date(time - 7 * DAY));
+
+    const result = await getPlants();
+
+    expect(result[0]?.lastRepotted).toBeNull();
+  });
+
+  it("should report lastRepotted from outside the 5-most-recent-waterings window", async () => {
+    const plantId = await seedPlant("Repotted Plant");
+    const longAgo = new Date(time - 100 * DAY);
+
+    await seedWatering(plantId, now);
+    await seedWatering(plantId, new Date(time - 2 * DAY));
+    await seedWatering(plantId, new Date(time - 4 * DAY));
+    await seedWatering(plantId, new Date(time - 6 * DAY));
+    await seedWatering(plantId, new Date(time - 8 * DAY));
+    // Outside the 5-most-recent window used for avgWateringIntervalDays, but repot
+    // history looks at everything.
+    await seedWatering(plantId, longAgo, false, true);
+
+    const result = await getPlants();
+
+    expect(result[0]?.lastRepotted).toEqual(longAgo);
+    // The 5-row window the other columns use stays untouched by the repot lookup.
+    expect(result[0]?.avgWateringIntervalDays).toBe(2);
+  });
+
   it("should handle waterings less than 1 day apart", async () => {
     const plantId = await seedPlant("Frequently Watered Plant");
     const halfDayAgo = new Date(time - 0.5 * DAY);

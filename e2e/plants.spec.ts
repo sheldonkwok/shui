@@ -132,11 +132,12 @@ test.describe("Watering editing", () => {
     await expect(backButton).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Water plant" })).toHaveCount(0);
     await expect(dialog.getByText("Today")).toBeVisible();
-    await expect(dialog.getByText("Not fertilized")).toBeVisible();
+    const fertilizeToggle = dialog.getByRole("button", { name: "Toggle fertilize" });
+    await expect(fertilizeToggle).toHaveAttribute("aria-pressed", "false");
 
     // Fertilizer can be toggled on the watering itself.
-    await dialog.getByRole("button", { name: "Toggle fertilize" }).click();
-    await expect(dialog.getByText("Fertilized", { exact: true })).toBeVisible();
+    await fertilizeToggle.click();
+    await expect(fertilizeToggle).toHaveAttribute("aria-pressed", "true");
 
     // Back returns to the original modal.
     await backButton.click();
@@ -147,6 +148,35 @@ test.describe("Watering editing", () => {
     await dialog.getByRole("button", { name: "Delete watering" }).click();
     await expect(dialog.getByRole("button", { name: "Water plant" })).toBeVisible();
     await expect(dialog.getByRole("button", { name: /^Edit watering on / })).toHaveCount(0);
+  });
+
+  test("repot toggles independently of fertilizer", async ({ page, request }) => {
+    const res = await request.post("/api/plants", { data: { name: "E2E Repot Plant" } });
+    const { id } = await res.json();
+    plantId = id;
+
+    await request.post(`/api/plants/${id}/water`, { data: { fertilized: true } });
+
+    await page.goto("/");
+
+    const plantRow = page.getByRole("listitem").filter({ hasText: "E2E Repot Plant" });
+    await plantRow.getByRole("button", { name: "E2E Repot Plant" }).click();
+
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: /^Edit watering on / }).click();
+
+    const fertilizeToggle = dialog.getByRole("button", { name: "Toggle fertilize" });
+    const repotToggle = dialog.getByRole("button", { name: "Toggle repot" });
+    await expect(fertilizeToggle).toHaveAttribute("aria-pressed", "true");
+    await expect(repotToggle).toHaveAttribute("aria-pressed", "false");
+
+    await repotToggle.click();
+    await expect(repotToggle).toHaveAttribute("aria-pressed", "true");
+    // Independent flags: fertilizer stays on.
+    await expect(fertilizeToggle).toHaveAttribute("aria-pressed", "true");
+
+    await dialog.getByRole("button", { name: "Back to plant actions" }).click();
+    await expect(dialog.getByRole("img", { name: "Last repotted" })).toContainText("0d");
   });
 
   test("clicking outside the edit view returns to the plant list", async ({ page, request }) => {

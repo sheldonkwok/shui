@@ -31,6 +31,7 @@ export async function getPlants() {
       wateringCount: plant.wateringCount,
       lastWatered: plant.lastWatered ? new Date(plant.lastWatered) : null,
       lastFertilized: plant.lastFertilized ?? null,
+      lastRepotted: plant.lastRepotted ?? null,
       avgWateringIntervalDays: plant.avgIntervalDays ?? null,
       daysUntilNextWatering: plant.daysUntilNextWatering,
     }))

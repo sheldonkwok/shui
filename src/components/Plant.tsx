@@ -64,6 +64,7 @@ export function Plant({ plant, gap = false }: PlantProps) {
           species={plant.species}
           lastWatered={plant.lastWatered}
           lastFertilized={plant.lastFertilized}
+          lastRepotted={plant.lastRepotted}
           avgWateringIntervalDays={plant.avgWateringIntervalDays}
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}

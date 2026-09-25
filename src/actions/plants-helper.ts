@@ -12,6 +12,7 @@ export async function listPlants() {
       lastWatered: wateringSummary.lastWatered,
       avgIntervalDays: wateringSummary.avgIntervalDays,
       lastFertilized: wateringSummary.lastFertilized,
+      lastRepotted: wateringSummary.lastRepotted,
       daysUntilNextWatering: sql<number | null>`
         CASE
           WHEN ${wateringSummary.avgIntervalDays} IS NOT NULL
@@ -51,17 +52,26 @@ export async function refreshWateringSummary() {
 export async function getWateringHistory(plantId: number, days: number) {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   return getDB()
-    .select({ id: waterings.id, wateringTime: waterings.wateringTime, fertilized: waterings.fertilized })
+    .select({
+      id: waterings.id,
+      wateringTime: waterings.wateringTime,
+      fertilized: waterings.fertilized,
+      repot: waterings.repot,
+    })
     .from(waterings)
     .where(and(eq(waterings.plantId, plantId), gte(waterings.wateringTime, since)))
     .orderBy(asc(waterings.wateringTime));
 }
 
-/** Flips the fertilized flag on a single watering. Returns false if it isn't this plant's. */
-export async function setWateringFertilized(plantId: number, wateringId: number, fertilized: boolean) {
+/** Updates the flags on a single watering. Returns false if it isn't this plant's. */
+export async function updateWatering(
+  plantId: number,
+  wateringId: number,
+  patch: { fertilized?: boolean; repot?: boolean },
+) {
   const updated = await getDB()
     .update(waterings)
-    .set({ fertilized })
+    .set(patch)
     .where(and(eq(waterings.id, wateringId), eq(waterings.plantId, plantId)))
     .returning();
   return updated.length > 0;
