@@ -7,6 +7,7 @@ import { apiClient } from "../api/client.ts";
 import { useSession } from "../hooks/useSession.ts";
 import { cls } from "../styles/palette.ts";
 import type { PlantWithStats } from "../types.ts";
+import { MonsteraPixel } from "./MonsteraPixel.tsx";
 import { Plant } from "./Plant.tsx";
 
 const container = cva("mb-10");
@@ -119,11 +120,11 @@ export function PlantListClient({ plants }: PlantListClientProps) {
             onClick={handleSproutClick}
             className={sproutButton()}
           >
-            <img src="/pixel-potted-leaf.png" alt="" className="w-8 h-8 [image-rendering:pixelated]" />
+            <MonsteraPixel />
           </button>
         ) : (
           <a href="/auth/google" aria-label="Log in to add a plant" className={sproutButton()}>
-            <img src="/pixel-potted-leaf.png" alt="" className="w-8 h-8 [image-rendering:pixelated]" />
+            <MonsteraPixel />
           </a>
         )}
         <div className={panelCard()}>

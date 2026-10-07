@@ -3,7 +3,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { PlantListClient } from "./PlantListClient.tsx";
 
@@ -14,7 +14,13 @@ vi.mock("waku", () => ({
   }),
 }));
 
+// jsdom does not provide a canvas renderer; browser checks cover the artwork.
+beforeEach(() => {
+  vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
+});
+
 afterEach(() => {
+  vi.restoreAllMocks();
   document.cookie = "is_authenticated=; max-age=0";
 });
 
