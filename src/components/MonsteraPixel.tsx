@@ -14,6 +14,6 @@ export function MonsteraPixel() {
   }, []);
 
   return (
-    <canvas ref={canvasRef} width={48} height={48} aria-hidden="true" tabIndex={-1} className={leaf()} />
+    <canvas ref={canvasRef} width={64} height={64} aria-hidden="true" tabIndex={-1} className={leaf()} />
   );
 }
