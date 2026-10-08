@@ -15,15 +15,21 @@ vi.mock("waku", () => ({
   }),
 }));
 
+// Control the login state directly instead of faking the auth cookie.
+const session = vi.hoisted(() => ({ loggedIn: false }));
+vi.mock("../hooks/useSession.ts", () => ({
+  useSession: () => session,
+}));
+
 // jsdom does not provide a canvas renderer; browser checks cover the artwork.
 beforeEach(() => {
   reload.mockClear();
+  session.loggedIn = false;
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
-  document.cookie = "is_authenticated=; max-age=0";
 });
 
 describe("PlantListClient sprout control", () => {
@@ -36,7 +42,7 @@ describe("PlantListClient sprout control", () => {
   });
 
   it("shows the add-plant button when logged in", async () => {
-    document.cookie = "is_authenticated=1";
+    session.loggedIn = true;
 
     render(<PlantListClient plants={[]} />);
 
@@ -47,7 +53,7 @@ describe("PlantListClient sprout control", () => {
 
 describe("PlantListClient add plant failure", () => {
   it("keeps the draft and shows an error when the create request fails", async () => {
-    document.cookie = "is_authenticated=1";
+    session.loggedIn = true;
     const fetchMock = vi
       .fn()
       .mockResolvedValue(new Response(JSON.stringify({ error: "boom" }), { status: 500 }));
