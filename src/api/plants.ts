@@ -1,6 +1,6 @@
 import { arktypeValidator } from "@hono/arktype-validator";
 import { type } from "arktype";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { classifyPlant } from "../actions/plants.ts";
 import {
@@ -39,6 +39,8 @@ export const plantsRouter = new Hono()
     }
     const { fertilized } = c.req.valid("json");
     await getDB().insert(waterings).values({ plantId, fertilized });
+    // Watering resets the schedule, so any pending delay no longer applies.
+    await getDB().delete(plantDelays).where(eq(plantDelays.plantId, plantId));
     await refreshWateringSummary();
     return c.json({ ok: true }, 201);
   })
@@ -89,17 +91,20 @@ export const plantsRouter = new Hono()
       return c.json({ error: "Invalid plant ID" }, 400);
     }
     const { numDays } = c.req.valid("json");
-    try {
-      await getDB().insert(plantDelays).values({ plantId, numDays });
-      return c.json({ ok: true }, 201);
-    } catch (error) {
-      const cause =
-        error instanceof Error ? (error as Error & { cause?: { code?: string } }).cause : undefined;
-      if (cause?.code === "23505") {
-        return c.json({ error: "A delay already exists for this plant" }, 409);
-      }
-      throw error;
-    }
+    // A new delay extends an active one by numDays; an expired one restarts from now.
+    // Both SET expressions read the existing row's values.
+    const active = sql`EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400 < ${plantDelays.numDays}`;
+    await getDB()
+      .insert(plantDelays)
+      .values({ plantId, numDays })
+      .onConflictDoUpdate({
+        target: plantDelays.plantId,
+        set: {
+          numDays: sql`CASE WHEN ${active} THEN ${plantDelays.numDays} + ${numDays} ELSE ${numDays} END`,
+          dateAdded: sql`CASE WHEN ${active} THEN ${plantDelays.dateAdded} ELSE NOW() END`,
+        },
+      });
+    return c.json({ ok: true }, 201);
   })
   .post("/:id/classify", arktypeValidator("json", classifySchema), async (c) => {
     const plantId = Number(c.req.param("id"));

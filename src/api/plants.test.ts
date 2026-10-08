@@ -1,6 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanupTestDB, seedPlant, seedWatering } from "../test-utils.ts";
+import { getPlants } from "../actions/plants.ts";
+import { cleanupTestDB, seedDelay, seedPlant, seedWatering } from "../test-utils.ts";
 import { app } from "./index.ts";
+
+const DAY = 24 * 60 * 60 * 1000;
 
 describe("POST /api/plants", () => {
   beforeEach(async () => {
@@ -359,14 +362,12 @@ describe("POST /api/plants/:id/delay", () => {
     expect(body).toEqual({ ok: true });
   });
 
-  it("should return 409 when a delay already exists for the plant", async () => {
+  it("should restart from now when the existing delay has expired", async () => {
     const plantId = await seedPlant("Cactus");
-
-    await app.request(`/api/plants/${plantId}/delay`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ numDays: 3 }),
-    });
+    await seedWatering(plantId, new Date(Date.now() - 10 * DAY));
+    await seedWatering(plantId, new Date(Date.now() - 17 * DAY));
+    // An old, expired delay must not block a new one
+    await seedDelay(plantId, 3, new Date(Date.now() - 30 * DAY));
 
     const res = await app.request(`/api/plants/${plantId}/delay`, {
       method: "POST",
@@ -374,7 +375,42 @@ describe("POST /api/plants/:id/delay", () => {
       body: JSON.stringify({ numDays: 5 }),
     });
 
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(201);
+    const [plant] = await getPlants();
+    expect(plant?.daysUntilNextWatering).toBe(5);
+  });
+
+  it("should extend an active delay by the new number of days", async () => {
+    const plantId = await seedPlant("Aloe");
+    await seedWatering(plantId, new Date(Date.now() - 10 * DAY));
+    await seedWatering(plantId, new Date(Date.now() - 17 * DAY));
+    // 5-day delay set 2 days ago => 3 days remain
+    await seedDelay(plantId, 5, new Date(Date.now() - 2 * DAY));
+
+    const res = await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 4 }),
+    });
+
+    expect(res.status).toBe(201);
+    const [plant] = await getPlants();
+    expect(plant?.daysUntilNextWatering).toBe(7);
+  });
+
+  it("should clear the delay when the plant is watered", async () => {
+    const plantId = await seedPlant("Fig");
+    await seedWatering(plantId, new Date(Date.now() - 7 * DAY));
+    await seedDelay(plantId, 30, new Date());
+
+    await app.request(`/api/plants/${plantId}/water`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: false }),
+    });
+
+    const [plant] = await getPlants();
+    expect(plant?.daysUntilNextWatering).toBe(7);
   });
 
   it("should return 400 for a non-integer plant ID", async () => {

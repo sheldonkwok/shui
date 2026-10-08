@@ -169,18 +169,65 @@ describe("getPlants - watering intervals", () => {
     expect(result[0]?.avgWateringIntervalDays).toBe(0.5);
   });
 
-  it("should add delay days to daysUntilNextWatering when delay has not expired", async () => {
+  it("should push the next watering to N days from when the delay was set", async () => {
     const plantId = await seedPlant("Delayed Plant");
     // Last watered 6 days ago, avg interval 7 days => daysUntilNextWatering = 1 without delay
     await seedWatering(plantId, new Date(time - 6 * DAY));
     await seedWatering(plantId, new Date(time - 13 * DAY));
-    // Add a 3-day delay initiated just now (0 calendar days have passed)
+    // Add a 3-day delay initiated just now
     await seedDelay(plantId, 3, now);
 
     const result = await getPlants();
 
-    // daysUntilNextWatering = 7 - 6 + 3 = 4
-    expect(result[0]?.daysUntilNextWatering).toBe(4);
+    expect(result[0]?.daysUntilNextWatering).toBe(3);
+  });
+
+  it("should delay an overdue plant by the full delay rather than offsetting its overdue days", async () => {
+    const plantId = await seedPlant("Overdue Delayed Plant");
+    // Last watered 10 days ago, avg interval 7 days => 3 days overdue
+    await seedWatering(plantId, new Date(time - 10 * DAY));
+    await seedWatering(plantId, new Date(time - 17 * DAY));
+    await seedDelay(plantId, 5, now);
+
+    const result = await getPlants();
+
+    expect(result[0]?.daysUntilNextWatering).toBe(5);
+  });
+
+  it("should count down an active delay as days pass", async () => {
+    const plantId = await seedPlant("Counting Down Plant");
+    await seedWatering(plantId, new Date(time - 10 * DAY));
+    await seedWatering(plantId, new Date(time - 17 * DAY));
+    // 5-day delay set 2 days ago => 3 days remain
+    await seedDelay(plantId, 5, new Date(time - 2 * DAY));
+
+    const result = await getPlants();
+
+    expect(result[0]?.daysUntilNextWatering).toBe(3);
+  });
+
+  it("should not let a delay pull the schedule earlier", async () => {
+    const plantId = await seedPlant("Not Due Plant");
+    // Watered just now, avg interval 7 days => 7 days until next watering
+    await seedWatering(plantId, now);
+    await seedWatering(plantId, new Date(time - 7 * DAY));
+    await seedDelay(plantId, 2, now);
+
+    const result = await getPlants();
+
+    expect(result[0]?.daysUntilNextWatering).toBe(7);
+  });
+
+  it("should fall back to the overdue schedule once the delay expires", async () => {
+    const plantId = await seedPlant("Expired Overdue Plant");
+    // Last watered 10 days ago, avg interval 7 days => 3 days overdue
+    await seedWatering(plantId, new Date(time - 10 * DAY));
+    await seedWatering(plantId, new Date(time - 17 * DAY));
+    await seedDelay(plantId, 2, new Date(time - 2 * DAY));
+
+    const result = await getPlants();
+
+    expect(result[0]?.daysUntilNextWatering).toBe(-3);
   });
 
   it("should not use the delay when calendar days elapsed exceeds the delay", async () => {
