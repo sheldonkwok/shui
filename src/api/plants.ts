@@ -1,6 +1,6 @@
 import { arktypeValidator } from "@hono/arktype-validator";
 import { type } from "arktype";
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import { classifyPlant } from "../actions/plants.ts";
 import {
@@ -132,8 +132,12 @@ export const plantsRouter = new Hono()
     if (!Number.isInteger(plantId) || plantId <= 0) {
       return c.json({ error: "Invalid plant ID" }, 400);
     }
-    await getDB().delete(waterings).where(eq(waterings.plantId, plantId));
-    await getDB().delete(plantDelays).where(eq(plantDelays.plantId, plantId));
-    await getDB().delete(plants).where(eq(plants.id, plantId));
+    // Soft delete: keep the plant row and its waterings so history survives.
+    const deleted = await getDB()
+      .update(plants)
+      .set({ deletedAt: sql`NOW()` })
+      .where(and(eq(plants.id, plantId), isNull(plants.deletedAt)))
+      .returning();
+    if (deleted.length === 0) return c.json({ error: "Plant not found" }, 404);
     return c.json({ ok: true });
   });

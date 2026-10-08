@@ -1,5 +1,8 @@
+import { eq } from "drizzle-orm";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { getPlants } from "../actions/plants.ts";
+import { getDB } from "../db.ts";
+import { plants, waterings } from "../schema.ts";
 import { cleanupTestDB, seedDelay, seedPlant, seedWatering } from "../test-utils.ts";
 import { app } from "./index.ts";
 
@@ -564,6 +567,56 @@ describe("PATCH /api/plants/:id", () => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: 123 }),
     });
+
+    expect(res.status).toBe(400);
+  });
+});
+
+describe("DELETE /api/plants/:id", () => {
+  beforeEach(async () => {
+    await cleanupTestDB();
+  });
+
+  it("should soft delete the plant and keep its waterings", async () => {
+    const plantId = await seedPlant("Fern");
+    const otherId = await seedPlant("Cactus");
+    await seedWatering(plantId, new Date(), false);
+    await seedWatering(plantId, new Date(Date.now() - DAY), true);
+
+    const res = await app.request(`/api/plants/${plantId}`, { method: "DELETE" });
+
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ ok: true });
+
+    const listed = await getPlants();
+    expect(listed.map((p) => p.id)).toEqual([otherId]);
+
+    const [row] = await getDB().select().from(plants).where(eq(plants.id, plantId));
+    expect(row?.deletedAt).toBeInstanceOf(Date);
+    const kept = await getDB().select().from(waterings).where(eq(waterings.plantId, plantId));
+    expect(kept).toHaveLength(2);
+  });
+
+  it("should return 404 for a plant that does not exist", async () => {
+    const res = await app.request("/api/plants/999", { method: "DELETE" });
+
+    expect(res.status).toBe(404);
+  });
+
+  it("should return 404 for an already deleted plant and keep the original deletedAt", async () => {
+    const plantId = await seedPlant("Fern");
+    await app.request(`/api/plants/${plantId}`, { method: "DELETE" });
+    const [first] = await getDB().select().from(plants).where(eq(plants.id, plantId));
+
+    const res = await app.request(`/api/plants/${plantId}`, { method: "DELETE" });
+
+    expect(res.status).toBe(404);
+    const [second] = await getDB().select().from(plants).where(eq(plants.id, plantId));
+    expect(second?.deletedAt).toEqual(first?.deletedAt);
+  });
+
+  it("should return 400 for a non-integer plant ID", async () => {
+    const res = await app.request("/api/plants/abc", { method: "DELETE" });
 
     expect(res.status).toBe(400);
   });
