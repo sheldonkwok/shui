@@ -34,6 +34,7 @@ export async function getPlants() {
       lastRepotted: plant.lastRepotted ?? null,
       avgWateringIntervalDays: plant.avgIntervalDays ?? null,
       daysUntilNextWatering: plant.daysUntilNextWatering,
+      delayDaysRemaining: plant.delayDaysRemaining,
     }))
     .sort((a, b) => {
       if (a.daysUntilNextWatering === b.daysUntilNextWatering) return 0;

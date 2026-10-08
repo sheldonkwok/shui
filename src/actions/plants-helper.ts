@@ -2,6 +2,16 @@ import { and, asc, eq, gte, isNull, sql } from "drizzle-orm";
 import { getDB } from "../db.ts";
 import { plantDelays, plants, wateringSummary, waterings } from "../schema.ts";
 
+// Days left on the plant's delay, or NULL when it has expired or was never set.
+const delayDaysLeft = sql`
+  CASE
+    WHEN EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400
+         < ${plantDelays.numDays}
+    THEN ${plantDelays.numDays}::numeric
+         - EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400
+  END
+`;
+
 export async function listPlants() {
   const data = await getDB()
     .select({
@@ -24,18 +34,14 @@ export async function listPlants() {
             GREATEST(
               ${wateringSummary.avgIntervalDays}::numeric
                 - EXTRACT(EPOCH FROM (NOW() - ${wateringSummary.lastWatered})) / 86400,
-              CASE
-                WHEN EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400
-                     < ${plantDelays.numDays}
-                THEN ${plantDelays.numDays}::numeric
-                     - EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400
-              END
+              ${delayDaysLeft}
             ),
             1
           )::float
           ELSE NULL
         END
       `,
+      delayDaysRemaining: sql<number | null>`CEIL(${delayDaysLeft})::integer`,
     })
     .from(plants)
     .leftJoin(wateringSummary, eq(plants.id, wateringSummary.plantId))
