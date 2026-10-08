@@ -17,17 +17,19 @@ export async function listPlants() {
         CASE
           WHEN ${wateringSummary.avgIntervalDays} IS NOT NULL
            AND ${wateringSummary.lastWatered} IS NOT NULL
+          -- An active delay means "next watering is N days from when it was set".
+          -- GREATEST skips the NULL from an expired/missing delay and never pulls
+          -- the schedule earlier than it already was.
           THEN ROUND(
-            (
+            GREATEST(
               ${wateringSummary.avgIntervalDays}::numeric
-              - EXTRACT(EPOCH FROM (NOW() - ${wateringSummary.lastWatered})) / 86400
-              + CASE
-                  WHEN ${plantDelays.numDays} IS NOT NULL
-                   AND EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400
-                       < ${plantDelays.numDays}
-                  THEN ${plantDelays.numDays}::numeric
-                  ELSE 0
-                END
+                - EXTRACT(EPOCH FROM (NOW() - ${wateringSummary.lastWatered})) / 86400,
+              CASE
+                WHEN EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400
+                     < ${plantDelays.numDays}
+                THEN ${plantDelays.numDays}::numeric
+                     - EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400
+              END
             ),
             1
           )::float

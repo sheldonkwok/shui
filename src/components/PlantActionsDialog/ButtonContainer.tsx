@@ -24,6 +24,7 @@ const delayGroupButton = cva([
   cls.hoverBgHover,
   "disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
+const delayError = cva(["text-[11px] leading-tight text-red-700 text-center"]);
 
 interface ButtonContainerProps {
   plantId: number;
@@ -37,21 +38,27 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
   const [fertilizeToggled, setFertilizeToggled] = useState(false);
   const [delayDays, setDelayDays] = useState<number | "">(1);
   const [isWatering, setIsWatering] = useState(false);
+  const [delayFailed, setDelayFailed] = useState(false);
 
   useEffect(() => {
     if (!open) {
       setFertilizeToggled(false);
       setDelayDays(1);
       setIsWatering(false);
+      setDelayFailed(false);
     }
   }, [open]);
 
   const handleDelay = async () => {
     if (!delayDays || delayDays < 1) return;
-    await apiClient.api.plants[":id"].delay.$post({
+    const res = await apiClient.api.plants[":id"].delay.$post({
       param: { id: String(plantId) },
       json: { numDays: delayDays },
     });
+    if (!res.ok) {
+      setDelayFailed(true);
+      return;
+    }
     onOpenChange(false);
     router.reload();
   };
@@ -116,6 +123,11 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
           <TimerReset size={16} />
         </button>
       </ButtonGroup>
+      {delayFailed && (
+        <p className={delayError()} role="alert">
+          Couldn't delay
+        </p>
+      )}
     </div>
   );
 }
