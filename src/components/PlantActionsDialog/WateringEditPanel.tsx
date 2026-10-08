@@ -32,6 +32,7 @@ const siblingNav = cva(["flex items-center gap-0.5 text-[13px]", cls.textSeconda
 const statsList = cva("flex flex-col gap-2");
 const statRow = cva(["flex items-center gap-2 text-[13px]", cls.textSecondary]);
 const controls = cva("flex items-center gap-2.5");
+const panelError = cva("text-[11px] leading-tight text-red-700");
 const deleteButton = cva([
   cls.borderInput,
   "ml-auto flex h-10 items-center gap-1.5 rounded-md border bg-transparent px-3 text-[13px] text-red-700 cursor-pointer transition-colors hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed",
@@ -63,6 +64,7 @@ export function WateringEditPanel({
   onChanged,
 }: WateringEditPanelProps) {
   const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
   const wateredAt = new Date(watering.wateringTime);
 
   // Several waterings can share a calendar cell; the grid opens the last one and
@@ -75,12 +77,19 @@ export function WateringEditPanel({
 
   const handleFlagChange = async (patch: { fertilized?: boolean; repot?: boolean }) => {
     setPending(true);
+    setFailed(false);
     try {
-      await apiClient.api.plants[":id"].waterings[":wateringId"].$patch({
+      const res = await apiClient.api.plants[":id"].waterings[":wateringId"].$patch({
         param: { id: String(plantId), wateringId: String(watering.id) },
         json: patch,
       });
+      if (!res.ok) {
+        setFailed(true);
+        return;
+      }
       onChanged();
+    } catch {
+      setFailed(true);
     } finally {
       setPending(false);
     }
@@ -88,12 +97,19 @@ export function WateringEditPanel({
 
   const handleDelete = async () => {
     setPending(true);
+    setFailed(false);
     try {
-      await apiClient.api.plants[":id"].waterings[":wateringId"].$delete({
+      const res = await apiClient.api.plants[":id"].waterings[":wateringId"].$delete({
         param: { id: String(plantId), wateringId: String(watering.id) },
       });
+      if (!res.ok) {
+        setFailed(true);
+        return;
+      }
       onChanged();
       onBack();
+    } catch {
+      setFailed(true);
     } finally {
       setPending(false);
     }
@@ -193,6 +209,11 @@ export function WateringEditPanel({
           Delete
         </button>
       </div>
+      {failed && (
+        <p className={panelError()} role="alert">
+          Couldn't save changes
+        </p>
+      )}
     </div>
   );
 }

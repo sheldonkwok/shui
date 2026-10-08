@@ -13,13 +13,7 @@ async function runListPlants(): Promise<string> {
 
   if (plants.length === 0) return "No plants found.";
 
-  const sorted = [...plants].sort((a, b) => {
-    const aVal = a.daysUntilNextWatering ?? Infinity;
-    const bVal = b.daysUntilNextWatering ?? Infinity;
-    return aVal - bVal;
-  });
-
-  const lines = sorted.map((p) => {
+  const lines = plants.map((p) => {
     const name = p.species ? `${p.name} (${p.species})` : p.name;
     if (p.daysUntilNextWatering === null) {
       return `- [ID ${p.id}] ${name}: no watering data yet`;

@@ -2,26 +2,34 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { PlantListClient } from "./PlantListClient.tsx";
 
 // Mock waku router
+const reload = vi.fn();
 vi.mock("waku", () => ({
   useRouter: () => ({
-    reload: vi.fn(),
+    reload,
   }),
+}));
+
+// Control the login state directly instead of faking the auth cookie.
+const session = vi.hoisted(() => ({ loggedIn: false }));
+vi.mock("../hooks/useSession.ts", () => ({
+  useSession: () => session,
 }));
 
 // jsdom does not provide a canvas renderer; browser checks cover the artwork.
 beforeEach(() => {
+  reload.mockClear();
+  session.loggedIn = false;
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 });
 
 afterEach(() => {
   vi.restoreAllMocks();
-  document.cookie = "is_authenticated=; max-age=0";
 });
 
 describe("PlantListClient sprout control", () => {
@@ -34,11 +42,35 @@ describe("PlantListClient sprout control", () => {
   });
 
   it("shows the add-plant button when logged in", async () => {
-    document.cookie = "is_authenticated=1";
+    session.loggedIn = true;
 
     render(<PlantListClient plants={[]} />);
 
     expect(await screen.findByRole("button", { name: "Add a new plant" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Log in to add a plant" })).not.toBeInTheDocument();
+  });
+});
+
+describe("PlantListClient add plant failure", () => {
+  it("keeps the draft and shows an error when the create request fails", async () => {
+    session.loggedIn = true;
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ error: "boom" }), { status: 500 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<PlantListClient plants={[]} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Add a new plant" }));
+    const input = screen.getByPlaceholderText("Add a new plant");
+    fireEvent.change(input, { target: { value: "Fern" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't add plant");
+    await waitFor(() => expect(screen.getByPlaceholderText("Add a new plant")).toBeEnabled());
+    expect(screen.getByPlaceholderText("Add a new plant")).toHaveValue("Fern");
+    expect(reload).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 });

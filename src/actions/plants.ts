@@ -23,25 +23,16 @@ export async function classifyPlant(
 export async function getPlants() {
   const plantsList = await listPlants();
 
-  const results = plantsList
-    .map((plant) => ({
-      id: plant.id,
-      name: plant.name,
-      species: plant.species ?? null,
-      wateringCount: plant.wateringCount,
-      lastWatered: plant.lastWatered ? new Date(plant.lastWatered) : null,
-      lastFertilized: plant.lastFertilized ?? null,
-      lastRepotted: plant.lastRepotted ?? null,
-      avgWateringIntervalDays: plant.avgIntervalDays ?? null,
-      daysUntilNextWatering: plant.daysUntilNextWatering,
-      delayDaysRemaining: plant.delayDaysRemaining,
-    }))
-    .sort((a, b) => {
-      if (a.daysUntilNextWatering === b.daysUntilNextWatering) return 0;
-      if (a.daysUntilNextWatering === null) return 1;
-      if (b.daysUntilNextWatering === null) return -1;
-      return a.daysUntilNextWatering - b.daysUntilNextWatering;
-    });
-
-  return results;
+  return plantsList.map((plant) => ({
+    id: plant.id,
+    name: plant.name,
+    species: plant.species ?? null,
+    wateringCount: plant.wateringCount,
+    lastWatered: plant.lastWatered ? new Date(plant.lastWatered) : null,
+    lastFertilized: plant.lastFertilized ?? null,
+    lastRepotted: plant.lastRepotted ?? null,
+    avgWateringIntervalDays: plant.avgIntervalDays ?? null,
+    daysUntilNextWatering: plant.daysUntilNextWatering,
+    delayDaysRemaining: plant.delayDaysRemaining,
+  }));
 }

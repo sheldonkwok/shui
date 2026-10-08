@@ -260,24 +260,28 @@ describe("getPlants - watering intervals", () => {
     expect(result[0]?.daysUntilNextWatering).toBe(1);
   });
 
-  it("should sort plants by daysUntilNextWatering ascending", async () => {
-    const closestId = await seedPlant("Closest");
+  it("should sort plants by daysUntilNextWatering ascending with plants lacking data last", async () => {
+    // Seeded in an order unrelated to urgency so the result can't be insertion order.
+    const neverWateredId = await seedPlant("Never Watered");
     const nearId = await seedPlant("Near");
-    const fartherId = await seedPlant("Farther");
+    const overdueId = await seedPlant("Overdue");
+    const closestId = await seedPlant("Closest");
 
+    // 3 days overdue
+    await seedWatering(overdueId, new Date(time - 10 * DAY));
+    await seedWatering(overdueId, new Date(time - 17 * DAY));
+
+    // 4 days until next watering (avg interval 7, last watered 3 days ago)
     await seedWatering(closestId, new Date(time - 3 * DAY));
-    await seedWatering(closestId, new Date(time - 6 * DAY));
+    await seedWatering(closestId, new Date(time - 10 * DAY));
 
+    // 1 day until next watering
     await seedWatering(nearId, new Date(time - 6 * DAY));
     await seedWatering(nearId, new Date(time - 13 * DAY));
 
-    await seedWatering(fartherId, new Date(time - 10 * DAY));
-    await seedWatering(fartherId, new Date(time - 17 * DAY));
-
     const result = await getPlants();
-    const ids = result.map((p) => p.id);
 
-    expect(ids.indexOf(fartherId)).toBeLessThan(ids.indexOf(closestId));
-    expect(ids.indexOf(closestId)).toBeLessThan(ids.indexOf(nearId));
+    expect(result.map((p) => p.id)).toEqual([overdueId, nearId, closestId, neverWateredId]);
+    expect(result.at(-1)?.daysUntilNextWatering).toBeNull();
   });
 });

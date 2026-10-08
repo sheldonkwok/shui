@@ -29,6 +29,7 @@ const draftInput = cva([
   cls.borderBPrimaryGreen,
   "flex-1 min-w-0 bg-transparent border-0 border-b-2 outline-none text-base font-medium py-1 px-0.5",
 ]);
+const addError = cva("px-3 pt-1 text-[11px] leading-tight text-red-700");
 const list = cva("list-none p-0 m-0 pt-[14px]");
 const noPlants = cva(["text-center italic p-5", cls.textMuted]);
 
@@ -53,17 +54,12 @@ function thirstBand(daysUntilNextWatering: number | null): number {
   return 2;
 }
 
-/** Sorts thirstiest-first, flagging rows where the thirst band changes so a silent gap can be rendered. */
-function sortByThirst(plants: PlantWithStats[]) {
-  const sorted = [...plants].sort((a, b) => {
-    const daysA = a.daysUntilNextWatering ?? Number.POSITIVE_INFINITY;
-    const daysB = b.daysUntilNextWatering ?? Number.POSITIVE_INFINITY;
-    return daysA - daysB;
-  });
-  return sorted.map((plant, i) => ({
+/** Flags rows where the thirst band changes so a silent gap can be rendered. Expects plants already sorted thirstiest-first. */
+function withBandGaps(plants: PlantWithStats[]) {
+  return plants.map((plant, i) => ({
     plant,
     gap:
-      i > 0 && thirstBand(plant.daysUntilNextWatering) !== thirstBand(sorted[i - 1]!.daysUntilNextWatering),
+      i > 0 && thirstBand(plant.daysUntilNextWatering) !== thirstBand(plants[i - 1]!.daysUntilNextWatering),
   }));
 }
 
@@ -74,10 +70,11 @@ interface PlantListClientProps {
 export function PlantListClient({ plants }: PlantListClientProps) {
   const { loggedIn } = useSession();
   const router = useRouter();
-  const sortedPlants = useMemo(() => sortByThirst(plants), [plants]);
+  const rows = useMemo(() => withBandGaps(plants), [plants]);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const [addFailed, setAddFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -91,10 +88,17 @@ export function PlantListClient({ plants }: PlantListClientProps) {
       return;
     }
     setPending(true);
+    setAddFailed(false);
     try {
-      await apiClient.api.plants.$post({ json: { name } });
+      const res = await apiClient.api.plants.$post({ json: { name } });
+      if (!res.ok) {
+        setAddFailed(true);
+        return;
+      }
       setDraft("");
       router.reload();
+    } catch {
+      setAddFailed(true);
     } finally {
       setPending(false);
     }
@@ -134,7 +138,10 @@ export function PlantListClient({ plants }: PlantListClientProps) {
               <input
                 ref={inputRef}
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  setAddFailed(false);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -143,6 +150,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
                   if (e.key === "Escape") {
                     setAdding(false);
                     setDraft("");
+                    setAddFailed(false);
                   }
                 }}
                 onBlur={() => {
@@ -154,9 +162,14 @@ export function PlantListClient({ plants }: PlantListClientProps) {
               />
             </div>
           )}
+          {addFailed && (
+            <p className={addError()} role="alert">
+              Couldn't add plant
+            </p>
+          )}
           {plants.length > 0 ? (
             <ul className={list()}>
-              {sortedPlants.map(({ plant, gap }) => (
+              {rows.map(({ plant, gap }) => (
                 <Plant key={plant.id} plant={plant} gap={gap} />
               ))}
             </ul>

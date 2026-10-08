@@ -1,5 +1,5 @@
 import { and, asc, eq, gte, isNull, sql } from "drizzle-orm";
-import { getDB } from "../db.ts";
+import { type DBExecutor, getDB } from "../db.ts";
 import { plantDelays, plants, wateringSummary, waterings } from "../schema.ts";
 
 // Days left on the plant's delay, or NULL when it has expired or was never set.
@@ -12,6 +12,27 @@ const delayDaysLeft = sql`
   END
 `;
 
+// Days until the plant's next watering (negative when overdue), or NULL with no watering data.
+const daysUntilNextWatering = sql<number | null>`
+    CASE
+      WHEN ${wateringSummary.avgIntervalDays} IS NOT NULL
+       AND ${wateringSummary.lastWatered} IS NOT NULL
+      -- An active delay means "next watering is N days from when it was set".
+      -- GREATEST skips the NULL from an expired/missing delay and never pulls
+      -- the schedule earlier than it already was.
+      THEN ROUND(
+        GREATEST(
+          ${wateringSummary.avgIntervalDays}::numeric
+            - EXTRACT(EPOCH FROM (NOW() - ${wateringSummary.lastWatered})) / 86400,
+          ${delayDaysLeft}
+        ),
+        1
+      )::float
+      ELSE NULL
+    END
+  `;
+
+/** Active plants, thirstiest first (nulls last), with id as a stable tiebreaker. */
 export async function listPlants() {
   const data = await getDB()
     .select({
@@ -23,37 +44,20 @@ export async function listPlants() {
       avgIntervalDays: wateringSummary.avgIntervalDays,
       lastFertilized: wateringSummary.lastFertilized,
       lastRepotted: wateringSummary.lastRepotted,
-      daysUntilNextWatering: sql<number | null>`
-        CASE
-          WHEN ${wateringSummary.avgIntervalDays} IS NOT NULL
-           AND ${wateringSummary.lastWatered} IS NOT NULL
-          -- An active delay means "next watering is N days from when it was set".
-          -- GREATEST skips the NULL from an expired/missing delay and never pulls
-          -- the schedule earlier than it already was.
-          THEN ROUND(
-            GREATEST(
-              ${wateringSummary.avgIntervalDays}::numeric
-                - EXTRACT(EPOCH FROM (NOW() - ${wateringSummary.lastWatered})) / 86400,
-              ${delayDaysLeft}
-            ),
-            1
-          )::float
-          ELSE NULL
-        END
-      `,
+      daysUntilNextWatering,
       delayDaysRemaining: sql<number | null>`CEIL(${delayDaysLeft})::integer`,
     })
     .from(plants)
     .leftJoin(wateringSummary, eq(plants.id, wateringSummary.plantId))
     .leftJoin(plantDelays, eq(plants.id, plantDelays.plantId))
     .where(isNull(plants.deletedAt))
-    .orderBy(asc(wateringSummary.lastWatered));
+    .orderBy(sql`${daysUntilNextWatering} ASC NULLS LAST`, asc(plants.id));
 
   return data;
 }
 
-export async function refreshWateringSummary() {
-  await getDB().refreshMaterializedView(wateringSummary);
+export async function refreshWateringSummary(db: DBExecutor = getDB()) {
+  await db.refreshMaterializedView(wateringSummary);
 }
 
 /** Raw watering events for a plant within the last `days` days, oldest first. */
@@ -76,8 +80,9 @@ export async function updateWatering(
   plantId: number,
   wateringId: number,
   patch: { fertilized?: boolean; repot?: boolean },
+  db: DBExecutor = getDB(),
 ) {
-  const updated = await getDB()
+  const updated = await db
     .update(waterings)
     .set(patch)
     .where(and(eq(waterings.id, wateringId), eq(waterings.plantId, plantId)))
@@ -86,8 +91,8 @@ export async function updateWatering(
 }
 
 /** Removes a single watering. Returns false if it isn't this plant's. */
-export async function deleteWatering(plantId: number, wateringId: number) {
-  const deleted = await getDB()
+export async function deleteWatering(plantId: number, wateringId: number, db: DBExecutor = getDB()) {
+  const deleted = await db
     .delete(waterings)
     .where(and(eq(waterings.id, wateringId), eq(waterings.plantId, plantId)))
     .returning();

@@ -39,6 +39,7 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
   const [delayDays, setDelayDays] = useState<number | "">(1);
   const [isWatering, setIsWatering] = useState(false);
   const [delayFailed, setDelayFailed] = useState(false);
+  const [waterFailed, setWaterFailed] = useState(false);
 
   useEffect(() => {
     if (!open) {
@@ -46,16 +47,23 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
       setDelayDays(1);
       setIsWatering(false);
       setDelayFailed(false);
+      setWaterFailed(false);
     }
   }, [open]);
 
   const handleDelay = async () => {
     if (!delayDays || delayDays < 1) return;
-    const res = await apiClient.api.plants[":id"].delay.$post({
-      param: { id: String(plantId) },
-      json: { numDays: delayDays },
-    });
-    if (!res.ok) {
+    setDelayFailed(false);
+    try {
+      const res = await apiClient.api.plants[":id"].delay.$post({
+        param: { id: String(plantId) },
+        json: { numDays: delayDays },
+      });
+      if (!res.ok) {
+        setDelayFailed(true);
+        return;
+      }
+    } catch {
       setDelayFailed(true);
       return;
     }
@@ -65,12 +73,23 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
 
   const handleWater = async () => {
     setIsWatering(true);
-    await apiClient.api.plants[":id"].water.$post({
-      param: { id: String(plantId) },
-      json: { fertilized: fertilizeToggled },
-    });
-    setFertilizeToggled(false);
-    setIsWatering(false);
+    setWaterFailed(false);
+    try {
+      const res = await apiClient.api.plants[":id"].water.$post({
+        param: { id: String(plantId) },
+        json: { fertilized: fertilizeToggled },
+      });
+      if (!res.ok) {
+        setWaterFailed(true);
+        return;
+      }
+      setFertilizeToggled(false);
+    } catch {
+      setWaterFailed(true);
+      return;
+    } finally {
+      setIsWatering(false);
+    }
     onOpenChange(false);
     router.reload();
   };
@@ -123,6 +142,11 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
           <TimerReset size={16} />
         </button>
       </ButtonGroup>
+      {waterFailed && (
+        <p className={delayError()} role="alert">
+          Couldn't water
+        </p>
+      )}
       {delayFailed && (
         <p className={delayError()} role="alert">
           Couldn't delay
