@@ -54,7 +54,7 @@ Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `c
 
 ## Hooks
 
-Claude Code hooks live in `.claude/hooks/` and are registered in `.claude/settings.json`. See `.claude/hooks/README.md` for how to write and test one.
+Claude Code hooks live in `.claude/hooks/` and are registered in `.claude/settings.json`.
 
 - **SessionStart** — installs dependencies and sets up the e2e database. Runs automatically, including in cloud sessions.
 - **Stop** — linting, type checking, migrations, unit tests, e2e tests.
