@@ -21,6 +21,7 @@ interface PlantActionsDialogProps {
   lastFertilized: Date | null;
   lastRepotted: Date | null;
   avgWateringIntervalDays: number | null;
+  delayDaysRemaining: number | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -44,6 +45,7 @@ export function PlantActionsDialog({
   lastFertilized: lastFertilizedDate,
   lastRepotted: lastRepottedDate,
   avgWateringIntervalDays,
+  delayDaysRemaining,
   open,
   onOpenChange,
 }: PlantActionsDialogProps) {
@@ -100,6 +102,7 @@ export function PlantActionsDialog({
               <PlantStats
                 lastWateredDate={lastWateredDate}
                 avgWateringIntervalDays={avgWateringIntervalDays}
+                delayDaysRemaining={delayDaysRemaining}
                 lastFertilizedDate={lastFertilizedDate}
                 lastRepottedDate={lastRepottedDate}
               />

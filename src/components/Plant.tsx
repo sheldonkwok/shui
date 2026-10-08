@@ -66,6 +66,7 @@ export function Plant({ plant, gap = false }: PlantProps) {
           lastFertilized={plant.lastFertilized}
           lastRepotted={plant.lastRepotted}
           avgWateringIntervalDays={plant.avgWateringIntervalDays}
+          delayDaysRemaining={plant.delayDaysRemaining}
           open={isDialogOpen}
           onOpenChange={setIsDialogOpen}
         />

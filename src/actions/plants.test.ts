@@ -204,6 +204,7 @@ describe("getPlants - watering intervals", () => {
     const result = await getPlants();
 
     expect(result[0]?.daysUntilNextWatering).toBe(3);
+    expect(result[0]?.delayDaysRemaining).toBe(3);
   });
 
   it("should not let a delay pull the schedule earlier", async () => {
@@ -242,6 +243,7 @@ describe("getPlants - watering intervals", () => {
 
     // Delay is expired, so daysUntilNextWatering = 7 - 6 = 1
     expect(result[0]?.daysUntilNextWatering).toBe(1);
+    expect(result[0]?.delayDaysRemaining).toBeNull();
   });
 
   it("should not use the delay when calendar days elapsed equals the delay", async () => {

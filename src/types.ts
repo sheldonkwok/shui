@@ -8,6 +8,8 @@ export interface PlantWithStats {
   lastRepotted: Date | null;
   avgWateringIntervalDays: number | null;
   daysUntilNextWatering: number | null;
+  /** Whole days left on an active watering delay, or null when there is none. */
+  delayDaysRemaining: number | null;
 }
 
 /** A single watering event, as returned by `GET /api/plants/:id/waterings`. */
