@@ -1,5 +1,5 @@
 import { and, asc, eq, gte, isNull, sql } from "drizzle-orm";
-import { getDB } from "../db.ts";
+import { type DBExecutor, getDB } from "../db.ts";
 import { plantDelays, plants, wateringSummary, waterings } from "../schema.ts";
 
 // Days left on the plant's delay, or NULL when it has expired or was never set.
@@ -52,8 +52,8 @@ export async function listPlants() {
   return data;
 }
 
-export async function refreshWateringSummary() {
-  await getDB().refreshMaterializedView(wateringSummary);
+export async function refreshWateringSummary(db: DBExecutor = getDB()) {
+  await db.refreshMaterializedView(wateringSummary);
 }
 
 /** Raw watering events for a plant within the last `days` days, oldest first. */
@@ -76,8 +76,9 @@ export async function updateWatering(
   plantId: number,
   wateringId: number,
   patch: { fertilized?: boolean; repot?: boolean },
+  db: DBExecutor = getDB(),
 ) {
-  const updated = await getDB()
+  const updated = await db
     .update(waterings)
     .set(patch)
     .where(and(eq(waterings.id, wateringId), eq(waterings.plantId, plantId)))
@@ -86,8 +87,8 @@ export async function updateWatering(
 }
 
 /** Removes a single watering. Returns false if it isn't this plant's. */
-export async function deleteWatering(plantId: number, wateringId: number) {
-  const deleted = await getDB()
+export async function deleteWatering(plantId: number, wateringId: number, db: DBExecutor = getDB()) {
+  const deleted = await db
     .delete(waterings)
     .where(and(eq(waterings.id, wateringId), eq(waterings.plantId, plantId)))
     .returning();

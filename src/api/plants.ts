@@ -38,10 +38,19 @@ export const plantsRouter = new Hono()
       return c.json({ error: "Invalid plant ID" }, 400);
     }
     const { fertilized } = c.req.valid("json");
-    await getDB().insert(waterings).values({ plantId, fertilized });
-    // Watering resets the schedule, so any pending delay no longer applies.
-    await getDB().delete(plantDelays).where(eq(plantDelays.plantId, plantId));
-    await refreshWateringSummary();
+    const found = await getDB().transaction(async (tx) => {
+      const [plant] = await tx
+        .select({ id: plants.id })
+        .from(plants)
+        .where(and(eq(plants.id, plantId), isNull(plants.deletedAt)));
+      if (!plant) return false;
+      await tx.insert(waterings).values({ plantId, fertilized });
+      // Watering resets the schedule, so any pending delay no longer applies.
+      await tx.delete(plantDelays).where(eq(plantDelays.plantId, plantId));
+      await refreshWateringSummary(tx);
+      return true;
+    });
+    if (!found) return c.json({ error: "Plant not found" }, 404);
     return c.json({ ok: true }, 201);
   })
   .get("/:id/waterings", async (c) => {
@@ -69,9 +78,12 @@ export const plantsRouter = new Hono()
     if (fertilized === undefined && repot === undefined) {
       return c.json({ error: "Nothing to update" }, 400);
     }
-    const updated = await updateWatering(plantId, wateringId, { fertilized, repot });
+    const updated = await getDB().transaction(async (tx) => {
+      const ok = await updateWatering(plantId, wateringId, { fertilized, repot }, tx);
+      if (ok) await refreshWateringSummary(tx);
+      return ok;
+    });
     if (!updated) return c.json({ error: "Watering not found" }, 404);
-    await refreshWateringSummary();
     return c.json({ ok: true });
   })
   .delete("/:id/waterings/:wateringId", async (c) => {
@@ -80,9 +92,12 @@ export const plantsRouter = new Hono()
     if (!isValidId(plantId) || !isValidId(wateringId)) {
       return c.json({ error: "Invalid ID" }, 400);
     }
-    const deleted = await deleteWatering(plantId, wateringId);
+    const deleted = await getDB().transaction(async (tx) => {
+      const ok = await deleteWatering(plantId, wateringId, tx);
+      if (ok) await refreshWateringSummary(tx);
+      return ok;
+    });
     if (!deleted) return c.json({ error: "Watering not found" }, 404);
-    await refreshWateringSummary();
     return c.json({ ok: true });
   })
   .post("/:id/delay", arktypeValidator("json", delaySchema), async (c) => {

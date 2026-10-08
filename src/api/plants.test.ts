@@ -106,6 +106,33 @@ describe("POST /api/plants/:id/water", () => {
     const body = await list.json();
     expect(body.waterings).toEqual([expect.objectContaining({ repot: false })]);
   });
+
+  it("should return 404 when watering a plant that does not exist", async () => {
+    const res = await app.request("/api/plants/999/water", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: false }),
+    });
+
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: "Plant not found" });
+  });
+
+  it("should return 404 and insert nothing when watering a soft-deleted plant", async () => {
+    const plantId = await seedPlant("Fern");
+    await getDB().update(plants).set({ deletedAt: new Date() }).where(eq(plants.id, plantId));
+
+    const res = await app.request(`/api/plants/${plantId}/water`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ fertilized: false }),
+    });
+
+    expect(res.status).toBe(404);
+    expect(await res.json()).toEqual({ error: "Plant not found" });
+    const rows = await getDB().select().from(waterings).where(eq(waterings.plantId, plantId));
+    expect(rows).toHaveLength(0);
+  });
 });
 
 describe("GET /api/plants/:id/waterings", () => {

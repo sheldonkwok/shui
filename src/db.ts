@@ -24,3 +24,8 @@ export function getDB() {
 
   return db;
 }
+
+type DB = ReturnType<typeof getDB>;
+
+/** Either the DB itself or a transaction handle, for either driver (PGlite or postgres-js). */
+export type DBExecutor = DB | Parameters<Parameters<DB["transaction"]>[0]>[0];
