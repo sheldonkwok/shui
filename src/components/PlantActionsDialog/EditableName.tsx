@@ -7,6 +7,7 @@ import { DialogTitle } from "../ui/Dialog.tsx";
 const nameInput = cva(
   "w-full text-lg pt-1 pb-0 border-0 border-b-2 bg-transparent focus:outline-none truncate",
 );
+const nameError = cva("text-[11px] leading-tight text-red-700");
 const nameInputReadOnly = cva("border-b-transparent cursor-pointer hover:opacity-70");
 const nameInputEditing = cva(["cursor-text", cls.borderBPrimaryGreen]);
 
@@ -20,6 +21,7 @@ interface EditableNameProps {
 export function EditableName({ plantId, plantName, onRenamed, canEdit }: EditableNameProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(plantName);
+  const [renameFailed, setRenameFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleNameClick = () => {
@@ -32,12 +34,25 @@ export function EditableName({ plantId, plantName, onRenamed, canEdit }: Editabl
     setIsEditing(false);
     const trimmed = name.trim();
     if (trimmed && trimmed !== plantName) {
-      await apiClient.api.plants[":id"].$patch({
-        param: { id: String(plantId) },
-        json: { name: trimmed },
-      });
+      try {
+        const res = await apiClient.api.plants[":id"].$patch({
+          param: { id: String(plantId) },
+          json: { name: trimmed },
+        });
+        if (!res.ok) {
+          setName(plantName);
+          setRenameFailed(true);
+          return;
+        }
+      } catch {
+        setName(plantName);
+        setRenameFailed(true);
+        return;
+      }
+      setRenameFailed(false);
       onRenamed();
     } else {
+      setRenameFailed(false);
       setName(plantName);
     }
   };
@@ -65,6 +80,11 @@ export function EditableName({ plantId, plantName, onRenamed, canEdit }: Editabl
         onBlur={handleNameBlur}
         onKeyDown={handleNameKeyDown}
       />
+      {renameFailed && (
+        <p className={nameError()} role="alert">
+          Couldn't rename
+        </p>
+      )}
     </>
   );
 }

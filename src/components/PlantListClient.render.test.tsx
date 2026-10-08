@@ -2,20 +2,22 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { PlantListClient } from "./PlantListClient.tsx";
 
 // Mock waku router
+const reload = vi.fn();
 vi.mock("waku", () => ({
   useRouter: () => ({
-    reload: vi.fn(),
+    reload,
   }),
 }));
 
 // jsdom does not provide a canvas renderer; browser checks cover the artwork.
 beforeEach(() => {
+  reload.mockClear();
   vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(null);
 });
 
@@ -40,5 +42,29 @@ describe("PlantListClient sprout control", () => {
 
     expect(await screen.findByRole("button", { name: "Add a new plant" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Log in to add a plant" })).not.toBeInTheDocument();
+  });
+});
+
+describe("PlantListClient add plant failure", () => {
+  it("keeps the draft and shows an error when the create request fails", async () => {
+    document.cookie = "is_authenticated=1";
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(JSON.stringify({ error: "boom" }), { status: 500 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    render(<PlantListClient plants={[]} />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Add a new plant" }));
+    const input = screen.getByPlaceholderText("Add a new plant");
+    fireEvent.change(input, { target: { value: "Fern" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Couldn't add plant");
+    await waitFor(() => expect(screen.getByPlaceholderText("Add a new plant")).toBeEnabled());
+    expect(screen.getByPlaceholderText("Add a new plant")).toHaveValue("Fern");
+    expect(reload).not.toHaveBeenCalled();
+
+    vi.unstubAllGlobals();
   });
 });

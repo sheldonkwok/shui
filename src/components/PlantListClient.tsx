@@ -29,6 +29,7 @@ const draftInput = cva([
   cls.borderBPrimaryGreen,
   "flex-1 min-w-0 bg-transparent border-0 border-b-2 outline-none text-base font-medium py-1 px-0.5",
 ]);
+const addError = cva("px-3 pt-1 text-[11px] leading-tight text-red-700");
 const list = cva("list-none p-0 m-0 pt-[14px]");
 const noPlants = cva(["text-center italic p-5", cls.textMuted]);
 
@@ -78,6 +79,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
+  const [addFailed, setAddFailed] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -91,10 +93,17 @@ export function PlantListClient({ plants }: PlantListClientProps) {
       return;
     }
     setPending(true);
+    setAddFailed(false);
     try {
-      await apiClient.api.plants.$post({ json: { name } });
+      const res = await apiClient.api.plants.$post({ json: { name } });
+      if (!res.ok) {
+        setAddFailed(true);
+        return;
+      }
       setDraft("");
       router.reload();
+    } catch {
+      setAddFailed(true);
     } finally {
       setPending(false);
     }
@@ -134,7 +143,10 @@ export function PlantListClient({ plants }: PlantListClientProps) {
               <input
                 ref={inputRef}
                 value={draft}
-                onChange={(e) => setDraft(e.target.value)}
+                onChange={(e) => {
+                  setDraft(e.target.value);
+                  setAddFailed(false);
+                }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -143,6 +155,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
                   if (e.key === "Escape") {
                     setAdding(false);
                     setDraft("");
+                    setAddFailed(false);
                   }
                 }}
                 onBlur={() => {
@@ -153,6 +166,11 @@ export function PlantListClient({ plants }: PlantListClientProps) {
                 className={draftInput()}
               />
             </div>
+          )}
+          {addFailed && (
+            <p className={addError()} role="alert">
+              Couldn't add plant
+            </p>
           )}
           {plants.length > 0 ? (
             <ul className={list()}>
