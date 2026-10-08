@@ -362,7 +362,7 @@ describe("POST /api/plants/:id/delay", () => {
     expect(body).toEqual({ ok: true });
   });
 
-  it("should replace an existing delay for the plant", async () => {
+  it("should restart from now when the existing delay has expired", async () => {
     const plantId = await seedPlant("Cactus");
     await seedWatering(plantId, new Date(Date.now() - 10 * DAY));
     await seedWatering(plantId, new Date(Date.now() - 17 * DAY));
@@ -378,6 +378,24 @@ describe("POST /api/plants/:id/delay", () => {
     expect(res.status).toBe(201);
     const [plant] = await getPlants();
     expect(plant?.daysUntilNextWatering).toBe(5);
+  });
+
+  it("should extend an active delay by the new number of days", async () => {
+    const plantId = await seedPlant("Aloe");
+    await seedWatering(plantId, new Date(Date.now() - 10 * DAY));
+    await seedWatering(plantId, new Date(Date.now() - 17 * DAY));
+    // 5-day delay set 2 days ago => 3 days remain
+    await seedDelay(plantId, 5, new Date(Date.now() - 2 * DAY));
+
+    const res = await app.request(`/api/plants/${plantId}/delay`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ numDays: 4 }),
+    });
+
+    expect(res.status).toBe(201);
+    const [plant] = await getPlants();
+    expect(plant?.daysUntilNextWatering).toBe(7);
   });
 
   it("should clear the delay when the plant is watered", async () => {

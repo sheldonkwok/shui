@@ -91,13 +91,18 @@ export const plantsRouter = new Hono()
       return c.json({ error: "Invalid plant ID" }, 400);
     }
     const { numDays } = c.req.valid("json");
-    // A new delay replaces any previous one (active or expired) and restarts from now.
+    // A new delay extends an active one by numDays; an expired one restarts from now.
+    // Both SET expressions read the existing row's values.
+    const active = sql`EXTRACT(EPOCH FROM (NOW() - ${plantDelays.dateAdded})) / 86400 < ${plantDelays.numDays}`;
     await getDB()
       .insert(plantDelays)
       .values({ plantId, numDays })
       .onConflictDoUpdate({
         target: plantDelays.plantId,
-        set: { numDays, dateAdded: sql`NOW()` },
+        set: {
+          numDays: sql`CASE WHEN ${active} THEN ${plantDelays.numDays} + ${numDays} ELSE ${numDays} END`,
+          dateAdded: sql`CASE WHEN ${active} THEN ${plantDelays.dateAdded} ELSE NOW() END`,
+        },
       });
     return c.json({ ok: true }, 201);
   })
