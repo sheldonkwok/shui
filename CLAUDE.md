@@ -149,6 +149,7 @@ openssl rand -base64 32
 1. Stage your changes with `git add`
 1. Commit with conventional commit style
 1. Push your changes
+1. Cloud agents (Claude.ai): after the first push of new code on a branch, open a pull request automatically without waiting to be asked. Later pushes update that same PR.
 
 Following these guidelines ensures code quality and maintains a clean, understandable commit history.
 
