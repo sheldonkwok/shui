@@ -7,4 +7,8 @@ fi
 
 pnpm install
 
-pnpm exec playwright install --with-deps chromium
+# The preinstalled Chromium is used directly (see test-e2e.sh); only download
+# one when it is missing.
+if [ ! -e /opt/pw-browsers/chromium ]; then
+  pnpm exec playwright install --with-deps chromium
+fi
