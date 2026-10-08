@@ -2,12 +2,14 @@
 
 import { cva, cx } from "class-variance-authority";
 import { useEffect, useRef, useState } from "react";
+import { apiClient } from "../../api/client.ts";
 import { cls } from "../../styles/palette.ts";
 import { Popover, PopoverAnchor, PopoverContent } from "../ui/Popover.tsx";
 
 const speciesInput = cva(
   "text-sm font-normal italic w-full border-0 border-b-2 bg-transparent focus:outline-none",
 );
+const speciesError = cva("text-[11px] leading-tight text-red-700 not-italic");
 const speciesInputReadOnly = cva("border-b-transparent cursor-pointer hover:opacity-70");
 const speciesInputEditing = cva(["cursor-text", cls.borderBPrimaryGreen]);
 const suggestionItem = cva(["px-2 py-1.5 text-sm cursor-pointer rounded-sm", cls.hoverBgHover]);
@@ -29,6 +31,7 @@ export function EditableSpecies({ plantId, species, onClassified, canEdit }: Edi
   const [inputValue, setInputValue] = useState(species ?? "");
   const [suggestions, setSuggestions] = useState<GbifSuggestion[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [classifyError, setClassifyError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const committingRef = useRef(false);
@@ -69,6 +72,7 @@ export function EditableSpecies({ plantId, species, onClassified, canEdit }: Edi
   const classify = async (value: string) => {
     const trimmed = value.trim();
     if (!trimmed || trimmed === species) {
+      setClassifyError(null);
       setInputValue(species ?? "");
       setIsEditing(false);
       setSuggestions([]);
@@ -76,18 +80,20 @@ export function EditableSpecies({ plantId, species, onClassified, canEdit }: Edi
       return;
     }
     try {
-      const res = await fetch(`/api/plants/${plantId}/classify`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ species: trimmed }),
+      const res = await apiClient.api.plants[":id"].classify.$post({
+        param: { id: String(plantId) },
+        json: { species: trimmed },
       });
       if (res.ok) {
+        setClassifyError(null);
         onClassified();
       } else {
         setInputValue(species ?? "");
+        setClassifyError(res.status === 422 ? "Species not found" : "Couldn't save species");
       }
     } catch {
       setInputValue(species ?? "");
+      setClassifyError("Couldn't save species");
     }
     setIsEditing(false);
     setSuggestions([]);
@@ -123,6 +129,7 @@ export function EditableSpecies({ plantId, species, onClassified, canEdit }: Edi
     }
     if (e.key === "Escape") {
       committingRef.current = true;
+      setClassifyError(null);
       setInputValue(species ?? "");
       setIsEditing(false);
       setSuggestions([]);
@@ -131,42 +138,49 @@ export function EditableSpecies({ plantId, species, onClassified, canEdit }: Edi
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={setIsOpen}>
-      <PopoverAnchor asChild>
-        <input
-          ref={inputRef}
-          className={cx(speciesInput(), isEditing ? speciesInputEditing() : speciesInputReadOnly())}
-          readOnly={!isEditing}
-          value={inputValue}
-          placeholder={canEdit && !isEditing ? "Add species..." : undefined}
-          onChange={(e) => {
-            setInputValue(e.target.value);
-            fetchSuggestions(e.target.value);
-          }}
-          onClick={handleClick}
-          onBlur={handleBlur}
-          onKeyDown={handleKeyDown}
-        />
-      </PopoverAnchor>
-      <PopoverContent
-        className="w-64 p-1"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onInteractOutside={() => setIsOpen(false)}
-      >
-        {suggestions.map((s) => (
-          <button
-            key={s.scientificName}
-            type="button"
-            className={cx(suggestionItem())}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleSuggestionSelect(s.canonicalName);
+    <>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
+        <PopoverAnchor asChild>
+          <input
+            ref={inputRef}
+            className={cx(speciesInput(), isEditing ? speciesInputEditing() : speciesInputReadOnly())}
+            readOnly={!isEditing}
+            value={inputValue}
+            placeholder={canEdit && !isEditing ? "Add species..." : undefined}
+            onChange={(e) => {
+              setInputValue(e.target.value);
+              fetchSuggestions(e.target.value);
             }}
-          >
-            {s.canonicalName}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
+            onClick={handleClick}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+          />
+        </PopoverAnchor>
+        <PopoverContent
+          className="w-64 p-1"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onInteractOutside={() => setIsOpen(false)}
+        >
+          {suggestions.map((s) => (
+            <button
+              key={s.scientificName}
+              type="button"
+              className={cx(suggestionItem())}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSuggestionSelect(s.canonicalName);
+              }}
+            >
+              {s.canonicalName}
+            </button>
+          ))}
+        </PopoverContent>
+      </Popover>
+      {classifyError && (
+        <p className={speciesError()} role="alert">
+          {classifyError}
+        </p>
+      )}
+    </>
   );
 }
