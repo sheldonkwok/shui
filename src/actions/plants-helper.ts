@@ -12,6 +12,27 @@ const delayDaysLeft = sql`
   END
 `;
 
+// Days until the plant's next watering (negative when overdue), or NULL with no watering data.
+const daysUntilNextWatering = sql<number | null>`
+    CASE
+      WHEN ${wateringSummary.avgIntervalDays} IS NOT NULL
+       AND ${wateringSummary.lastWatered} IS NOT NULL
+      -- An active delay means "next watering is N days from when it was set".
+      -- GREATEST skips the NULL from an expired/missing delay and never pulls
+      -- the schedule earlier than it already was.
+      THEN ROUND(
+        GREATEST(
+          ${wateringSummary.avgIntervalDays}::numeric
+            - EXTRACT(EPOCH FROM (NOW() - ${wateringSummary.lastWatered})) / 86400,
+          ${delayDaysLeft}
+        ),
+        1
+      )::float
+      ELSE NULL
+    END
+  `;
+
+/** Active plants, thirstiest first (nulls last), with id as a stable tiebreaker. */
 export async function listPlants() {
   const data = await getDB()
     .select({
@@ -23,31 +44,14 @@ export async function listPlants() {
       avgIntervalDays: wateringSummary.avgIntervalDays,
       lastFertilized: wateringSummary.lastFertilized,
       lastRepotted: wateringSummary.lastRepotted,
-      daysUntilNextWatering: sql<number | null>`
-        CASE
-          WHEN ${wateringSummary.avgIntervalDays} IS NOT NULL
-           AND ${wateringSummary.lastWatered} IS NOT NULL
-          -- An active delay means "next watering is N days from when it was set".
-          -- GREATEST skips the NULL from an expired/missing delay and never pulls
-          -- the schedule earlier than it already was.
-          THEN ROUND(
-            GREATEST(
-              ${wateringSummary.avgIntervalDays}::numeric
-                - EXTRACT(EPOCH FROM (NOW() - ${wateringSummary.lastWatered})) / 86400,
-              ${delayDaysLeft}
-            ),
-            1
-          )::float
-          ELSE NULL
-        END
-      `,
+      daysUntilNextWatering,
       delayDaysRemaining: sql<number | null>`CEIL(${delayDaysLeft})::integer`,
     })
     .from(plants)
     .leftJoin(wateringSummary, eq(plants.id, wateringSummary.plantId))
     .leftJoin(plantDelays, eq(plants.id, plantDelays.plantId))
     .where(isNull(plants.deletedAt))
-    .orderBy(asc(wateringSummary.lastWatered));
+    .orderBy(sql`${daysUntilNextWatering} ASC NULLS LAST`, asc(plants.id));
 
   return data;
 }

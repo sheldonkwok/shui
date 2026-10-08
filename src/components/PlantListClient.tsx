@@ -54,17 +54,12 @@ function thirstBand(daysUntilNextWatering: number | null): number {
   return 2;
 }
 
-/** Sorts thirstiest-first, flagging rows where the thirst band changes so a silent gap can be rendered. */
-function sortByThirst(plants: PlantWithStats[]) {
-  const sorted = [...plants].sort((a, b) => {
-    const daysA = a.daysUntilNextWatering ?? Number.POSITIVE_INFINITY;
-    const daysB = b.daysUntilNextWatering ?? Number.POSITIVE_INFINITY;
-    return daysA - daysB;
-  });
-  return sorted.map((plant, i) => ({
+/** Flags rows where the thirst band changes so a silent gap can be rendered. Expects plants already sorted thirstiest-first. */
+function withBandGaps(plants: PlantWithStats[]) {
+  return plants.map((plant, i) => ({
     plant,
     gap:
-      i > 0 && thirstBand(plant.daysUntilNextWatering) !== thirstBand(sorted[i - 1]!.daysUntilNextWatering),
+      i > 0 && thirstBand(plant.daysUntilNextWatering) !== thirstBand(plants[i - 1]!.daysUntilNextWatering),
   }));
 }
 
@@ -75,7 +70,7 @@ interface PlantListClientProps {
 export function PlantListClient({ plants }: PlantListClientProps) {
   const { loggedIn } = useSession();
   const router = useRouter();
-  const sortedPlants = useMemo(() => sortByThirst(plants), [plants]);
+  const rows = useMemo(() => withBandGaps(plants), [plants]);
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -174,7 +169,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
           )}
           {plants.length > 0 ? (
             <ul className={list()}>
-              {sortedPlants.map(({ plant, gap }) => (
+              {rows.map(({ plant, gap }) => (
                 <Plant key={plant.id} plant={plant} gap={gap} />
               ))}
             </ul>
