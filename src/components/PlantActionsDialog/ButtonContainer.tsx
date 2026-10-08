@@ -4,9 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../../api/client.ts";
 import { cls, colors } from "../../styles/palette.ts";
-import { ButtonGroup } from "../ui/ButtonGroup.tsx";
-import { Input } from "../ui/Input.tsx";
 import { Toggle } from "../ui/Toggle.tsx";
+import { WheelSelect } from "../ui/WheelSelect.tsx";
 
 const waterButton = cva([
   cls.bgWaterBlue,
@@ -18,12 +17,14 @@ const buttonContainer = cva([
   "w-[104px] min-[480px]:w-[122px] box-border flex-shrink-0 mt-[18px] pt-0 pr-2.5 pb-[18px] pl-2.5 min-[480px]:pr-3.5 min-[480px]:pl-3.5 flex flex-col gap-2.5 border-l border-[#e5e7eb]",
 ]);
 const delayGroupButton = cva([
-  "inline-flex flex-1 items-center justify-center self-stretch border bg-transparent transition-colors",
+  "inline-flex h-9 flex-1 items-center justify-center rounded-md border bg-transparent transition-colors",
   cls.borderInput,
   cls.textPrimaryGreen,
   cls.hoverBgHover,
   "disabled:opacity-40 disabled:cursor-not-allowed",
 ]);
+const delayRow = cva("flex w-full items-center gap-1.5");
+const DEFAULT_DELAY_DAYS = 3;
 const delayError = cva(["text-[11px] leading-tight text-red-700 text-center"]);
 
 interface ButtonContainerProps {
@@ -36,7 +37,7 @@ interface ButtonContainerProps {
 export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: ButtonContainerProps) {
   const router = useRouter();
   const [fertilizeToggled, setFertilizeToggled] = useState(false);
-  const [delayDays, setDelayDays] = useState<number | "">(1);
+  const [delayDays, setDelayDays] = useState(DEFAULT_DELAY_DAYS);
   const [isWatering, setIsWatering] = useState(false);
   const [delayFailed, setDelayFailed] = useState(false);
   const [waterFailed, setWaterFailed] = useState(false);
@@ -44,7 +45,7 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
   useEffect(() => {
     if (!open) {
       setFertilizeToggled(false);
-      setDelayDays(1);
+      setDelayDays(DEFAULT_DELAY_DAYS);
       setIsWatering(false);
       setDelayFailed(false);
       setWaterFailed(false);
@@ -52,7 +53,7 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
   }, [open]);
 
   const handleDelay = async () => {
-    if (!delayDays || delayDays < 1) return;
+    if (delayDays < 1) return;
     setDelayFailed(false);
     try {
       const res = await apiClient.api.plants[":id"].delay.$post({
@@ -120,28 +121,25 @@ export function ButtonContainer({ plantId, loggedIn, open, onOpenChange }: Butto
           color={fertilizeToggled ? colors.lightGreen : undefined}
         />
       </Toggle>
-      <ButtonGroup className="w-full">
-        <Input
-          type="number"
-          min={1}
+      <div className={delayRow()}>
+        <WheelSelect
           value={delayDays}
-          onChange={(e) => setDelayDays(e.target.value === "" ? "" : Number(e.target.value))}
+          onChange={setDelayDays}
+          min={1}
+          max={7}
           disabled={!loggedIn}
           aria-label="Delay days"
-          // min-w-0 so the number input's intrinsic size (spinner + default cols)
-          // doesn't win over the width and push the delay button out of the dialog.
-          className="w-12 min-w-0 px-1 min-[480px]:w-14 min-[480px]:px-3 text-center"
         />
         <button
           className={delayGroupButton()}
           type="button"
           onClick={handleDelay}
-          disabled={!loggedIn || !delayDays || delayDays < 1}
+          disabled={!loggedIn}
           aria-label="Delay watering"
         >
           <TimerReset size={16} />
         </button>
-      </ButtonGroup>
+      </div>
       {waterFailed && (
         <p className={delayError()} role="alert">
           Couldn't water
