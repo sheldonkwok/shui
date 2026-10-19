@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { useRouter } from "waku";
 import { useSession } from "../../hooks/useSession.ts";
 import { useWaterings } from "../../hooks/useWaterings.ts";
+import type { PlantLocation } from "../../types.ts";
 import { Dialog, DialogContent } from "../ui/Dialog.tsx";
 import { ButtonContainer } from "./ButtonContainer.tsx";
 import { EditableName } from "./EditableName.tsx";
 import { EditableSpecies } from "./EditableSpecies.tsx";
+import { LocationButton } from "./LocationButton.tsx";
 import { PlantStats } from "./PlantStats.tsx";
 import { WateringEditPanel } from "./WateringEditPanel.tsx";
 import { WateringHistoryGrid } from "./WateringHistoryGrid.tsx";
@@ -17,6 +19,7 @@ interface PlantActionsDialogProps {
   plantId: number;
   plantName: string;
   species: string | null;
+  location: PlantLocation;
   lastWatered: Date | null;
   lastFertilized: Date | null;
   lastRepotted: Date | null;
@@ -35,12 +38,15 @@ const editBody = cva("flex flex-col overflow-hidden p-0");
 const leftBlock = cva(
   "w-[186px] min-w-0 box-border pt-[18px] pr-2 pb-[18px] pl-3.5 min-[480px]:pr-3 min-[480px]:pl-5 flex flex-col gap-3.5",
 );
+// Outdoor plants have no per-plant watering, so the name block gets the whole dialog.
+const outdoorBlock = cva("w-full box-border p-[18px] min-[480px]:px-5 flex flex-col gap-3.5");
 const nameBlock = cva("flex flex-col gap-0.5");
 
 export function PlantActionsDialog({
   plantId,
   plantName,
   species,
+  location,
   lastWatered: lastWateredDate,
   lastFertilized: lastFertilizedDate,
   lastRepotted: lastRepottedDate,
@@ -51,7 +57,8 @@ export function PlantActionsDialog({
 }: PlantActionsDialogProps) {
   const router = useRouter();
   const { loggedIn } = useSession();
-  const { waterings, reload } = useWaterings(plantId, open);
+  const outdoor = location === "outdoor";
+  const { waterings, reload } = useWaterings(plantId, open && !outdoor);
   const [editingId, setEditingId] = useState<number | null>(null);
 
   // Closing the dialog drops the user back on the plant list, so the next open
@@ -84,7 +91,7 @@ export function PlantActionsDialog({
           />
         ) : (
           <>
-            <div className={leftBlock()}>
+            <div className={outdoor ? outdoorBlock() : leftBlock()}>
               <div className={nameBlock()}>
                 <EditableName
                   plantId={plantId}
@@ -99,16 +106,36 @@ export function PlantActionsDialog({
                   canEdit={loggedIn}
                 />
               </div>
-              <PlantStats
-                lastWateredDate={lastWateredDate}
-                avgWateringIntervalDays={avgWateringIntervalDays}
-                delayDaysRemaining={delayDaysRemaining}
-                lastFertilizedDate={lastFertilizedDate}
-                lastRepottedDate={lastRepottedDate}
+              {!outdoor && (
+                <PlantStats
+                  lastWateredDate={lastWateredDate}
+                  avgWateringIntervalDays={avgWateringIntervalDays}
+                  delayDaysRemaining={delayDaysRemaining}
+                  lastFertilizedDate={lastFertilizedDate}
+                  lastRepottedDate={lastRepottedDate}
+                />
+              )}
+              <LocationButton
+                plantId={plantId}
+                location={location}
+                canEdit={loggedIn}
+                onMoved={() => {
+                  onOpenChange(false);
+                  router.reload();
+                }}
               />
             </div>
-            <WateringHistoryGrid waterings={waterings} onSelectWatering={setEditingId} />
-            <ButtonContainer plantId={plantId} loggedIn={loggedIn} open={open} onOpenChange={onOpenChange} />
+            {!outdoor && (
+              <>
+                <WateringHistoryGrid waterings={waterings} onSelectWatering={setEditingId} />
+                <ButtonContainer
+                  plantId={plantId}
+                  loggedIn={loggedIn}
+                  open={open}
+                  onOpenChange={onOpenChange}
+                />
+              </>
+            )}
           </>
         )}
       </DialogContent>

@@ -27,6 +27,7 @@ export async function getPlants() {
     id: plant.id,
     name: plant.name,
     species: plant.species ?? null,
+    location: plant.location,
     wateringCount: plant.wateringCount,
     lastWatered: plant.lastWatered ? new Date(plant.lastWatered) : null,
     lastFertilized: plant.lastFertilized ?? null,

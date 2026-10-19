@@ -26,6 +26,22 @@ describe("POST /api/plants", () => {
     expect(typeof body.id).toBe("number");
   });
 
+  it("should default new plants to indoors and accept an outdoor location", async () => {
+    for (const body of [{ name: "Pothos" }, { name: "Rose", location: "outdoor" }]) {
+      await app.request("/api/plants", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    }
+
+    const list = await getPlants();
+    expect(list.map((p) => [p.name, p.location])).toEqual([
+      ["Pothos", "indoor"],
+      ["Rose", "outdoor"],
+    ]);
+  });
+
   it("should return 400 for an invalid body", async () => {
     const res = await app.request("/api/plants", {
       method: "POST",
@@ -593,6 +609,44 @@ describe("PATCH /api/plants/:id", () => {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name: 123 }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should move a plant outdoors", async () => {
+    const plantId = await seedPlant("Patio Fig");
+
+    const res = await app.request(`/api/plants/${plantId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ location: "outdoor" }),
+    });
+
+    expect(res.status).toBe(200);
+    const [plant] = await getPlants();
+    expect(plant).toMatchObject({ name: "Patio Fig", location: "outdoor" });
+  });
+
+  it("should return 400 for an unknown location", async () => {
+    const plantId = await seedPlant("Patio Fig");
+
+    const res = await app.request(`/api/plants/${plantId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ location: "balcony" }),
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it("should return 400 when there is nothing to update", async () => {
+    const plantId = await seedPlant("Patio Fig");
+
+    const res = await app.request(`/api/plants/${plantId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({}),
     });
 
     expect(res.status).toBe(400);

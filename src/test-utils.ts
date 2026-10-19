@@ -1,9 +1,20 @@
 import { sql } from "drizzle-orm";
 import { getDB } from "./db.ts";
-import { plantDelays, plants, wateringSummary, waterings } from "./schema.ts";
+import {
+  choreCompletions,
+  chores,
+  irrigationRuns,
+  plantDelays,
+  plants,
+  wateringSummary,
+  waterings,
+} from "./schema.ts";
 
 export async function cleanupTestDB() {
   const db = getDB();
+  await db.delete(choreCompletions);
+  await db.delete(chores);
+  await db.delete(irrigationRuns);
   await db.delete(plantDelays);
   await db.delete(waterings);
   await db.delete(plants);
@@ -11,13 +22,16 @@ export async function cleanupTestDB() {
   await db.execute(sql`ALTER SEQUENCE plants_id_seq RESTART WITH 1`);
   await db.execute(sql`ALTER SEQUENCE waterings_id_seq RESTART WITH 1`);
   await db.execute(sql`ALTER SEQUENCE plant_delays_id_seq RESTART WITH 1`);
+  await db.execute(sql`ALTER SEQUENCE chores_id_seq RESTART WITH 1`);
+  await db.execute(sql`ALTER SEQUENCE chore_completions_id_seq RESTART WITH 1`);
+  await db.execute(sql`ALTER SEQUENCE irrigation_runs_id_seq RESTART WITH 1`);
   await db.refreshMaterializedView(wateringSummary);
 }
 
-export async function seedPlant(name: string): Promise<number> {
+export async function seedPlant(name: string, location: "indoor" | "outdoor" = "indoor"): Promise<number> {
   const db = getDB();
 
-  const result = await db.insert(plants).values({ name }).returning();
+  const result = await db.insert(plants).values({ name, location }).returning();
 
   return result[0]!.id;
 }

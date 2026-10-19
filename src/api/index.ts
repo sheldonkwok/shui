@@ -1,9 +1,14 @@
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import { authCheckMiddleware } from "../auth.ts";
+import { gardenRouter } from "./garden.ts";
 import { plantsRouter } from "./plants.ts";
 
-export const app = new Hono().basePath("/api").use(authCheckMiddleware).route("/plants", plantsRouter);
+export const app = new Hono()
+  .basePath("/api")
+  .use(authCheckMiddleware)
+  .route("/plants", plantsRouter)
+  .route("/garden", gardenRouter);
 
 export type AppType = typeof app;
 

@@ -12,8 +12,9 @@ import {
 import { getDB } from "../db.ts";
 import { plantDelays, plants, waterings } from "../schema.ts";
 
-const renameSchema = type({ name: "string" });
-const addPlantSchema = type({ name: "string" });
+const location = "'indoor' | 'outdoor'";
+const editPlantSchema = type({ "name?": "string", "location?": location });
+const addPlantSchema = type({ name: "string", "location?": location });
 const wateringSchema = type({ fertilized: "boolean" });
 const delaySchema = type({ numDays: "number.integer > 0" });
 const classifySchema = type({ species: "string" });
@@ -40,8 +41,8 @@ const wateringIdValidator = () =>
 
 export const plantsRouter = new Hono()
   .post("/", arktypeValidator("json", addPlantSchema), async (c) => {
-    const { name } = c.req.valid("json");
-    const [plant] = await getDB().insert(plants).values({ name }).returning();
+    const { name, location } = c.req.valid("json");
+    const [plant] = await getDB().insert(plants).values({ name, location }).returning();
     return c.json({ ok: true, id: plant!.id }, 201);
   })
   .post("/:id/water", plantIdValidator(), arktypeValidator("json", wateringSchema), async (c) => {
@@ -128,11 +129,14 @@ export const plantsRouter = new Hono()
     if ("error" in result) return c.json(result, 422);
     return c.json(result);
   })
-  .patch("/:id", plantIdValidator(), arktypeValidator("json", renameSchema), async (c) => {
+  .patch("/:id", plantIdValidator(), arktypeValidator("json", editPlantSchema), async (c) => {
     const { id: plantId } = c.req.valid("param");
 
-    const { name } = c.req.valid("json");
-    await getDB().update(plants).set({ name }).where(eq(plants.id, plantId));
+    const { name, location } = c.req.valid("json");
+    if (name === undefined && location === undefined) {
+      return c.json({ error: "Nothing to update" }, 400);
+    }
+    await getDB().update(plants).set({ name, location }).where(eq(plants.id, plantId));
 
     return c.json({ ok: true });
   })

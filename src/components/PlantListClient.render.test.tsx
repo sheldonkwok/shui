@@ -7,6 +7,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import "@testing-library/jest-dom/vitest";
 import { PlantListClient } from "./PlantListClient.tsx";
 
+const EMPTY_GARDEN = {
+  irrigation: { lastRun: null, avgIntervalDays: null, daysUntilNextRun: null },
+  chores: [],
+};
+
 // Mock waku router
 const reload = vi.fn();
 vi.mock("waku", () => ({
@@ -34,7 +39,7 @@ afterEach(() => {
 
 describe("PlantListClient sprout control", () => {
   it("links to the Google login when logged out", async () => {
-    render(<PlantListClient plants={[]} />);
+    render(<PlantListClient plants={[]} garden={EMPTY_GARDEN} />);
 
     const link = await screen.findByRole("link", { name: "Log in to add a plant" });
     expect(link).toHaveAttribute("href", "/auth/google");
@@ -44,7 +49,7 @@ describe("PlantListClient sprout control", () => {
   it("shows the add-plant button when logged in", async () => {
     session.loggedIn = true;
 
-    render(<PlantListClient plants={[]} />);
+    render(<PlantListClient plants={[]} garden={EMPTY_GARDEN} />);
 
     expect(await screen.findByRole("button", { name: "Add a new plant" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Log in to add a plant" })).not.toBeInTheDocument();
@@ -59,7 +64,7 @@ describe("PlantListClient add plant failure", () => {
       .mockResolvedValue(new Response(JSON.stringify({ error: "boom" }), { status: 500 }));
     vi.stubGlobal("fetch", fetchMock);
 
-    render(<PlantListClient plants={[]} />);
+    render(<PlantListClient plants={[]} garden={EMPTY_GARDEN} />);
 
     fireEvent.click(await screen.findByRole("button", { name: "Add a new plant" }));
     const input = screen.getByPlaceholderText("Add a new plant");

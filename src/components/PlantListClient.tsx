@@ -4,9 +4,13 @@ import { cva } from "class-variance-authority";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "waku";
 import { apiClient } from "../api/client.ts";
+import { usePlantLocation } from "../hooks/usePlantLocation.ts";
 import { useSession } from "../hooks/useSession.ts";
 import { cls } from "../styles/palette.ts";
-import type { PlantWithStats } from "../types.ts";
+import type { ChoreWithStatus, IrrigationSummary, PlantWithStats } from "../types.ts";
+import { ChoreList } from "./ChoreList.tsx";
+import { IrrigationRow } from "./IrrigationRow.tsx";
+import { LocationToggle } from "./LocationToggle.tsx";
 import { MonsteraPixel } from "./MonsteraPixel.tsx";
 import { Plant } from "./Plant.tsx";
 
@@ -30,7 +34,17 @@ const draftInput = cva([
   "flex-1 min-w-0 bg-transparent border-0 border-b-2 outline-none text-base font-medium py-1 px-0.5",
 ]);
 const addError = cva("px-3 pt-1 text-[11px] leading-tight text-red-700");
-const list = cva("list-none p-0 m-0 pt-[14px]");
+const list = cva("list-none p-0 m-0", {
+  variants: {
+    // The outdoor list sits right under its "Plants" heading.
+    headed: { true: "pt-0", false: "pt-[14px]" },
+  },
+});
+const gardenHeader = cva("pt-[14px]");
+const sectionHeading = cva([
+  cls.textSecondary,
+  "pl-3 pt-[14px] h-8 flex items-end text-[11px] font-semibold uppercase tracking-wider",
+]);
 const noPlants = cva(["text-center italic p-5", cls.textMuted]);
 
 // A few darker specks scattered across the dirt strip, plus a darker top edge.
@@ -65,12 +79,19 @@ function withBandGaps(plants: PlantWithStats[]) {
 
 interface PlantListClientProps {
   plants: PlantWithStats[];
+  garden: { irrigation: IrrigationSummary; chores: ChoreWithStatus[] };
 }
 
-export function PlantListClient({ plants }: PlantListClientProps) {
+export function PlantListClient({ plants: allPlants, garden }: PlantListClientProps) {
   const { loggedIn } = useSession();
   const router = useRouter();
-  const rows = useMemo(() => withBandGaps(plants), [plants]);
+  const [location, setLocation] = usePlantLocation();
+  const plants = useMemo(() => allPlants.filter((p) => p.location === location), [allPlants, location]);
+  // Outdoor plants share one irrigation schedule, so thirst bands don't apply to them.
+  const rows = useMemo(
+    () => (location === "indoor" ? withBandGaps(plants) : plants.map((plant) => ({ plant, gap: false }))),
+    [plants, location],
+  );
   const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState("");
   const [pending, setPending] = useState(false);
@@ -90,7 +111,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
     setPending(true);
     setAddFailed(false);
     try {
-      const res = await apiClient.api.plants.$post({ json: { name } });
+      const res = await apiClient.api.plants.$post({ json: { name, location } });
       if (!res.ok) {
         setAddFailed(true);
         return;
@@ -117,6 +138,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
     <div className={container()}>
       <div className={panelWrap()}>
         <img src="/shui.png" alt="Shui" className={logoMark()} />
+        <LocationToggle value={location} onChange={setLocation} />
         {loggedIn ? (
           <button
             type="button"
@@ -156,7 +178,7 @@ export function PlantListClient({ plants }: PlantListClientProps) {
                 onBlur={() => {
                   if (!draft.trim()) setAdding(false);
                 }}
-                placeholder="Add a new plant"
+                placeholder={location === "indoor" ? "Add a new plant" : "Add an outdoor plant"}
                 disabled={pending}
                 className={draftInput()}
               />
@@ -167,14 +189,25 @@ export function PlantListClient({ plants }: PlantListClientProps) {
               Couldn't add plant
             </p>
           )}
+          {location === "outdoor" && (
+            <div className={gardenHeader()}>
+              <IrrigationRow irrigation={garden.irrigation} loggedIn={loggedIn} />
+              <ChoreList chores={garden.chores} plants={plants} loggedIn={loggedIn} />
+              <h2 className={sectionHeading()}>Plants</h2>
+            </div>
+          )}
           {plants.length > 0 ? (
-            <ul className={list()}>
+            <ul className={list({ headed: location === "outdoor" })}>
               {rows.map(({ plant, gap }) => (
                 <Plant key={plant.id} plant={plant} gap={gap} />
               ))}
             </ul>
           ) : (
-            <p className={noPlants()}>No plants yet. Add your first plant above!</p>
+            <p className={noPlants()}>
+              {location === "indoor"
+                ? "No plants yet. Add your first plant above!"
+                : "No outdoor plants yet. Add your first one above!"}
+            </p>
           )}
         </div>
       </div>
