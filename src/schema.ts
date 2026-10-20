@@ -3,6 +3,7 @@ import { sql } from "drizzle-orm";
 import {
   boolean,
   integer,
+  pgEnum,
   pgMaterializedView,
   pgTable,
   real,
@@ -12,10 +13,14 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
+export const plantLocation = pgEnum("plant_location", ["indoor", "outdoor"]);
+
 export const plants = pgTable("plants", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   species: text("species"),
+  // Outdoor plants are watered together by irrigation, so they have no per-plant waterings.
+  location: plantLocation("location").default("indoor").notNull(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
 });
 
@@ -45,6 +50,33 @@ export const plantDelays = pgTable(
   },
   (table) => [unique().on(table.plantId)],
 );
+
+/** One hand-started run of the outdoor irrigation, which waters every outdoor plant at once. */
+export const irrigationRuns = pgTable("irrigation_runs", {
+  id: serial("id").primaryKey(),
+  runTime: timestamp("run_time", { withTimezone: true }).defaultNow().notNull(),
+});
+
+/**
+ * A yearly outdoor task, due each year from the start of `startMonth` to the end of
+ * `endMonth` (1–12). The window may wrap the new year (e.g. Nov–Feb). A null plantId
+ * means the chore is for the whole garden.
+ */
+export const chores = pgTable("chores", {
+  id: serial("id").primaryKey(),
+  plantId: integer("plant_id").references(() => plants.id),
+  title: text("title").notNull(),
+  startMonth: integer("start_month").notNull(),
+  endMonth: integer("end_month").notNull(),
+});
+
+export const choreCompletions = pgTable("chore_completions", {
+  id: serial("id").primaryKey(),
+  choreId: integer("chore_id")
+    .notNull()
+    .references(() => chores.id, { onDelete: "cascade" }),
+  completedAt: timestamp("completed_at", { withTimezone: true }).defaultNow().notNull(),
+});
 
 export const wateringSummary = pgMaterializedView("watering_summary", {
   plantId: integer("plant_id"),

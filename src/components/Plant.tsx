@@ -24,6 +24,7 @@ const plantName = cva([
   cls.textPrimaryGreen,
   "flex-1 min-w-0 bg-transparent border-none text-left font-medium text-base truncate select-none cursor-pointer focus:outline-none active:bg-transparent [-webkit-tap-highlight-color:transparent]",
 ]);
+const speciesLabel = cva([cls.textSecondary, "text-[13px] italic truncate max-w-[45%] select-none"]);
 const lastWatered = cva([
   cls.textSecondary,
   "bg-transparent border-none text-left text-[13px] whitespace-nowrap flex items-center cursor-pointer select-none focus:outline-none active:bg-transparent [-webkit-tap-highlight-color:transparent]",
@@ -37,12 +38,14 @@ const formatLastWatered = (date: Date | null) => {
 export function Plant({ plant, gap = false }: PlantProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const ratio = getExpectedDayRatio(plant.daysUntilNextWatering, plant.avgWateringIntervalDays);
+  const outdoor = plant.location === "outdoor";
 
   return (
     <>
       {gap && <li aria-hidden="true" className={gapSpacer()} />}
       <li className={plantItem()}>
-        <div className={gaugeTrack()}>
+        {/* Outdoor plants share the garden's irrigation gauge; keep the column so names align. */}
+        <div className={gaugeTrack()} style={outdoor ? { visibility: "hidden" } : undefined}>
           <div
             style={{
               width: "100%",
@@ -55,13 +58,18 @@ export function Plant({ plant, gap = false }: PlantProps) {
         <button type="button" className={plantName()} onClick={() => setIsDialogOpen(true)}>
           {plant.name}
         </button>
-        <button type="button" className={lastWatered()} onClick={() => setIsDialogOpen(true)}>
-          {formatLastWatered(plant.lastWatered)}
-        </button>
+        {outdoor ? (
+          plant.species && <span className={speciesLabel()}>{plant.species}</span>
+        ) : (
+          <button type="button" className={lastWatered()} onClick={() => setIsDialogOpen(true)}>
+            {formatLastWatered(plant.lastWatered)}
+          </button>
+        )}
         <PlantActionsDialog
           plantId={plant.id}
           plantName={plant.name}
           species={plant.species}
+          location={plant.location}
           lastWatered={plant.lastWatered}
           lastFertilized={plant.lastFertilized}
           lastRepotted={plant.lastRepotted}

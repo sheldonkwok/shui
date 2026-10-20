@@ -4,8 +4,10 @@ import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import { z } from "zod";
+import { getIrrigationSummary, listChores } from "../actions/garden-helper.ts";
 import { listPlants } from "../actions/plants-helper.ts";
 import { getDB } from "../db.ts";
+import { formatMonthRange } from "../garden-utils.ts";
 import { waterings } from "../schema.ts";
 
 async function runListPlants(): Promise<string> {
@@ -15,6 +17,7 @@ async function runListPlants(): Promise<string> {
 
   const lines = plants.map((p) => {
     const name = p.species ? `${p.name} (${p.species})` : p.name;
+    if (p.location === "outdoor") return `- [ID ${p.id}] ${name}: outdoors, watered by irrigation`;
     if (p.daysUntilNextWatering === null) {
       return `- [ID ${p.id}] ${name}: no watering data yet`;
     }
@@ -45,6 +48,27 @@ async function runGetWateringHistory(plantId: number, limit: number = 20): Promi
   return `Watering history for plant ID ${plantId}:\n${lines.join("\n")}`;
 }
 
+async function runGetGarden(): Promise<string> {
+  const [irrigation, chores] = await Promise.all([getIrrigationSummary(), listChores()]);
+
+  const lastRun = irrigation.lastRun ? irrigation.lastRun.toISOString().split("T")[0] : "never";
+  const next =
+    irrigation.daysUntilNextRun === null
+      ? ""
+      : irrigation.daysUntilNextRun < 0
+        ? `, OVERDUE by ${Math.abs(irrigation.daysUntilNextRun)} days`
+        : `, next due in ${irrigation.daysUntilNextRun} days`;
+  const choreLines = chores.map((ch) => {
+    const target = ch.plantName ? ` (${ch.plantName})` : "";
+    return `- [ID ${ch.id}] ${ch.title}${target}, ${formatMonthRange(ch.startMonth, ch.endMonth)}: ${ch.status}`;
+  });
+
+  return [
+    `Irrigation: last run ${lastRun}${next}`,
+    chores.length ? `Seasonal chores:\n${choreLines.join("\n")}` : "No seasonal chores.",
+  ].join("\n");
+}
+
 function createMcpServer() {
   const server = new McpServer({ name: "shui-plants", version: "1.0.0" });
 
@@ -58,6 +82,15 @@ function createMcpServer() {
     { plantId: z.number(), limit: z.number().optional() },
     async ({ plantId, limit }) => ({
       content: [{ type: "text", text: await runGetWateringHistory(plantId, limit) }],
+    }),
+  );
+
+  server.tool(
+    "get_garden",
+    "Get the outdoor garden's irrigation status and seasonal chores (due, done this season, or upcoming).",
+    {},
+    async () => ({
+      content: [{ type: "text", text: await runGetGarden() }],
     }),
   );
 
