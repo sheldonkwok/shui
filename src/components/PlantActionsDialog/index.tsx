@@ -10,7 +10,6 @@ import { Dialog, DialogContent } from "../ui/Dialog.tsx";
 import { ButtonContainer } from "./ButtonContainer.tsx";
 import { EditableName } from "./EditableName.tsx";
 import { EditableSpecies } from "./EditableSpecies.tsx";
-import { LocationButton } from "./LocationButton.tsx";
 import { PlantStats } from "./PlantStats.tsx";
 import { WateringEditPanel } from "./WateringEditPanel.tsx";
 import { WateringHistoryGrid } from "./WateringHistoryGrid.tsx";
@@ -115,15 +114,6 @@ export function PlantActionsDialog({
                   lastRepottedDate={lastRepottedDate}
                 />
               )}
-              <LocationButton
-                plantId={plantId}
-                location={location}
-                canEdit={loggedIn}
-                onMoved={() => {
-                  onOpenChange(false);
-                  router.reload();
-                }}
-              />
             </div>
             {!outdoor && (
               <>
