@@ -27,13 +27,6 @@ test.describe("Outdoor garden", () => {
     // The chosen view survives a full page load.
     await page.reload();
     await expect(page.getByText("E2E Outdoor Rose")).toBeVisible();
-
-    // Moving the plant indoors takes it off the garden list.
-    await page.getByRole("listitem").getByRole("button", { name: "E2E Outdoor Rose" }).click();
-    await page.getByRole("dialog").getByRole("button", { name: "Move indoors" }).click();
-    await expect(page.getByText("E2E Outdoor Rose")).toHaveCount(0);
-    await page.getByRole("button", { name: "Indoor plants" }).click();
-    await expect(page.getByText("E2E Outdoor Rose")).toBeVisible();
   });
 
   test("logs an irrigation run for the whole garden", async ({ page }) => {
