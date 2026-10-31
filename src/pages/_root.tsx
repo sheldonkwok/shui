@@ -29,7 +29,11 @@ export default function Root({ children }: RootProps) {
       <head>
         {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static inline polyfill, not user input */}
         <script dangerouslySetInnerHTML={{ __html: CRYPTO_RANDOM_UUID_POLYFILL }} />
+        <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+        <meta name="theme-color" content="#f5e9d8" />
+        <link rel="manifest" href="/manifest.webmanifest" />
         <link rel="icon" type="image/png" href="/shui.png" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
         <title>Shui App</title>
       </head>
       <body>
