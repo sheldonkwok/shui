@@ -14,6 +14,7 @@ const CONFIG = {
   allowedEmail: "me@sheldonk.com",
   cookieName: "auth_session",
   indicatorCookieName: "is_authenticated",
+  returnCookieName: "auth_return",
   sessionMaxAge: 60 * 60 * 24 * 30, // 30 days
 } as const;
 
@@ -42,7 +43,7 @@ function getGoogleAuth() {
 // Cookie Signing
 // =============================================================================
 
-async function signValue(value: string): Promise<string> {
+export async function signValue(value: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
     "raw",
@@ -56,7 +57,7 @@ async function signValue(value: string): Promise<string> {
   return `${value}.${signatureBase64}`;
 }
 
-async function verifySignedValue(signedValue: string): Promise<string | null> {
+export async function verifySignedValue(signedValue: string): Promise<string | null> {
   const lastDotIndex = signedValue.lastIndexOf(".");
   if (lastDotIndex === -1) return null;
 
@@ -66,7 +67,7 @@ async function verifySignedValue(signedValue: string): Promise<string | null> {
   return signedValue === expectedSigned ? value : null;
 }
 
-async function getSessionEmail(c: Context): Promise<string | null> {
+export async function getSessionEmail(c: Context): Promise<string | null> {
   const cookie = getCookie(c, CONFIG.cookieName);
   if (!cookie) return null;
 
@@ -75,6 +76,34 @@ async function getSessionEmail(c: Context): Promise<string | null> {
   } catch {
     return null;
   }
+}
+
+/** The only email allowed to sign in. */
+export const ALLOWED_EMAIL = CONFIG.allowedEmail;
+
+// =============================================================================
+// Return-to (resume the MCP OAuth /authorize request after Google login)
+// =============================================================================
+
+const RETURN_PATH_PREFIX = "/authorize?";
+
+/** Remember an /authorize URL to resume once the user has signed in with Google. */
+export function setReturnTo(c: Context, pathAndQuery: string): void {
+  if (!pathAndQuery.startsWith(RETURN_PATH_PREFIX)) return;
+  setCookie(c, CONFIG.returnCookieName, pathAndQuery, {
+    httpOnly: true,
+    secure: IS_PRODUCTION,
+    maxAge: 60 * 10,
+    sameSite: "Lax",
+    path: "/",
+  });
+}
+
+function takeReturnTo(c: Context): string {
+  const value = getCookie(c, CONFIG.returnCookieName);
+  if (!value) return "/";
+  deleteCookie(c, CONFIG.returnCookieName, { path: "/" });
+  return value.startsWith(RETURN_PATH_PREFIX) ? value : "/";
 }
 
 // =============================================================================
@@ -111,7 +140,7 @@ async function handleOAuthCallback(c: Context): Promise<Response> {
     sameSite: "Lax",
   });
 
-  return c.redirect("/");
+  return c.redirect(takeReturnTo(c));
 }
 
 // =============================================================================
