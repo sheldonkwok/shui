@@ -258,15 +258,11 @@ export function createMcpApp({ getEmail }: OAuthProviderOptions) {
   app.use(
     "/mcp",
     bearerAuth({
-      verifyToken: async (token) => {
-        // A static key stays valid for clients that can send a fixed header, such as the Claude Code CLI.
-        const apiKey = process.env.MCP_API_KEY;
-        if (apiKey && token === apiKey) return true;
-        return await provider.verifyAccessToken(token).then(
+      verifyToken: async (token) =>
+        await provider.verifyAccessToken(token).then(
           () => true,
           () => false,
-        );
-      },
+        ),
       noAuthenticationHeader: { wwwAuthenticateHeader: unauthorized },
       invalidAuthenticationHeader: { wwwAuthenticateHeader: unauthorized },
       invalidToken: { wwwAuthenticateHeader: unauthorized },

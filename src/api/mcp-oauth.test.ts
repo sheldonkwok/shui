@@ -200,11 +200,10 @@ describe("MCP OAuth", () => {
     expect(res.status).toBe(400);
   });
 
-  it("still accepts MCP_API_KEY as a bearer token when set", async () => {
+  it("ignores MCP_API_KEY: only OAuth tokens are accepted", async () => {
     process.env.MCP_API_KEY = "static-key";
     try {
-      expect((await callMcp(signedIn, "static-key")).status).toBe(200);
-      expect((await callMcp(signedIn, "wrong")).status).toBe(401);
+      expect((await callMcp(signedIn, "static-key")).status).toBe(401);
     } finally {
       delete process.env.MCP_API_KEY;
     }
