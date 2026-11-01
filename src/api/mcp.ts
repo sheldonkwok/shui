@@ -4,10 +4,11 @@ import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import { z } from "zod";
-import { getIrrigationSummary, listChores } from "../actions/garden-helper.ts";
+import { addGardenPlant, getIrrigationSummary, listChores } from "../actions/garden-helper.ts";
 import { listPlants } from "../actions/plants-helper.ts";
 import { getDB } from "../db.ts";
 import { formatMonthRange } from "../garden-utils.ts";
+import { fetchImage, lookupSpecies, type SpeciesMatch } from "../gbif.ts";
 import { waterings } from "../schema.ts";
 
 async function runListPlants(): Promise<string> {
@@ -69,8 +70,80 @@ async function runGetGarden(): Promise<string> {
   ].join("\n");
 }
 
-function createMcpServer() {
-  const server = new McpServer({ name: "shui-plants", version: "1.0.0" });
+/** USDA hardiness zone of the garden, which sets when its plants should be pruned. */
+export const GARDEN_ZONE = "10b";
+
+// How many reference photos are shown inline; more are listed as links.
+const INLINE_PHOTOS = 3;
+
+const ADD_GARDEN_PLANT_STEPS = `Adding a plant to the outdoor garden from a photo (USDA zone ${GARDEN_ZONE}):
+1. Look at the user's photo and suggest the most likely species, with a runner-up or two if you are unsure. Explain the visible features (leaves, flowers, bark, habit) that point to it.
+2. Call lookup_species with the scientific name of your best guess. Show the user its accepted name, common names and reference photos so they can compare them with their plant. Look up a runner-up the same way if the user asks or the photos don't fit.
+3. Ask the user to confirm the species. Do not continue until they do; if they correct you, look up their species instead.
+4. Suggest when to prune this species in USDA zone ${GARDEN_ZONE} (mild, frost-free winters, long warm growing season): the month window, what kind of pruning, and why. Some plants need more than one window (e.g. a hard prune and a summer tidy-up). Cite your sources for this advice as links, preferring university extension services for warm, frost-free climates (e.g. UC Agriculture and Natural Resources, UF/IFAS Extension) and botanical gardens; search the web for them if you can. Say plainly if you could not find a source for a recommendation.
+5. Ask the user to confirm or adjust the pruning windows, and what to name the plant (suggest its common name).
+6. Only after both the species and the pruning windows are confirmed, call add_garden_plant.`;
+
+function describeMatch(m: SpeciesMatch): string {
+  const family = m.family ? `, family ${m.family}` : "";
+  return `${m.scientificName} (${m.rank.toLowerCase()}${family}; ${m.matchType.toLowerCase()} match, ${m.confidence}% confidence)`;
+}
+
+type ToolContent = { type: "text"; text: string } | { type: "image"; data: string; mimeType: string };
+
+async function runLookupSpecies(name: string): Promise<ToolContent[]> {
+  const result = await lookupSpecies(name, 6);
+  if (!result) {
+    return [{ type: "text", text: `GBIF has no plant matching "${name}". Try another scientific name.` }];
+  }
+  const { match, commonNames, alternatives, photos } = result;
+
+  const lines = [`Best match: ${describeMatch(match)}`];
+  if (match.status !== "ACCEPTED")
+    lines.push(`Note: "${match.scientificName}" is a ${match.status.toLowerCase()} name.`);
+  if (match.rank !== "SPECIES" && match.rank !== "SUBSPECIES" && match.rank !== "VARIETY") {
+    lines.push("Note: this only matched above species level; try a more specific name.");
+  }
+  lines.push(`Species to store: ${match.canonicalName}`);
+  lines.push(commonNames.length ? `Common names: ${commonNames.join(", ")}` : "Common names: none listed");
+  if (alternatives.length) {
+    lines.push(`Other candidates:\n${alternatives.map((a) => `- ${describeMatch(a)}`).join("\n")}`);
+  }
+  if (photos.length) {
+    const photoLines = photos.map((p, i) => {
+      const credit = [p.credit, p.license].filter(Boolean).join(", ");
+      return `${i + 1}. ${p.url} (source: ${p.sourceUrl}${credit ? `; ${credit}` : ""})`;
+    });
+    lines.push(`Reference photos:\n${photoLines.join("\n")}`);
+  } else {
+    lines.push("Reference photos: none found on GBIF.");
+  }
+
+  const images = await Promise.all(photos.slice(0, INLINE_PHOTOS).map((p) => fetchImage(p.url)));
+  return [
+    { type: "text", text: lines.join("\n") },
+    ...images.filter((img) => img !== null).map((img) => ({ type: "image" as const, ...img })),
+  ];
+}
+
+async function runAddGardenPlant(input: Parameters<typeof addGardenPlant>[0]): Promise<string> {
+  const { plantId, choreIds } = await addGardenPlant(input);
+  const windows = input.pruning.map(
+    (p, i) => `- [Chore ID ${choreIds[i]}] ${p.title}, ${formatMonthRange(p.startMonth, p.endMonth)}`,
+  );
+  return [
+    `Added ${input.name} (${input.species}) to the garden as plant ID ${plantId}. It is watered by irrigation.`,
+    windows.length ? `Pruning chores:\n${windows.join("\n")}` : "No pruning chores.",
+  ].join("\n");
+}
+
+const month = z.number().int().min(1).max(12);
+
+export function createMcpServer() {
+  const server = new McpServer(
+    { name: "shui-plants", version: "1.0.0" },
+    { instructions: `Tracks indoor plant waterings and an outdoor garden.\n\n${ADD_GARDEN_PLANT_STEPS}` },
+  );
 
   server.tool("list_plants", "List all plants sorted by watering urgency.", {}, async () => ({
     content: [{ type: "text", text: await runListPlants() }],
@@ -91,6 +164,67 @@ function createMcpServer() {
     {},
     async () => ({
       content: [{ type: "text", text: await runGetGarden() }],
+    }),
+  );
+
+  server.registerTool(
+    "lookup_species",
+    {
+      title: "Look up plant species",
+      description:
+        "Look a plant up by scientific name in GBIF: its accepted name, family, common names, close alternatives, " +
+        "and reference photos of the species to compare with the user's photo. Use it after suggesting a species " +
+        "from a photo, before adding a garden plant.",
+      inputSchema: { name: z.string().min(1).describe("Scientific name, e.g. 'Bougainvillea glabra'.") },
+      annotations: { readOnlyHint: true, openWorldHint: true },
+    },
+    async ({ name }) => ({ content: await runLookupSpecies(name) }),
+  );
+
+  server.registerTool(
+    "add_garden_plant",
+    {
+      title: "Add garden plant",
+      description:
+        "Add an outdoor plant to the garden with its yearly pruning chores. Only call this after the user has " +
+        `confirmed both the species (via lookup_species) and the pruning windows for USDA zone ${GARDEN_ZONE}.`,
+      inputSchema: {
+        name: z.string().trim().min(1).describe("What the user calls the plant, e.g. 'Front bougainvillea'."),
+        species: z
+          .string()
+          .trim()
+          .min(1)
+          .describe("The confirmed species, as 'Species to store' from lookup_species."),
+        pruning: z
+          .array(
+            z.object({
+              title: z.string().trim().min(1).describe("The chore, e.g. 'Hard prune' or 'Deadhead'."),
+              startMonth: month.describe("First month of the window (1 = January)."),
+              endMonth: month.describe(
+                "Last month of the window; may be before startMonth to wrap the new year.",
+              ),
+            }),
+          )
+          .min(1)
+          .describe("When to prune each year, as confirmed by the user."),
+      },
+    },
+    async (input) => ({ content: [{ type: "text", text: await runAddGardenPlant(input) }] }),
+  );
+
+  server.registerPrompt(
+    "add_garden_plant",
+    {
+      title: "Add a garden plant from a photo",
+      description: `Identify a plant from a photo, confirm it, plan its pruning for zone ${GARDEN_ZONE}, then add it to the garden.`,
+    },
+    () => ({
+      messages: [
+        {
+          role: "user",
+          content: { type: "text", text: `${ADD_GARDEN_PLANT_STEPS}\n\nStart with the photo I've attached.` },
+        },
+      ],
     }),
   );
 

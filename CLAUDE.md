@@ -31,6 +31,19 @@ Base URL: `https://api.gbif.org/v1`. No authentication required for read-only en
 
 Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `confidence`, `matchType`, `kingdom`, `phylum`, `order`, `family`, `genus`, `speciesKey`.
 
+- **Vernacular names** — common names for a taxon, filter by `language=eng`:
+  ```
+  GET /species/{key}/vernacularNames
+  ```
+- **Occurrence photos** — observations with photos, used as reference images (`media[].identifier`):
+  ```
+  GET /occurrence/search?taxonKey={key}&mediaType=StillImage&basisOfRecord=HUMAN_OBSERVATION
+  ```
+
+## MCP Server
+
+`src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for GBIF reference photos, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`) with cited sources, and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.
+
 ## Environment Variables
 
 | Variable | Required | Description |
