@@ -44,6 +44,10 @@ Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `c
 
 `src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for GBIF reference photos, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`) with cited sources, and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.
 
+### MCP authentication
+
+`/mcp` is protected by OAuth 2.1 so Claude Desktop / claude.ai custom connectors can connect. `src/oauth.ts` is a stateless authorization server (client IDs, codes and tokens are JSON payloads signed with `AUTH_SECRET`; no DB tables), wired up with `@hono/mcp/auth` in `src/api/mcp.ts`. It serves `/register`, `/authorize`, `/token` and the `/.well-known/oauth-*` metadata. `/authorize` signs you in through the existing Google login (`src/auth.ts`, which resumes the request via the `auth_return` cookie) and only accepts Claude (`claude.ai`, `claude.com`) or loopback redirect URIs. Tokens can't be revoked individually; rotate `AUTH_SECRET` to invalidate all of them.
+
 ## Environment Variables
 
 | Variable | Required | Description |
@@ -51,7 +55,6 @@ Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `c
 | `AUTH_SECRET` | Yes | Secret for signing auth session cookies. |
 | `GOOGLE_CLIENT_ID` | Yes | Google OAuth client ID. |
 | `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret. |
-| `MCP_API_KEY` | No | Bearer token for MCP endpoint auth. If unset, the endpoint is open. Generate with `openssl rand -base64 32`. |
 | `DATABASE_URL` | No | External Postgres URL. If unset, PGlite is used. |
 | `PGLITE_DIR` | No | Directory for PGlite data files. Defaults to `./pglite`. |
 | `VERCEL_ENV` | No | Set by Vercel (`preview`, `production`). Used to gate preview auth. |

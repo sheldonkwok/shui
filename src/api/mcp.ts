@@ -1,15 +1,19 @@
 import { StreamableHTTPTransport } from "@hono/mcp";
+import { bearerAuth, mcpAuthRouter } from "@hono/mcp/auth";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { desc, eq } from "drizzle-orm";
-import { Hono } from "hono";
+import { type Context, Hono } from "hono";
 import { createMiddleware } from "hono/factory";
 import { z } from "zod";
 import { addGardenPlant, getIrrigationSummary, listChores } from "../actions/garden-helper.ts";
 import { listPlants } from "../actions/plants-helper.ts";
+import { ALLOWED_EMAIL, getSessionEmail } from "../auth.ts";
 import { getDB } from "../db.ts";
 import { formatMonthRange } from "../garden-utils.ts";
 import { fetchImage, lookupSpecies, type SpeciesMatch } from "../gbif.ts";
+import { createOAuthProvider, type OAuthProviderOptions } from "../oauth.ts";
 import { waterings } from "../schema.ts";
+import { IS_DEV, IS_PREVIEW, IS_PRODUCTION, IS_TEST } from "../utils.ts";
 
 async function runListPlants(): Promise<string> {
   const plants = await listPlants();
@@ -231,27 +235,73 @@ export function createMcpServer() {
   return server;
 }
 
-const mcpApp = new Hono();
+const OAUTH_ROUTE_PATHS = ["/authorize", "/token", "/register", "/.well-known/oauth-"];
 
-mcpApp.use("/mcp", async (c, next) => {
-  const apiKey = process.env.MCP_API_KEY;
-  if (apiKey) {
-    const auth = c.req.header("Authorization");
-    if (!auth || auth !== `Bearer ${apiKey}`) {
-      return c.json({ error: "Unauthorized" }, 401);
-    }
-  }
-  return await next();
-});
+/** The public origin that OAuth metadata advertises. */
+function publicOrigin(c: Context): string {
+  return IS_PRODUCTION ? "https://shui.fmj.io" : new URL(c.req.url).origin;
+}
 
-mcpApp.all("/mcp", async (c) => {
-  const server = createMcpServer();
-  const transport = new StreamableHTTPTransport();
-  await server.connect(transport);
-  return transport.handleRequest(c);
+const noRateLimit = { rateLimit: false } as const;
+
+/**
+ * The MCP endpoint plus its OAuth server (client registration, authorize, token and discovery metadata).
+ * Pass `getEmail` to control how the signed-in user is found.
+ */
+export function createMcpApp({ getEmail }: OAuthProviderOptions) {
+  const provider = createOAuthProvider({ getEmail });
+  const app = new Hono();
+
+  const unauthorized = (c: Context) =>
+    `Bearer error="Unauthorized", resource_metadata="${publicOrigin(c)}/.well-known/oauth-protected-resource/mcp"`;
+
+  app.use(
+    "/mcp",
+    bearerAuth({
+      verifyToken: async (token) =>
+        await provider.verifyAccessToken(token).then(
+          () => true,
+          () => false,
+        ),
+      noAuthenticationHeader: { wwwAuthenticateHeader: unauthorized },
+      invalidAuthenticationHeader: { wwwAuthenticateHeader: unauthorized },
+      invalidToken: { wwwAuthenticateHeader: unauthorized },
+    }),
+  );
+
+  app.all("/mcp", async (c) => {
+    const server = createMcpServer();
+    const transport = new StreamableHTTPTransport();
+    await server.connect(transport);
+    return transport.handleRequest(c);
+  });
+
+  // The router fixes its issuer URL when built, so build it for the origin each request arrives on.
+  app.all("*", (c) => {
+    const origin = publicOrigin(c);
+    const router = mcpAuthRouter({
+      // biome-ignore lint/suspicious/noExplicitAny: the SDK types authorize() for Express; hono passes a Context
+      provider: provider as any,
+      issuerUrl: origin,
+      resourceServerUrl: new URL("/mcp", origin),
+      resourceName: "Shui",
+      authorizationOptions: noRateLimit,
+      tokenOptions: noRateLimit,
+      clientRegistrationOptions: { ...noRateLimit, clientIdGeneration: false },
+    });
+    return router.fetch(c.req.raw);
+  });
+
+  return app;
+}
+
+const mcpApp = createMcpApp({
+  // Like authCheckMiddleware, dev and preview skip login; production needs the Google session cookie.
+  getEmail: async (c) => (IS_TEST || IS_PREVIEW || IS_DEV ? ALLOWED_EMAIL : await getSessionEmail(c)),
 });
 
 export const mcpMiddleware = createMiddleware(async (c, next) => {
-  if (!c.req.path.startsWith("/mcp")) return await next();
+  const isMcpRoute = c.req.path.startsWith("/mcp") || OAUTH_ROUTE_PATHS.some((p) => c.req.path.startsWith(p));
+  if (!isMcpRoute) return await next();
   return mcpApp.fetch(c.req.raw);
 });
