@@ -39,3 +39,26 @@ export async function listChores(db: DBExecutor = getDB()) {
     status: choreStatus(row.startMonth, row.endMonth, row.lastCompletedAt),
   }));
 }
+
+export interface PruningWindow {
+  title: string;
+  startMonth: number;
+  endMonth: number;
+}
+
+/** Adds an outdoor plant together with its yearly pruning chores, all or nothing. */
+export async function addGardenPlant(input: { name: string; species: string; pruning: PruningWindow[] }) {
+  return getDB().transaction(async (tx) => {
+    const [plant] = await tx
+      .insert(plants)
+      .values({ name: input.name.trim(), species: input.species.trim(), location: "outdoor" })
+      .returning();
+    const choreIds = input.pruning.length
+      ? await tx
+          .insert(chores)
+          .values(input.pruning.map((p) => ({ ...p, title: p.title.trim(), plantId: plant!.id })))
+          .returning()
+      : [];
+    return { plantId: plant!.id, choreIds: choreIds.map((c) => c.id) };
+  });
+}
