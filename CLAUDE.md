@@ -42,7 +42,7 @@ Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `c
 
 ## MCP Server
 
-`src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for GBIF reference photos, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`), and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.
+`src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for GBIF reference photos, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`) with cited sources, and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.
 
 ## Environment Variables
 

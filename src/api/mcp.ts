@@ -80,7 +80,7 @@ const ADD_GARDEN_PLANT_STEPS = `Adding a plant to the outdoor garden from a phot
 1. Look at the user's photo and suggest the most likely species, with a runner-up or two if you are unsure. Explain the visible features (leaves, flowers, bark, habit) that point to it.
 2. Call lookup_species with the scientific name of your best guess. Show the user its accepted name, common names and reference photos so they can compare them with their plant. Look up a runner-up the same way if the user asks or the photos don't fit.
 3. Ask the user to confirm the species. Do not continue until they do; if they correct you, look up their species instead.
-4. Suggest when to prune this species in USDA zone ${GARDEN_ZONE} (mild, frost-free winters, long warm growing season): the month window, what kind of pruning, and why. Some plants need more than one window (e.g. a hard prune and a summer tidy-up).
+4. Suggest when to prune this species in USDA zone ${GARDEN_ZONE} (mild, frost-free winters, long warm growing season): the month window, what kind of pruning, and why. Some plants need more than one window (e.g. a hard prune and a summer tidy-up). Cite your sources for this advice as links, preferring university extension services for warm, frost-free climates (e.g. UC Agriculture and Natural Resources, UF/IFAS Extension) and botanical gardens; search the web for them if you can. Say plainly if you could not find a source for a recommendation.
 5. Ask the user to confirm or adjust the pruning windows, and what to name the plant (suggest its common name).
 6. Only after both the species and the pruning windows are confirmed, call add_garden_plant.`;
 

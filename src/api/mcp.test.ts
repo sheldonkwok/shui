@@ -33,6 +33,7 @@ describe("MCP garden plant flow", () => {
     const prompt = await client.getPrompt({ name: "add_garden_plant" });
     const message = prompt.messages[0]!.content;
     expect(message.type === "text" && message.text).toContain("lookup_species");
+    expect(message.type === "text" && message.text).toContain("Cite your sources");
   });
 
   it("looks up a species with reference photos inline", async () => {
