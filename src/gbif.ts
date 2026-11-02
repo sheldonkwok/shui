@@ -30,6 +30,8 @@ export interface SpeciesLookup {
   commonNames: string[];
   alternatives: SpeciesMatch[];
   photos: ReferencePhoto[];
+  /** Why photos or common names could not be fetched, if a GBIF request failed. */
+  warnings: string[];
 }
 
 interface GbifMatch extends Partial<SpeciesMatch> {
@@ -47,8 +49,8 @@ interface GbifMedia {
   creator?: string;
 }
 
-async function gbifGet<T>(path: string): Promise<T> {
-  const res = await fetch(`${GBIF_API}${path}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+async function gbifGet<T>(path: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T> {
+  const res = await fetch(`${GBIF_API}${path}`, { signal: AbortSignal.timeout(timeoutMs) });
   if (!res.ok) throw new Error(`GBIF request failed (${res.status}): ${path}`);
   return (await res.json()) as T;
 }
@@ -84,9 +86,29 @@ async function fetchCommonNames(key: number): Promise<string[]> {
   return names.filter((n) => !seen.has(n.toLowerCase()) && seen.add(n.toLowerCase())).slice(0, 5);
 }
 
+/** Occurrence searches over a whole taxon can be slow on GBIF, so they get a longer timeout. */
+const OCCURRENCE_TIMEOUT_MS = 20000;
+
+/** Photos from the species' own GBIF media (checklist images), used when no observation photos are found. */
+async function fetchSpeciesMedia(taxonKey: number, limit: number): Promise<ReferencePhoto[]> {
+  const { results } = await gbifGet<{ results: GbifMedia[] }>(
+    `/species/${taxonKey}/media?limit=${limit * 3}`,
+  );
+  return results
+    .filter((m) => m.identifier?.startsWith("http"))
+    .slice(0, limit)
+    .map((m) => ({
+      url: webSizedPhotoUrl(m.identifier as string),
+      sourceUrl: `https://www.gbif.org/species/${taxonKey}`,
+      credit: m.rightsHolder ?? m.creator ?? null,
+      license: m.license ?? null,
+    }));
+}
+
 async function fetchPhotos(taxonKey: number, limit: number): Promise<ReferencePhoto[]> {
   const { results } = await gbifGet<{ results: { key: number; media?: GbifMedia[] }[] }>(
     `/occurrence/search?taxonKey=${taxonKey}&mediaType=StillImage&basisOfRecord=HUMAN_OBSERVATION&limit=${limit * 3}`,
+    OCCURRENCE_TIMEOUT_MS,
   );
   const photos: ReferencePhoto[] = [];
   // One photo per observation, so the set shows different plants rather than one plant many times.
@@ -117,16 +139,31 @@ export async function lookupSpecies(name: string, photoLimit = 4): Promise<Speci
 
   // Synonyms resolve to their accepted name, which is where photos and common names live.
   const key = raw.speciesKey ?? raw.acceptedUsageKey ?? match.usageKey;
-  const [commonNames, photos] = await Promise.all([
-    fetchCommonNames(key).catch(() => []),
-    photoLimit > 0 ? fetchPhotos(key, photoLimit).catch(() => []) : [],
+  const warnings: string[] = [];
+  const soft =
+    <T>(what: string, fallback: T) =>
+    (e: unknown) => {
+      const reason = e instanceof Error ? e.message : String(e);
+      console.error(`GBIF ${what} failed for ${name}:`, reason);
+      warnings.push(`${what} failed (${reason})`);
+      return fallback;
+    };
+  const [commonNames, observed] = await Promise.all([
+    fetchCommonNames(key).catch(soft<string[]>("common names", [])),
+    photoLimit > 0
+      ? fetchPhotos(key, photoLimit).catch(soft<ReferencePhoto[]>("observation photos", []))
+      : [],
   ]);
+  const photos =
+    observed.length || photoLimit <= 0
+      ? observed
+      : await fetchSpeciesMedia(key, photoLimit).catch(soft<ReferencePhoto[]>("species media", []));
   const alternatives = (raw.alternatives ?? [])
     .map(toMatch)
     .filter((m): m is SpeciesMatch => m !== null && m.canonicalName !== match.canonicalName)
     .slice(0, 3);
 
-  return { match, commonNames, alternatives, photos };
+  return { match, commonNames, alternatives, photos, warnings };
 }
 
 /** Downloads a photo for inline display, or null when it is unreachable, not an image, or too large. */

@@ -100,7 +100,7 @@ async function runLookupSpecies(name: string): Promise<ToolContent[]> {
   if (!result) {
     return [{ type: "text", text: `GBIF has no plant matching "${name}". Try another scientific name.` }];
   }
-  const { match, commonNames, alternatives, photos } = result;
+  const { match, commonNames, alternatives, photos, warnings } = result;
 
   const lines = [`Best match: ${describeMatch(match)}`];
   if (match.status !== "ACCEPTED")
@@ -120,10 +120,19 @@ async function runLookupSpecies(name: string): Promise<ToolContent[]> {
     });
     lines.push(`Reference photos:\n${photoLines.join("\n")}`);
   } else {
-    lines.push("Reference photos: none found on GBIF.");
+    lines.push(
+      warnings.length
+        ? `Reference photos: could not be loaded from GBIF (${warnings.join("; ")}). Say so to the user and retry lookup_species.`
+        : "Reference photos: none found on GBIF.",
+    );
   }
 
   const images = await Promise.all(photos.slice(0, INLINE_PHOTOS).map((p) => fetchImage(p.url)));
+  if (photos.length && !images.some((img) => img !== null)) {
+    lines.push(
+      "Note: the photos could not be embedded; show the user the photo links above so they can open them.",
+    );
+  }
   return [
     { type: "text", text: lines.join("\n") },
     ...images.filter((img) => img !== null).map((img) => ({ type: "image" as const, ...img })),
