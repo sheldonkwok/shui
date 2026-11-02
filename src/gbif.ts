@@ -105,9 +105,13 @@ async function fetchSpeciesMedia(taxonKey: number, limit: number): Promise<Refer
     }));
 }
 
-async function fetchPhotos(taxonKey: number, limit: number): Promise<ReferencePhoto[]> {
+/** iNaturalist research-grade observations on GBIF: community-verified photos, and a much faster query. */
+const INATURALIST_DATASET = "50c9509d-22c7-4a22-a47d-8c48425ef4a7";
+
+async function fetchPhotos(taxonKey: number, limit: number, datasetKey?: string): Promise<ReferencePhoto[]> {
+  const dataset = datasetKey ? `&datasetKey=${datasetKey}` : "";
   const { results } = await gbifGet<{ results: { key: number; media?: GbifMedia[] }[] }>(
-    `/occurrence/search?taxonKey=${taxonKey}&mediaType=StillImage&basisOfRecord=HUMAN_OBSERVATION&limit=${limit * 3}`,
+    `/occurrence/search?taxonKey=${taxonKey}&mediaType=StillImage&basisOfRecord=HUMAN_OBSERVATION${dataset}&limit=${limit * 3}`,
     OCCURRENCE_TIMEOUT_MS,
   );
   const photos: ReferencePhoto[] = [];
@@ -151,7 +155,9 @@ export async function lookupSpecies(name: string, photoLimit = 4): Promise<Speci
   const [commonNames, observed] = await Promise.all([
     fetchCommonNames(key).catch(soft<string[]>("common names", [])),
     photoLimit > 0
-      ? fetchPhotos(key, photoLimit).catch(soft<ReferencePhoto[]>("observation photos", []))
+      ? fetchPhotos(key, photoLimit, INATURALIST_DATASET)
+          .then((found) => (found.length ? found : fetchPhotos(key, photoLimit)))
+          .catch(soft<ReferencePhoto[]>("observation photos", []))
       : [],
   ]);
   const photos =
