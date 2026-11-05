@@ -35,14 +35,12 @@ Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `c
   ```
   GET /species/{key}/vernacularNames
   ```
-- **Occurrence photos** — observations with photos, used as reference images (`media[].identifier`):
-  ```
-  GET /occurrence/search?taxonKey={key}&mediaType=StillImage&basisOfRecord=HUMAN_OBSERVATION
-  ```
+
+GBIF is not used for photos (its occurrence search is rate limited). Claude finds reference photos with web search in chat.
 
 ## MCP Server
 
-`src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for GBIF reference photos, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`) with cited sources, and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.
+`src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for the accepted name and common names and web-searching for reference photos to show in its first reply, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`) with cited sources, and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.
 
 ### MCP authentication
 
