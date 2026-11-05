@@ -34,9 +34,10 @@ describe("MCP garden plant flow", () => {
     const message = prompt.messages[0]!.content;
     expect(message.type === "text" && message.text).toContain("lookup_species");
     expect(message.type === "text" && message.text).toContain("Cite your sources");
+    expect(message.type === "text" && message.text).toContain("web search");
   });
 
-  it("looks up a species with reference photos inline", async () => {
+  it("looks up a species without photos", async () => {
     vi.stubGlobal("fetch", async (input: string | URL | Request) => {
       const url = String(input);
       if (url.includes("/species/match")) {
@@ -54,12 +55,7 @@ describe("MCP garden plant flow", () => {
       if (url.includes("/vernacularNames")) {
         return Response.json({ results: [{ vernacularName: "Lesser bougainvillea", language: "eng" }] });
       }
-      if (url.includes("/occurrence/search")) {
-        return Response.json({
-          results: [{ key: 1, media: [{ type: "StillImage", identifier: "https://example.com/1.jpg" }] }],
-        });
-      }
-      return new Response("img", { headers: { "content-type": "image/jpeg" } });
+      return new Response("not found", { status: 404 });
     });
     const client = await connect();
 
@@ -71,8 +67,8 @@ describe("MCP garden plant flow", () => {
     const content = result.content as Content;
     expect(content[0]!.text).toContain("Species to store: Bougainvillea glabra");
     expect(content[0]!.text).toContain("Common names: Lesser bougainvillea");
-    expect(content[0]!.text).toContain("https://www.gbif.org/occurrence/1");
-    expect(content[1]).toMatchObject({ type: "image", mimeType: "image/jpeg" });
+    expect(content[0]!.text).toContain("use web search");
+    expect(content).toHaveLength(1);
   });
 
   it("reports when GBIF has no match", async () => {

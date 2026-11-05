@@ -10,7 +10,7 @@ import { listPlants } from "../actions/plants-helper.ts";
 import { ALLOWED_EMAIL, getSessionEmail } from "../auth.ts";
 import { getDB } from "../db.ts";
 import { formatMonthRange } from "../garden-utils.ts";
-import { fetchImage, lookupSpecies, type SpeciesMatch } from "../gbif.ts";
+import { lookupSpecies, type SpeciesMatch } from "../gbif.ts";
 import { createOAuthProvider, type OAuthProviderOptions } from "../oauth.ts";
 import { waterings } from "../schema.ts";
 import { IS_DEV, IS_PREVIEW, IS_PRODUCTION, IS_TEST } from "../utils.ts";
@@ -77,12 +77,9 @@ async function runGetGarden(): Promise<string> {
 /** USDA hardiness zone of the garden, which sets when its plants should be pruned. */
 export const GARDEN_ZONE = "10b";
 
-// How many reference photos are shown inline; more are listed as links.
-const INLINE_PHOTOS = 3;
-
 const ADD_GARDEN_PLANT_STEPS = `Adding a plant to the outdoor garden from a photo (USDA zone ${GARDEN_ZONE}):
-1. Look at the user's photo and decide on the most likely species, with a runner-up or two if you are unsure. Before you reply, call lookup_species with the scientific name of your best guess, so that your very first message already shows the suspected species.
-2. In that first message, explain the visible features (leaves, flowers, bark, habit) that point to the species, then show its accepted name, common names and reference photos so the user can compare them with their plant. Always put the photos in your own reply, one per line as markdown images (![Species](photo URL)) with the source link beneath each, even if the tool result also embeds them; the user needs to see the pictures in the chat. If the tool says the photos could not be loaded, call it again once before telling the user. Look up a runner-up the same way if the user asks or the photos don't fit.
+1. Look at the user's photo and decide on the most likely species, with a runner-up or two if you are unsure. Before you reply, call lookup_species with the scientific name of your best guess to confirm its accepted name and common names, then use web search to find reference photos of that species.
+2. Your very first message must show the suspected species: explain the visible features (leaves, flowers, bark, habit) that point to it, give its accepted name and common names, and include 2-3 reference photos from the web search so the user can compare them with their plant. Show each photo as a markdown image (![Species](direct image URL)) with a link to the page it came from beneath it; if you only have a page and no direct image URL, give the page link. Never skip the pictures. Search for a runner-up the same way if the user asks or the photos don't fit.
 3. Ask the user to confirm the species. Do not continue until they do; if they correct you, look up their species instead.
 4. Suggest when to prune this species in USDA zone ${GARDEN_ZONE} (mild, frost-free winters, long warm growing season): the month window, what kind of pruning, and why. Some plants need more than one window (e.g. a hard prune and a summer tidy-up). Cite your sources for this advice as links, preferring university extension services for warm, frost-free climates (e.g. UC Agriculture and Natural Resources, UF/IFAS Extension) and botanical gardens; search the web for them if you can. Say plainly if you could not find a source for a recommendation.
 5. Ask the user to confirm or adjust the pruning windows, and what to name the plant (suggest its common name).
@@ -93,14 +90,10 @@ function describeMatch(m: SpeciesMatch): string {
   return `${m.scientificName} (${m.rank.toLowerCase()}${family}; ${m.matchType.toLowerCase()} match, ${m.confidence}% confidence)`;
 }
 
-type ToolContent = { type: "text"; text: string } | { type: "image"; data: string; mimeType: string };
-
-async function runLookupSpecies(name: string): Promise<ToolContent[]> {
-  const result = await lookupSpecies(name, 6);
-  if (!result) {
-    return [{ type: "text", text: `GBIF has no plant matching "${name}". Try another scientific name.` }];
-  }
-  const { match, commonNames, alternatives, photos, warnings } = result;
+async function runLookupSpecies(name: string): Promise<string> {
+  const result = await lookupSpecies(name);
+  if (!result) return `GBIF has no plant matching "${name}". Try another scientific name.`;
+  const { match, commonNames, alternatives } = result;
 
   const lines = [`Best match: ${describeMatch(match)}`];
   if (match.status !== "ACCEPTED")
@@ -113,30 +106,8 @@ async function runLookupSpecies(name: string): Promise<ToolContent[]> {
   if (alternatives.length) {
     lines.push(`Other candidates:\n${alternatives.map((a) => `- ${describeMatch(a)}`).join("\n")}`);
   }
-  if (photos.length) {
-    const photoLines = photos.map((p, i) => {
-      const credit = [p.credit, p.license].filter(Boolean).join(", ");
-      return `${i + 1}. ${p.url} (source: ${p.sourceUrl}${credit ? `; ${credit}` : ""})`;
-    });
-    lines.push(`Reference photos:\n${photoLines.join("\n")}`);
-  } else {
-    lines.push(
-      warnings.length
-        ? `Reference photos: could not be loaded from GBIF (${warnings.join("; ")}). Say so to the user and retry lookup_species.`
-        : "Reference photos: none found on GBIF.",
-    );
-  }
-
-  const images = await Promise.all(photos.slice(0, INLINE_PHOTOS).map((p) => fetchImage(p.url)));
-  if (photos.length && !images.some((img) => img !== null)) {
-    lines.push(
-      "Note: the photos could not be embedded; show the user the photo links above so they can open them.",
-    );
-  }
-  return [
-    { type: "text", text: lines.join("\n") },
-    ...images.filter((img) => img !== null).map((img) => ({ type: "image" as const, ...img })),
-  ];
+  lines.push("This tool returns no photos: use web search to find reference photos to show the user.");
+  return lines.join("\n");
 }
 
 async function runAddGardenPlant(input: Parameters<typeof addGardenPlant>[0]): Promise<string> {
@@ -185,13 +156,13 @@ export function createMcpServer() {
     {
       title: "Look up plant species",
       description:
-        "Look a plant up by scientific name in GBIF: its accepted name, family, common names, close alternatives, " +
-        "and reference photos of the species to compare with the user's photo. Use it after suggesting a species " +
-        "from a photo, before adding a garden plant.",
+        "Look a plant up by scientific name in GBIF: its accepted name, family, common names, close alternatives. " +
+        "It returns no photos; find those with web search. Use it right after deciding on a species from a photo, " +
+        "before replying and before adding a garden plant.",
       inputSchema: { name: z.string().min(1).describe("Scientific name, e.g. 'Bougainvillea glabra'.") },
       annotations: { readOnlyHint: true, openWorldHint: true },
     },
-    async ({ name }) => ({ content: await runLookupSpecies(name) }),
+    async ({ name }) => ({ content: [{ type: "text", text: await runLookupSpecies(name) }] }),
   );
 
   server.registerTool(
