@@ -49,10 +49,26 @@ interface GbifMedia {
   creator?: string;
 }
 
+const USER_AGENT = "shui-plant-tracker";
+const MAX_ATTEMPTS = 3;
+const RETRY_MAX_DELAY_MS = 2000;
+
+/** GBIF rate limits shared hosting IPs (429); a short pause and retry usually gets through. */
 async function gbifGet<T>(path: string, timeoutMs = FETCH_TIMEOUT_MS): Promise<T> {
-  const res = await fetch(`${GBIF_API}${path}`, { signal: AbortSignal.timeout(timeoutMs) });
-  if (!res.ok) throw new Error(`GBIF request failed (${res.status}): ${path}`);
-  return (await res.json()) as T;
+  for (let attempt = 1; ; attempt++) {
+    const res = await fetch(`${GBIF_API}${path}`, {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+    if (res.ok) return (await res.json()) as T;
+    if ((res.status === 429 || res.status === 503) && attempt < MAX_ATTEMPTS) {
+      const retryAfter = Number(res.headers.get("retry-after")) * 1000;
+      const delay = Math.min(retryAfter > 0 ? retryAfter : 500 * attempt, RETRY_MAX_DELAY_MS);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+      continue;
+    }
+    throw new Error(`GBIF request failed (${res.status}): ${path}`);
+  }
 }
 
 function toMatch(m: GbifMatch): SpeciesMatch | null {
@@ -130,6 +146,31 @@ async function fetchPhotos(taxonKey: number, limit: number, datasetKey?: string)
   return photos;
 }
 
+const photoCache = new Map<number, ReferencePhoto[]>();
+
+/** Tries each photo source in turn, moving on when one fails or comes back empty. */
+async function findPhotos(
+  key: number,
+  limit: number,
+  soft: <T>(what: string, fallback: T) => (e: unknown) => T,
+): Promise<ReferencePhoto[]> {
+  const cached = photoCache.get(key);
+  if (cached && cached.length >= limit) return cached.slice(0, limit);
+  const sources: [string, () => Promise<ReferencePhoto[]>][] = [
+    ["iNaturalist photos", () => fetchPhotos(key, limit, INATURALIST_DATASET)],
+    ["observation photos", () => fetchPhotos(key, limit)],
+    ["species media", () => fetchSpeciesMedia(key, limit)],
+  ];
+  for (const [what, source] of sources) {
+    const found = await source().catch(soft<ReferencePhoto[]>(what, []));
+    if (found.length) {
+      photoCache.set(key, found);
+      return found;
+    }
+  }
+  return [];
+}
+
 /**
  * Looks a plant name up in GBIF's backbone taxonomy, with its common names and photos of
  * the plant observed in the wild. Returns null when GBIF has no match for the name.
@@ -152,18 +193,10 @@ export async function lookupSpecies(name: string, photoLimit = 4): Promise<Speci
       warnings.push(`${what} failed (${reason})`);
       return fallback;
     };
-  const [commonNames, observed] = await Promise.all([
+  const [commonNames, photos] = await Promise.all([
     fetchCommonNames(key).catch(soft<string[]>("common names", [])),
-    photoLimit > 0
-      ? fetchPhotos(key, photoLimit, INATURALIST_DATASET)
-          .then((found) => (found.length ? found : fetchPhotos(key, photoLimit)))
-          .catch(soft<ReferencePhoto[]>("observation photos", []))
-      : [],
+    photoLimit > 0 ? findPhotos(key, photoLimit, soft) : [],
   ]);
-  const photos =
-    observed.length || photoLimit <= 0
-      ? observed
-      : await fetchSpeciesMedia(key, photoLimit).catch(soft<ReferencePhoto[]>("species media", []));
   const alternatives = (raw.alternatives ?? [])
     .map(toMatch)
     .filter((m): m is SpeciesMatch => m !== null && m.canonicalName !== match.canonicalName)

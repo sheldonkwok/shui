@@ -118,6 +118,59 @@ describe("lookupSpecies", () => {
   });
 });
 
+describe("lookupSpecies photo sources", () => {
+  const PHOTO = { key: 7, media: [{ type: "StillImage", identifier: "https://example.com/p.jpg" }] };
+
+  it("retries a rate-limited (429) request", async () => {
+    vi.useFakeTimers();
+    let occurrenceCalls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request) => {
+        const url = String(input);
+        if (url.includes("/species/match"))
+          return Response.json({ ...MATCH, speciesKey: 200, usageKey: 200 });
+        if (url.includes("/occurrence/search")) {
+          return ++occurrenceCalls < 2
+            ? new Response("slow down", { status: 429 })
+            : Response.json({ results: [PHOTO] });
+        }
+        return Response.json({ results: [] });
+      }),
+    );
+    const pending = lookupSpecies("Bougainvillea glabra");
+    await vi.advanceTimersByTimeAsync(5000);
+    const result = await pending;
+    vi.useRealTimers();
+    expect(occurrenceCalls).toBe(2);
+    expect(result?.photos.map((p) => p.url)).toEqual(["https://example.com/p.jpg"]);
+    expect(result?.warnings).toEqual([]);
+  });
+
+  it("falls back to species media when the occurrence search keeps failing", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: string | URL | Request) => {
+        const url = String(input);
+        if (url.includes("/species/match"))
+          return Response.json({ ...MATCH, speciesKey: 300, usageKey: 300 });
+        if (url.includes("/occurrence/search")) return new Response("slow down", { status: 429 });
+        if (url.includes("/species/300/media")) {
+          return Response.json({ results: [{ identifier: "https://example.com/m.jpg" }] });
+        }
+        return Response.json({ results: [] });
+      }),
+    );
+    const pending = lookupSpecies("Bougainvillea glabra");
+    await vi.advanceTimersByTimeAsync(20000);
+    const result = await pending;
+    vi.useRealTimers();
+    expect(result?.photos.map((p) => p.url)).toEqual(["https://example.com/m.jpg"]);
+    expect(result?.warnings.length).toBeGreaterThan(0);
+  });
+});
+
 describe("webSizedPhotoUrl", () => {
   it("only rewrites iNaturalist originals", () => {
     expect(webSizedPhotoUrl("https://static.inaturalist.org/photos/1/original.jpg")).toBe(
