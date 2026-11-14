@@ -13,6 +13,9 @@ import {
   unique,
 } from "drizzle-orm/pg-core";
 
+// Every table enables row-level security with no policies, so Supabase's Data API
+// (anon/authenticated roles) can't read or write rows. The app connects as the
+// table owner, which bypasses RLS. schema.test.ts checks new tables do the same.
 export const plantLocation = pgEnum("plant_location", ["indoor", "outdoor"]);
 
 export const plants = pgTable("plants", {
@@ -22,7 +25,7 @@ export const plants = pgTable("plants", {
   // Outdoor plants are watered together by irrigation, so they have no per-plant waterings.
   location: plantLocation("location").default("indoor").notNull(),
   deletedAt: timestamp("deleted_at", { withTimezone: true }),
-});
+}).enableRLS();
 
 export const plantInsertSchema = createInsertSchema(plants);
 
@@ -34,7 +37,7 @@ export const waterings = pgTable("waterings", {
   wateringTime: timestamp("watering_time", { withTimezone: true }).defaultNow().notNull(),
   fertilized: boolean("fertilized").default(false),
   repot: boolean("repot").default(false),
-});
+}).enableRLS();
 
 export const wateringInsertSchema = createInsertSchema(waterings);
 
@@ -49,13 +52,13 @@ export const plantDelays = pgTable(
     numDays: integer("num_days").notNull(),
   },
   (table) => [unique().on(table.plantId)],
-);
+).enableRLS();
 
 /** One hand-started run of the outdoor irrigation, which waters every outdoor plant at once. */
 export const irrigationRuns = pgTable("irrigation_runs", {
   id: serial("id").primaryKey(),
   runTime: timestamp("run_time", { withTimezone: true }).defaultNow().notNull(),
-});
+}).enableRLS();
 
 /**
  * A yearly outdoor task, due each year from the start of `startMonth` to the end of
@@ -68,7 +71,7 @@ export const chores = pgTable("chores", {
   title: text("title").notNull(),
   startMonth: integer("start_month").notNull(),
   endMonth: integer("end_month").notNull(),
-});
+}).enableRLS();
 
 export const choreCompletions = pgTable("chore_completions", {
   id: serial("id").primaryKey(),
@@ -76,7 +79,7 @@ export const choreCompletions = pgTable("chore_completions", {
     .notNull()
     .references(() => chores.id, { onDelete: "cascade" }),
   completedAt: timestamp("completed_at", { withTimezone: true }).defaultNow().notNull(),
-});
+}).enableRLS();
 
 export const wateringSummary = pgMaterializedView("watering_summary", {
   plantId: integer("plant_id"),

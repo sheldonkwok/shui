@@ -36,6 +36,17 @@ for (const view of views) {
   console.log(`Syncing materialized view: ${name}`);
   await db.execute(sql`DROP MATERIALIZED VIEW IF EXISTS ${sql.identifier(name)}`);
   await db.execute(sql`CREATE MATERIALIZED VIEW ${sql.identifier(name)} AS ${query}`);
+  // RLS doesn't apply to materialized views, so keep Supabase's Data API roles out
+  // by revoking their grants. The roles only exist on Supabase, not in PGlite.
+  for (const role of ["anon", "authenticated"]) {
+    await db.execute(sql`
+      DO $$ BEGIN
+        IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '${sql.raw(role)}') THEN
+          REVOKE ALL ON ${sql.identifier(name)} FROM ${sql.identifier(role)};
+        END IF;
+      END $$
+    `);
+  }
 }
 
 console.log(`Done. Synced ${views.length} materialized view(s).`);
