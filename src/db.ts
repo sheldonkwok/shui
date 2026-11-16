@@ -7,7 +7,10 @@ import { IS_TEST } from "./utils.ts";
 function createDB() {
   const databaseUrl = process.env.DATABASE_URL;
   if (databaseUrl) {
-    const client = postgres(databaseUrl);
+    // Supabase's pooler (transaction mode) can run each statement on a different
+    // backend, so a named prepared statement may not exist where it runs
+    // ("prepared statement ... does not exist", which rolled back waterings).
+    const client = postgres(databaseUrl, { prepare: false });
     return drizzlePg(client, { logger: !IS_TEST });
   }
   const pgliteDir = process.env.PGLITE_DIR ?? "./pglite";
