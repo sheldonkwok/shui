@@ -2,6 +2,7 @@ import { createInsertSchema } from "drizzle-arktype";
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  date,
   integer,
   pgEnum,
   pgMaterializedView,
@@ -54,10 +55,15 @@ export const plantDelays = pgTable(
   (table) => [unique().on(table.plantId)],
 ).enableRLS();
 
-/** One hand-started run of the outdoor irrigation, which waters every outdoor plant at once. */
+/**
+ * One run of the outdoor irrigation, which waters every outdoor plant at once. Runs are
+ * started by hand, or logged automatically for a day of heavy rain; `rainDate` is that
+ * day (local to the garden), unique so the daily rain check never logs a day twice.
+ */
 export const irrigationRuns = pgTable("irrigation_runs", {
   id: serial("id").primaryKey(),
   runTime: timestamp("run_time", { withTimezone: true }).defaultNow().notNull(),
+  rainDate: date("rain_date").unique(),
 }).enableRLS();
 
 /**

@@ -38,6 +38,10 @@ Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `c
 
 GBIF is not used for photos (its occurrence search is rate limited). Claude finds reference photos with web search in chat.
 
+### Open-Meteo — Rain Waterings
+
+`src/rain.ts` reads daily rain totals (inches, `America/Los_Angeles` days) for the garden's ZIP code, 94123, from `https://api.open-meteo.com/v1/forecast` (no authentication). Each day with more than 1 inch of rain is logged as a garden irrigation run with its `rain_date` set; the column is unique, so a day is never logged twice. `.github/workflows/record-rain.yml` runs `pnpm record-rain` every morning against the production database and checks the last 3 full days, so a skipped run is caught up.
+
 ## MCP Server
 
 `src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for the accepted name and common names and web-searching for reference photos to show in its first reply, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`) with cited sources, and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.

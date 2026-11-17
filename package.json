@@ -57,6 +57,7 @@
     "start": "waku start",
     "start:e2e": "WAKU_ADAPTER=node waku start --port 3000",
     "migrate": "drizzle-kit push && node --experimental-strip-types scripts/sync-views.ts",
+    "record-rain": "node --experimental-strip-types scripts/record-rain.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "dev:waku": "waku dev"
