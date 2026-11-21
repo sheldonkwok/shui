@@ -50,14 +50,13 @@
     "vitest": "~5.0.1"
   },
   "scripts": {
-    "build": "waku build",
+    "build": "waku build && node --experimental-strip-types scripts/vercel-crons.ts",
     "build:e2e": "WAKU_ADAPTER=node waku build && cp node_modules/@electric-sql/pglite/dist/pglite.data dist/server/assets/ && cp node_modules/@electric-sql/pglite/dist/pglite.wasm dist/server/assets/",
     "check": "biome check --write . && tsc --noEmit",
     "dev": "pnpm run /^dev:/",
     "start": "waku start",
     "start:e2e": "WAKU_ADAPTER=node waku start --port 3000",
     "migrate": "drizzle-kit push && node --experimental-strip-types scripts/sync-views.ts",
-    "record-rain": "node --experimental-strip-types scripts/record-rain.ts",
     "test": "vitest run",
     "test:e2e": "playwright test",
     "dev:waku": "waku dev"
