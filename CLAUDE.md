@@ -38,6 +38,14 @@ Response fields of note: `scientificName`, `canonicalName`, `rank`, `status`, `c
 
 GBIF is not used for photos (its occurrence search is rate limited). Claude finds reference photos with web search in chat.
 
+### Open-Meteo — Rain Waterings
+
+`src/rain.ts` reads daily rain totals (inches, `America/Los_Angeles` days) for the garden's ZIP code, 94123, from `https://api.open-meteo.com/v1/forecast` (no authentication). Each day with more than 1 inch of rain is logged as a garden irrigation run with its `rain_date` set; the column is unique, so a day is never logged twice. It checks the last 3 full days, so a skipped run is caught up.
+
+### Vercel Cron Jobs
+
+`src/api/cron.ts` serves `/cron/*` routes for Vercel Cron Jobs, outside the Google sign-in. Vercel calls them on the production deployment with `Authorization: Bearer $CRON_SECRET`; without `CRON_SECRET` set they refuse every request. Schedules live in `CRONS` in that file. Waku's Vercel adapter writes `.vercel/output/config.json` itself, so `pnpm build` runs `scripts/vercel-crons.ts` afterwards to add `CRONS` there; don't put crons in a `vercel.json`. `/cron/record-rain` runs the rain check above every morning.
+
 ## MCP Server
 
 `src/api/mcp.ts` serves an MCP endpoint at `/mcp`. Besides read-only tools, it supports adding garden plants from a photo taken in Claude: the `add_garden_plant` prompt (and the server instructions) walk Claude through identifying the plant, calling `lookup_species` for the accepted name and common names and web-searching for reference photos to show in its first reply, confirming the species, proposing pruning windows for USDA zone 10b (`GARDEN_ZONE`) with cited sources, and finally calling the `add_garden_plant` tool, which creates an outdoor plant with its pruning chores.
@@ -55,6 +63,7 @@ GBIF is not used for photos (its occurrence search is rate limited). Claude find
 | `GOOGLE_CLIENT_SECRET` | Yes | Google OAuth client secret. |
 | `DATABASE_URL` | No | External Postgres URL. If unset, PGlite is used. |
 | `PGLITE_DIR` | No | Directory for PGlite data files. Defaults to `./pglite`. |
+| `CRON_SECRET` | Production | Bearer token Vercel sends to `/cron/*` routes. |
 | `VERCEL_ENV` | No | Set by Vercel (`preview`, `production`). Used to gate preview auth. |
 
 ## Workflow

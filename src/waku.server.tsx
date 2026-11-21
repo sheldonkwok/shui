@@ -1,5 +1,6 @@
 import adapter from "waku/adapters/default";
 import { fsRouter } from "waku/router/server";
+import { cronMiddleware } from "./api/cron.ts";
 import { apiMiddleware } from "./api/index.ts";
 import { mcpMiddleware } from "./api/mcp.ts";
 import { authRoutesMiddleware, previewAuthMiddleware } from "./auth.ts";
@@ -11,6 +12,7 @@ const server: ReturnType<typeof adapter> = adapter(fsRouter(import.meta.glob("./
   middlewareFns: [
     () => authRoutesMiddleware,
     ...(IS_PREVIEW || IS_DEV ? [() => previewAuthMiddleware] : []),
+    () => cronMiddleware,
     () => mcpMiddleware,
     () => apiMiddleware,
   ],

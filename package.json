@@ -50,7 +50,7 @@
     "vitest": "~5.0.1"
   },
   "scripts": {
-    "build": "waku build",
+    "build": "waku build && node --experimental-strip-types scripts/vercel-crons.ts",
     "build:e2e": "WAKU_ADAPTER=node waku build && cp node_modules/@electric-sql/pglite/dist/pglite.data dist/server/assets/ && cp node_modules/@electric-sql/pglite/dist/pglite.wasm dist/server/assets/",
     "check": "biome check --write . && tsc --noEmit",
     "dev": "pnpm run /^dev:/",
